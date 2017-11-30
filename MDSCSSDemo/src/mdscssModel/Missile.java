@@ -5,7 +5,7 @@
  ******************************************************************************/
 package mdscssModel;
 
-public abstract class Missile 
+abstract class Missile 
 {
     protected String id;
     protected int posX, posY, posZ;
