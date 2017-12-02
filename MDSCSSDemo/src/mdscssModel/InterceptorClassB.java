@@ -1,6 +1,6 @@
 /*******************************************************************************
  * File: InterceptorClassB.java
- * Description:
+ * Description: model class for class b interceptors
  *
  ******************************************************************************/
 package mdscssModel;
@@ -8,6 +8,7 @@ package mdscssModel;
 
 public class InterceptorClassB extends Interceptor
 {
+    // defining constants
     private static final int MAX_THRUST_X = 10;
     private static final int MAX_THRUST_Y = 10;
     private static final int MAX_THRUST_Z = 12;
@@ -18,22 +19,17 @@ public class InterceptorClassB extends Interceptor
     
     private static final int DET_RANGE = 100;
     
-
+    /***************************************************************************
+     * InterceptorClassB
+     * 
+     * Constructor
+     * 
+     * @param pId - the 2-char identification string of the interceptor
+     **************************************************************************/
     public InterceptorClassB(String pId)
     {
-        id = pId;
-        state = interceptorState.PRE_FLIGHT;
-        assignedThreat = "N/A";
-        
-        fricX = FRIC_COEFF_X;
-        fricY = FRIC_COEFF_Y;
-        fricZ = FRIC_COEFF_Z;
-        
-        maxThrustX = MAX_THRUST_X; 
-        maxThrustY = MAX_THRUST_Y; 
-        maxThrustZ = MAX_THRUST_Z;
-        
-        detonationRange = DET_RANGE;
+        super(pId, FRIC_COEFF_X, FRIC_COEFF_Y, FRIC_COEFF_Z,
+                MAX_THRUST_X, MAX_THRUST_Y, MAX_THRUST_Z, "NA", DET_RANGE);
     }
     
 }

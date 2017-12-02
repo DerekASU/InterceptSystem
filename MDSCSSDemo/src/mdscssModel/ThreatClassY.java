@@ -1,16 +1,14 @@
 /*******************************************************************************
  * File: ThreatClassY.java
- * Description:
+ * Description: model class for Y class threats
  *
  ******************************************************************************/
 package mdscssModel;
 
-/**
- *
- * @author William
- */
+
 public class ThreatClassY extends Missile
 {
+    // defining constants
     private static final int MAX_THRUST_X = 4;
     private static final int MAX_THRUST_Y = 4;
     private static final int MAX_THRUST_Z = 6;
@@ -19,17 +17,17 @@ public class ThreatClassY extends Missile
     private static final double FRIC_COEFF_Y = 0.07;
     private static final double FRIC_COEFF_Z = 0.04;
     
+    /***************************************************************************
+     * ThreatClassY
+     * 
+     * Constructor
+     * 
+     * @param pId - the 2-char identification string of the threat
+     **************************************************************************/
     public ThreatClassY(String pId)
     {
-        id = pId;
-        
-        fricX = FRIC_COEFF_X;
-        fricY = FRIC_COEFF_Y;
-        fricZ = FRIC_COEFF_Z;
-        
-        maxThrustX = MAX_THRUST_X; 
-        maxThrustY = MAX_THRUST_Y; 
-        maxThrustZ = MAX_THRUST_Z;
+        super(pId, MissileType.THREAT, FRIC_COEFF_X, FRIC_COEFF_Y, FRIC_COEFF_Z,
+                MAX_THRUST_X, MAX_THRUST_Y, MAX_THRUST_Z);
     }
     
 }

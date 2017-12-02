@@ -5,10 +5,13 @@
  ******************************************************************************/
 package mdscssRoot;
 
+import java.util.ArrayList;
+
 
 public class SMCDPanel extends javax.swing.JPanel 
 {
-
+    ArrayList<SMCDWrapper> windowList;
+    
     /***************************************************************************
      * SMCDPanel
      * 
@@ -16,6 +19,8 @@ public class SMCDPanel extends javax.swing.JPanel
      **************************************************************************/
     public SMCDPanel() 
     {
+        windowList = new ArrayList();
+        
         initComponents();
     }
 
@@ -63,6 +68,11 @@ public class SMCDPanel extends javax.swing.JPanel
         lblTitle.setText("Interceptor Control:");
 
         btnNewWindow.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/openIcon2.png"))); // NOI18N
+        btnNewWindow.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                btnNewWindowMousePressed(evt);
+            }
+        });
 
         cmbSelInterceptor.setBackground(new java.awt.Color(65, 65, 65));
         cmbSelInterceptor.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -164,6 +174,11 @@ public class SMCDPanel extends javax.swing.JPanel
         btnDetonate.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnDetonate.setText("Detonate");
         btnDetonate.setPreferredSize(new java.awt.Dimension(127, 30));
+        btnDetonate.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mousePressed(java.awt.event.MouseEvent evt) {
+                btnDetonateMousePressed(evt);
+            }
+        });
 
         btnLaunch.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnLaunch.setText("Launch");
@@ -270,7 +285,37 @@ public class SMCDPanel extends javax.swing.JPanel
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
+        SMCDWrapper tmpWindow;
+        
+        windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this));
+        tmpWindow = windowList.get(windowList.size()-1);
+        tmpWindow.getContentPane().setBackground(new java.awt.Color(65,65,65));
+        tmpWindow.setVisible(true);
+    }//GEN-LAST:event_btnNewWindowMousePressed
 
+    private void btnDetonateMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnDetonateMousePressed
+        // TODO here we have to cycle through the window list, check for null entries and delete them
+        // check to see if one is made for this, if so bring to front and center, otherwise check to see if > 5
+        // if greater than 5, dialog alert for max windows, otherwise create
+        
+        
+    }//GEN-LAST:event_btnDetonateMousePressed
+
+    
+    public void hideExpandControls()
+    {
+        btnNewWindow.setVisible(false);
+    }
+    
+    public void setDisplayedInterceptor(String pID)
+    {
+        
+    }
+    
+  
+
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDestruct;
     private javax.swing.JButton btnDetonate;

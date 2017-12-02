@@ -8,7 +8,6 @@ package mdscssRoot;
 import mdscssModel.MissileDBManager;
 import mdscssControl.MDSCSSController;
 
-
 public class MMODFrame extends javax.swing.JFrame 
 {
     MissileDBManager mModel;

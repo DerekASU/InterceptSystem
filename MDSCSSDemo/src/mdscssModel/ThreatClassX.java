@@ -1,6 +1,6 @@
 /*******************************************************************************
  * File: ThreatClassX.java
- * Description:
+ * Description: model class for X class threats
  *
  ******************************************************************************/
 package mdscssModel;
@@ -8,6 +8,7 @@ package mdscssModel;
 
 public class ThreatClassX extends Missile
 {
+    // defining constants
     private static final int MAX_THRUST_X = 4;
     private static final int MAX_THRUST_Y = 4;
     private static final int MAX_THRUST_Z = 4;
@@ -20,18 +21,13 @@ public class ThreatClassX extends Missile
      * ThreatClassX
      * 
      * Constructor
+     * 
+     * @param pId - the 2-char identification string of the threat
      **************************************************************************/
     public ThreatClassX(String pId)
     {
-        id = pId;
-        
-        fricX = FRIC_COEFF_X;
-        fricY = FRIC_COEFF_Y;
-        fricZ = FRIC_COEFF_Z;
-        
-        maxThrustX = MAX_THRUST_X; 
-        maxThrustY = MAX_THRUST_Y; 
-        maxThrustZ = MAX_THRUST_Z; 
+        super(pId, MissileType.THREAT, FRIC_COEFF_X, FRIC_COEFF_Y, FRIC_COEFF_Z,
+                MAX_THRUST_X, MAX_THRUST_Y, MAX_THRUST_Z);
     }
     
 

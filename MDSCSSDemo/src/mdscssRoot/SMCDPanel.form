@@ -169,6 +169,9 @@
           <Image iconType="3" name="/img/openIcon2.png"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="btnNewWindowMousePressed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JComboBox" name="cmbSelInterceptor">
       <Properties>
@@ -485,6 +488,9 @@
           <Dimension value="[127, 30]"/>
         </Property>
       </Properties>
+      <Events>
+        <EventHandler event="mousePressed" listener="java.awt.event.MouseListener" parameters="java.awt.event.MouseEvent" handler="btnDetonateMousePressed"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnLaunch">
       <Properties>
