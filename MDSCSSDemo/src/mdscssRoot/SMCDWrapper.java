@@ -41,6 +41,8 @@ public class SMCDWrapper extends javax.swing.JFrame
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setAlwaysOnTop(true);
         setIconImages(null);
+        setMaximumSize(new java.awt.Dimension(347, 599));
+        setMinimumSize(new java.awt.Dimension(347, 599));
         setResizable(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
