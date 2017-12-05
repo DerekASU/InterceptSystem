@@ -5,6 +5,7 @@
  ******************************************************************************/
 package mdscssRoot;
 
+import java.awt.Color;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 
@@ -39,6 +40,13 @@ public class MMODFrame extends javax.swing.JFrame
     {
         mModel = pModel;
         mController = pController;
+    }
+    
+    public void connectionEstablished()
+    {
+        MCSSStatusIndicator.setBackground(Color.GREEN);
+        SMSSStatusIndicator.setBackground(Color.GREEN);
+        TSSStatusIndicator.setBackground(Color.GREEN);
     }
 
     /***************************************************************************
@@ -76,6 +84,11 @@ public class MMODFrame extends javax.swing.JFrame
         setMinimumSize(new java.awt.Dimension(1280, 1024));
         setResizable(false);
         setSize(new java.awt.Dimension(1280, 1024));
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         lblTSS.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblTSS.setForeground(new java.awt.Color(255, 255, 255));
@@ -86,27 +99,27 @@ public class MMODFrame extends javax.swing.JFrame
         lblSysControl.setText("System Control Mode:");
 
         TSSStatusIndicator.setEditable(false);
-        TSSStatusIndicator.setBackground(new java.awt.Color(0, 204, 0));
+        TSSStatusIndicator.setBackground(new java.awt.Color(255, 255, 255));
         TSSStatusIndicator.setPreferredSize(new java.awt.Dimension(22, 22));
 
         lblTSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblTSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblTSSVersion.setText("X.X");
+        lblTSSVersion.setText("N/A");
 
         SMSSStatusIndicator.setEditable(false);
-        SMSSStatusIndicator.setBackground(new java.awt.Color(0, 204, 0));
+        SMSSStatusIndicator.setBackground(new java.awt.Color(255, 255, 255));
         SMSSStatusIndicator.setPreferredSize(new java.awt.Dimension(22, 22));
 
         lblSMSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblSMSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblSMSSVersion.setText("X.X");
+        lblSMSSVersion.setText("N/A");
 
         lblSMSS.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblSMSS.setForeground(new java.awt.Color(255, 255, 255));
         lblSMSS.setText("SMSS Software Version:");
 
         MCSSStatusIndicator.setEditable(false);
-        MCSSStatusIndicator.setBackground(new java.awt.Color(0, 204, 0));
+        MCSSStatusIndicator.setBackground(new java.awt.Color(255, 255, 255));
         MCSSStatusIndicator.setPreferredSize(new java.awt.Dimension(22, 22));
 
         lblMCSS.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -115,7 +128,7 @@ public class MMODFrame extends javax.swing.JFrame
 
         lblMCSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblMCSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblMCSSVersion.setText("X.X");
+        lblMCSSVersion.setText("N/A");
 
         lblMDSCSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblMDSCSSVersion.setForeground(new java.awt.Color(255, 255, 255));
@@ -180,7 +193,7 @@ public class MMODFrame extends javax.swing.JFrame
                                 .addGap(315, 315, 315)
                                 .addComponent(lblMDSCSSVersion))
                             .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(35, Short.MAX_VALUE))
+                .addContainerGap(17, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -217,6 +230,12 @@ public class MMODFrame extends javax.swing.JFrame
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        // TODO add your handling code here:
+        System.out.println("closing");
+        mController.finalize();
+    }//GEN-LAST:event_formWindowClosing
 
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
