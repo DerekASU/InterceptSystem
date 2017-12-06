@@ -8,6 +8,9 @@ package mdscssRoot;
 import java.util.ArrayList;
 
 
+//!!!!!! TODO:  do we need to add implementation for controller software version on a per interceptor basis?
+
+
 public class SMCDPanel extends javax.swing.JPanel 
 {
     ArrayList<SMCDWrapper> windowList;

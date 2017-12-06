@@ -5,7 +5,7 @@
  ******************************************************************************/
 package mdscssModel;
 
-class Interceptor extends Missile
+public class Interceptor extends Missile
 {
     // Enumerations
     public enum interceptorState

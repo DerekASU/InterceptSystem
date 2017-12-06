@@ -39,7 +39,10 @@ public class ControlThread implements Runnable
                {
                    bCtEstablished = controlUtility.establishConnection();
                    
-                   controlUtility.sendCommand();
+               }
+               else
+               {                  
+                   controlUtility.cmdSmssGetVersion("A1");
                }
                
                Thread.sleep(500);
