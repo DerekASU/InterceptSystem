@@ -18,6 +18,7 @@ public class ControlThread implements Runnable
     public ControlThread(MDSCSSController pController)
     {
         bRunning = false;
+        bCtEstablished = false;
         controlUtility = pController;
     }
     
@@ -29,20 +30,30 @@ public class ControlThread implements Runnable
     public void run()
     {
         bRunning = true;
+        boolean tmp = false;
         System.out.print("Thread Started:");
         
         try 
         {       
             while (bRunning) 
             {
+                
                if(!bCtEstablished)
                {
+                   
                    bCtEstablished = controlUtility.establishConnection();
                    
+                   controlUtility.cmdSmssActivateSafety("A3");
+                   controlUtility.cmdMcssLaunch("A3");
+                   
+                   controlUtility.cmdMcssThrust("A3", 0, 0, 0);
+                                      
                }
                else
                {                  
-                   controlUtility.cmdSmssGetVersion("A1");
+                   controlUtility.cmdSmssPingWatchdog("A3");
+                   controlUtility.cmdMcssThrust("A3", 4, 4, 4);
+
                }
                
                Thread.sleep(500);
