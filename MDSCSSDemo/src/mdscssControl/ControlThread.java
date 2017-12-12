@@ -66,6 +66,7 @@ public class ControlThread implements Runnable
                        }
                        break;
                    case activating: 
+                       controlUtility.initializeModel();
                        controlUtility.initializeWatchdog();
                        threadState = controlState.operational;
                        break;
@@ -74,24 +75,22 @@ public class ControlThread implements Runnable
                        controlUtility.handleWatchdogTimer();
 
                        
-                       //test here, what happens if we pause the simulator, then start again, do we still ping? .... we do not, should we?
-                       //also todo, handle
                        
 
                        
-                       
+                       elapsedTime = System.currentTimeMillis() - entryTime;
+                        if(elapsedTime < 500)
+                        {
+                             Thread.sleep(500 - elapsedTime);
+                        }
+                        else if(elapsedTime > 1000)
+                        {
+                            System.out.println("ControlThread -- Warning: latency time approaching 1 second");
+                        }
                        break;
                }
                
-                elapsedTime = System.currentTimeMillis() - entryTime;
-                if(elapsedTime < 500)
-                {
-                     Thread.sleep(500 - elapsedTime);
-                }
-                else if(elapsedTime > 1000)
-                {
-                    System.out.println("ControlThread -- Warning: latency time approaching 1 second");
-                }
+                
             }
         } 
         catch (InterruptedException e) 

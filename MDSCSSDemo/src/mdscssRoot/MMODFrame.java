@@ -22,7 +22,7 @@ public class MMODFrame extends javax.swing.JFrame
     public MMODFrame() 
     {
         javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
-         
+         //todo:: add a polling thread to the database? might not be necessary, only if latency becomes an issue
         setIconImage(icon.getImage());
         initComponents();
     }
@@ -58,8 +58,6 @@ public class MMODFrame extends javax.swing.JFrame
     {
         SMSSStatusIndicator.setBackground(Color.GREEN);
         lblSMSSVersion.setText(version);
-        
-        
     }
 
     /***************************************************************************

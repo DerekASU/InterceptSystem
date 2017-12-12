@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import mdscssModel.*;
 import mdscssRoot.MMODFrame;
 
-//TODO::: buffin.read is blocking, we may need to figure out a way to handle if the socket goes down on the sim side, such as a timeout
+//TODO::: handle a different exception for timeouts? 
 /* note install wireshark and https://nmap.org/npcap/ to do loopback testing of tcp messages */
 
 public class MDSCSSController 
@@ -162,11 +162,17 @@ public class MDSCSSController
            return true;
     }
     
+    public void initializeModel()
+    {
+        //todo reconcile db with subsystem results, delete deleted, add new
+        //
+    }
+    
     public void initializeWatchdog()
     {
         int i;
         ArrayList<String> interceptors = cmdMcssGetInterceptorList();
-        //todo:: initial population of database, don't add ones that could not be deactivated and reactivated
+        //todo:: replace with getInterceptorList
         for(i = 0; i < interceptors.size(); i++)
         {
             cmdSmssDeactivateSafety(interceptors.get(i));
@@ -191,6 +197,23 @@ public class MDSCSSController
             cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
         }
         
+    }
+    
+    public void handleSocketFailure()
+    {
+        finalize();
+        tssTCP = null;
+        mcssTCP = null;
+        smssTCP = null;
+        
+        //purge the model
+        
+        //TODO:: notify view
+        
+        controller = new Thread(new ControlThread(this));
+        controller.start();
+        
+        bInitialized = true;
     }
     
     /***************************************************************************
@@ -221,29 +244,32 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
+                if(returnHeader[3] == 0 && bufferSize == 12)
+                {
+                    buffIn.read(returnBuffer, 0, bufferSize);
 
-                    if(returnHeader[3] == 0 && bufferSize == 12)
-                    {
-                        buffIn.read(returnBuffer, 0, bufferSize);
-
-                        result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
-                        result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
-                        result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                    }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdTssTrackThreat: unexpected or failed response\n");
-                        result = null;
-                    }
+                    result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
+                    result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
+                    result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdTssTrackThreat: unexpected or failed response\n");
+                    result = null;
+                }
                 
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdTssTrackThreat: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdTssTrackThreat: buffer failure\n" + ex.getMessage() +"\n");
-                result = null;
+                handleSocketFailure();
             } 
         }
         
@@ -274,30 +300,33 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
+                if(returnHeader[3] == 0 && bufferSize == 12)
+                {
+                    buffIn.read(returnBuffer, 0, bufferSize);
 
-                    if(returnHeader[3] == 0 && bufferSize == 12)
-                    {
-                        buffIn.read(returnBuffer, 0, bufferSize);
-
-                        result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
-                        result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
-                        result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                        System.out.println(result[0]);
-                    }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdTssTrackInterceptor: unexpected or failed response\n");
-                        result = null;
-                    }
+                    result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
+                    result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
+                    result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
+                    System.out.println(result[0]);
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdTssTrackInterceptor: unexpected or failed response\n");
+                    result = null;
+                }
                 
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdTssTrackInterceptor: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdTssTrackInterceptor: buffer failure\n" + ex.getMessage() +"\n");
-                result = null;
+                handleSocketFailure();
             } 
         }
         
@@ -325,30 +354,33 @@ public class MDSCSSController
                 header[0] = 5;
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
+                if(returnHeader[3] == 0 && bufferSize > 0)
+                {
+                    result = new ArrayList();
 
-                    if(returnHeader[3] == 0 && bufferSize > 0)
+                    for(int i = 0; i < bufferSize; i+=2)
                     {
-                        result = new ArrayList();
-
-                        for(int i = 0; i < bufferSize; i+=2)
-                        {
-                            buffIn.read(returnBuffer, 0, 2);
-                            result.add(new String(returnBuffer, "UTF-8"));
-                        }
+                        buffIn.read(returnBuffer, 0, 2);
+                        result.add(new String(returnBuffer, "UTF-8"));
                     }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdTssGetThreatList: unexpected or failed response\n");
-                    }
-                
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdTssGetThreatList: unexpected or failed response\n");
+                }                
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdTssGetThreatList: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdTssGetThreatList: buffer failure\n" + ex.getMessage() +"\n");
-            } 
+                handleSocketFailure();
+            }  
         }
 
         
@@ -375,30 +407,31 @@ public class MDSCSSController
                 header[0] = 6;
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnBuffer, 0, 6);
+                bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
-                    buffIn.read(returnBuffer, 0, 6);
-                    bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
+                if(returnBuffer[3] == 0)
+                {
+                    buffIn.read(returnBuffer, 0, bufferSize);
+                    result = new String(returnBuffer, "UTF-8");
 
-                    if(returnBuffer[3] == 0)
-                    {
-                        buffIn.read(returnBuffer, 0, bufferSize);
-                        result = new String(returnBuffer, "UTF-8");
-
-                        result = result.substring(27, 30);
-                    }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdTssGetVersion: unexpected or failed response\n");
-                    }
-                
+                    result = result.substring(27, 30);
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdTssGetVersion: unexpected or failed response\n");
+                }
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdTssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdTssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
-
-        System.out.println("tss - " + result);
         
         return result;
     }
@@ -428,20 +461,24 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssLaunch: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssLaunch: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
         return result;
     }
     
-    //TODO:!!!!!! Talk with john, look at resources .... always send a 1?..
+    
     public boolean cmdMcssThrust(String missileID, int pwrX, int pwrY, int pwrZ)
     {
         DataOutputStream buffOut;
@@ -522,14 +559,17 @@ public class MDSCSSController
                 
                 buffOut.write(header, 0, 53);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
-
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssThrust: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
-                System.out.println("MDSCSSController - cmdMcssLaunch: buffer failure\n" + ex.getMessage() +"\n");
+                System.out.println("MDSCSSController - cmdMcssThrust: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -557,14 +597,18 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssDetonate: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssDetonate: buffer failure\n" + ex.getMessage() +"\n");
-            } 
+                handleSocketFailure();
+            }  
         }
         
         return result;
@@ -591,14 +635,17 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssDestruct: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssDestruct: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -626,28 +673,30 @@ public class MDSCSSController
                 header[0] = 5;
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
-
-                    if(returnHeader[3] == 0 && bufferSize > 0)
+                if(returnHeader[3] == 0 && bufferSize > 0)
+                {
+                    for(int i = 0; i < bufferSize; i+=2)
                     {
-                        for(int i = 0; i < bufferSize; i+=2)
-                        {
-                            buffIn.read(returnBuffer, 0, 2);
-                            result.add(new String(returnBuffer, "UTF-8"));
-                        }
+                        buffIn.read(returnBuffer, 0, 2);
+                        result.add(new String(returnBuffer, "UTF-8"));
                     }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdMcssGetInterceptorList: unexpected or failed response\n");
-                    }
-                
-
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdMcssGetInterceptorList: unexpected or failed response\n");
+                }
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssGetInterceptorList: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssGetInterceptorList: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -677,34 +726,39 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    if(returnHeader[3] == 0 && bufferSize == 25)
+                if(returnHeader[3] == 0 && bufferSize == 25)
+                {
+                    buffIn.read(returnBuffer, 0, 25);
+
+                    if(returnBuffer[0] == 0)
                     {
-                        buffIn.read(returnBuffer, 0, 25);
-
-                        if(returnBuffer[0] == 1)
-                        {
-                            result = Interceptor.interceptorState.PRE_FLIGHT;
-                        }
-                        else if (returnBuffer[0] == 2)
-                        {
-                            result = Interceptor.interceptorState.IN_FLIGHT;
-                        }
-
-                        // TODO, bytes 1 -24 are thruster state bytes ..... wtf is this?
-
+                        result = Interceptor.interceptorState.DETONATED;
                     }
-                    else
+                    else if(returnBuffer[0] == 1)
                     {
-                        System.out.println("MDSCSSController - cmdMcssgetState: unexpected or failed response\n");
+                        result = Interceptor.interceptorState.PRE_FLIGHT;
                     }
-                
+                    else if (returnBuffer[0] == 2)
+                    {
+                        result = Interceptor.interceptorState.IN_FLIGHT;
+                    }
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdMcssgetState: unexpected or failed response\n");
+                }
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssgetState: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssgetState: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -735,29 +789,32 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
-                    buffIn.read(returnHeader, 0, 6);
-                    bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
+                buffIn.read(returnHeader, 0, 6);
+                bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                    if(returnHeader[3] == 0 && bufferSize == 12)
-                    {
-                        buffIn.read(returnBuffer, 0, bufferSize);
+                if(returnHeader[3] == 0 && bufferSize == 12)
+                {
+                    buffIn.read(returnBuffer, 0, bufferSize);
 
-                        result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
-                        result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
-                        result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                        System.out.println(result[0]);
-                    }
-                    else
-                    {
-                        System.out.println("MDSCSSController - cmdMcssGetLaunchSite: unexpected or failed response\n");
-                        result = null;
-                    }
-                
+                    result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
+                    result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
+                    result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
+                    System.out.println(result[0]);
+                }
+                else
+                {
+                    System.out.println("MDSCSSController - cmdMcssGetLaunchSite: unexpected or failed response\n");
+                    result = null;
+                }   
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssGetLaunchSite: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssGetLaunchSite: buffer failure\n" + ex.getMessage() +"\n");
-                result = null;
+                handleSocketFailure();
             } 
         }
         
@@ -784,24 +841,25 @@ public class MDSCSSController
                 header[0] = 8;
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnBuffer, 0, 6);
+                bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
-                    buffIn.read(returnBuffer, 0, 6);
-                    bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
+                buffIn.read(returnBuffer, 0, bufferSize);
+                result = new String(returnBuffer, "UTF-8");
 
-                    buffIn.read(returnBuffer, 0, bufferSize);
-                    result = new String(returnBuffer, "UTF-8");
-System.out.println("mcss - " + result);
-                    result = result.substring(26, 29);
-                
+                result = result.substring(26, 29);    
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
-        
 
-        
         return result;
     }
     
@@ -827,17 +885,20 @@ System.out.println("mcss - " + result);
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnBuffer, 0, 6);
+                bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
-                    buffIn.read(returnBuffer, 0, 6);
-                    bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
-
-                    buffIn.read(returnBuffer, 0, bufferSize);
-                    result = new String(returnBuffer, "UTF-8");
-                
+                buffIn.read(returnBuffer, 0, bufferSize);
+                result = new String(returnBuffer, "UTF-8");
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -869,14 +930,17 @@ System.out.println("mcss - " + result);
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);             
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssActivateSafety: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdSmssActivateSafety: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -904,15 +968,19 @@ System.out.println("mcss - " + result);
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-               
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssDeactivateSafety: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdSmssDeactivateSafety: buffer failure\n" + ex.getMessage() +"\n");
-            } 
+                handleSocketFailure();
+            }  
+            
         }
         
         return result;
@@ -945,15 +1013,17 @@ System.out.println("mcss - " + result);
                 header[8] = (byte)(pTimer & 0xff);
                 buffOut.write(header, 0, 9);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
-
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssPingWatchdog: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
-                System.out.println("MDSCSSController - cmdMcssLaunch: buffer failure\n" + ex.getMessage() +"\n");
+                System.out.println("MDSCSSController - cmdSmssPingWatchdog: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -981,14 +1051,17 @@ System.out.println("mcss - " + result);
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssDetEnable: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdSmssDetEnable: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
@@ -1016,15 +1089,18 @@ System.out.println("mcss - " + result);
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-
-                    buffIn.read(returnHeader, 0, 6);
-                    result = (returnHeader[3] == 0);
-                
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssDestruct: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdSmssDestruct: buffer failure\n" + ex.getMessage() +"\n");
-            } 
+                handleSocketFailure();
+            }  
         }
         
         return result;
@@ -1053,18 +1129,21 @@ System.out.println("mcss - " + result);
 
                 buffOut.write(header, 0, 5);
 
+                buffIn.read(returnBuffer, 0, 6);
+                bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
-                    buffIn.read(returnBuffer, 0, 6);
-                    bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
-
-                    buffIn.read(returnBuffer, 0, bufferSize);
-                    result = new String(returnBuffer, "UTF-8");
-                    result = result.substring(14,18);
-                
+                buffIn.read(returnBuffer, 0, bufferSize);
+                result = new String(returnBuffer, "UTF-8");
+                result = result.substring(14,18);
             } 
+            catch(SocketTimeoutException ex)
+            {
+                System.out.println("MDSCSSController - cmdSmssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+            }
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdSmssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+                handleSocketFailure();
             } 
         }
         
