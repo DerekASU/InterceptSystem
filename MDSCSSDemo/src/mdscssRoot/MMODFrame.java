@@ -42,11 +42,24 @@ public class MMODFrame extends javax.swing.JFrame
         mController = pController;
     }
     
-    public void connectionEstablished()
+    public void tssConnected(String version)
+    {
+        TSSStatusIndicator.setBackground(Color.GREEN);
+        lblTSSVersion.setText(version);
+    }
+    
+    public void mcssConnected(String version)
     {
         MCSSStatusIndicator.setBackground(Color.GREEN);
+        lblMCSSVersion.setText(version);
+    }
+    
+    public void smssConnected(String version)
+    {
         SMSSStatusIndicator.setBackground(Color.GREEN);
-        TSSStatusIndicator.setBackground(Color.GREEN);
+        lblSMSSVersion.setText(version);
+        
+        
     }
 
     /***************************************************************************

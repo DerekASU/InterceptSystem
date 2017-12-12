@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import mdscssModel.*;
 import mdscssRoot.MMODFrame;
 
-
+//TODO::: buffin.read is blocking, we may need to figure out a way to handle if the socket goes down on the sim side, such as a timeout
 /* note install wireshark and https://nmap.org/npcap/ to do loopback testing of tcp messages */
 
 public class MDSCSSController 
@@ -22,7 +22,7 @@ public class MDSCSSController
     private static final int SMSS_SOCKET = 27015;
     private static final int MCSS_SOCKET = 27016;
     private static final int TSS_SOCKET = 27017;
-    private static final int SOCKET_READ_TIMEOUT = 300;
+    private static final int SOCKET_TIMEOUT_MS = 2000;
     
     private MissileDBManager mModel;
     private MMODFrame mView;
@@ -87,19 +87,29 @@ public class MDSCSSController
             
             bInitialized = false;
         }
-        
     }
     
     public boolean establishConnection()
     {
         try
         {
-           smssTCP = new Socket("localhost", SMSS_SOCKET);
-           tssTCP = new Socket("localhost", TSS_SOCKET);
-           mcssTCP = new Socket("localhost", MCSS_SOCKET);
+            // Connect the sockets and update the GUI's status Indicators and versions
+            if(tssTCP == null)
+            {
+                tssTCP = new Socket("localhost", TSS_SOCKET);
+                tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+            }
+            if(mcssTCP == null)
+            {
+                mcssTCP = new Socket("localhost", MCSS_SOCKET);
+                mcssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+            }
+            if(smssTCP == null)
+            {
+                smssTCP = new Socket("localhost", SMSS_SOCKET);
+                smssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+            }
 
-           mView.connectionEstablished();
-           
            return true;
         } 
         catch(Exception ex)
@@ -108,6 +118,80 @@ public class MDSCSSController
             return false;
         }
     }   
+    
+    public boolean establishStatus()
+    {
+        String tmp = "";
+        
+            if(tssTCP != null)
+            {
+                tmp = cmdTssGetVersion();
+                if(tmp!= null)
+                    mView.tssConnected(cmdTssGetVersion());
+                else
+                    return false;
+            }
+            
+            if(mcssTCP != null)
+            {
+                tmp = cmdMcssGetVersion();
+                if(tmp!= null)
+                    mView.mcssConnected(tmp);
+                else
+                    return false;
+            }
+            
+            if(smssTCP != null && mcssTCP != null)
+            {
+                ArrayList<String> interceptors = cmdMcssGetInterceptorList();
+                
+                if(interceptors.size() > 0)
+                {
+                    tmp = cmdSmssGetVersion(interceptors.get(0));
+                    if(tmp!= null)
+                        mView.smssConnected(tmp);
+                    else
+                    return false;
+                }
+                else
+                {
+                    mView.smssConnected("N/A");
+                }
+            }
+
+           return true;
+    }
+    
+    public void initializeWatchdog()
+    {
+        int i;
+        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
+        //todo:: initial population of database, don't add ones that could not be deactivated and reactivated
+        for(i = 0; i < interceptors.size(); i++)
+        {
+            cmdSmssDeactivateSafety(interceptors.get(i));
+        }
+        
+        for(i = 0; i < interceptors.size(); i++)
+        {
+            cmdSmssActivateSafety(interceptors.get(i));
+        }
+        
+    }
+    
+    public void handleWatchdogTimer()
+    {
+        watchdogTime++; 
+        
+        //todo, replace with a get to the model
+        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
+        
+        for(int i = 0; i < interceptors.size(); i++)
+        {
+            cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
+        }
+        
+    }
     
     /***************************************************************************
      *  TSS Command Interface
@@ -137,14 +221,7 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
@@ -161,7 +238,7 @@ public class MDSCSSController
                         System.out.println("MDSCSSController - cmdTssTrackThreat: unexpected or failed response\n");
                         result = null;
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -197,14 +274,7 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
@@ -222,7 +292,7 @@ public class MDSCSSController
                         System.out.println("MDSCSSController - cmdTssTrackInterceptor: unexpected or failed response\n");
                         result = null;
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -255,14 +325,7 @@ public class MDSCSSController
                 header[0] = 5;
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
@@ -280,7 +343,7 @@ public class MDSCSSController
                     {
                         System.out.println("MDSCSSController - cmdTssGetThreatList: unexpected or failed response\n");
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -288,6 +351,7 @@ public class MDSCSSController
             } 
         }
 
+        
         return result;
     }
     
@@ -311,14 +375,7 @@ public class MDSCSSController
                 header[0] = 6;
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnBuffer, 0, 6);
                     bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
@@ -327,19 +384,21 @@ public class MDSCSSController
                         buffIn.read(returnBuffer, 0, bufferSize);
                         result = new String(returnBuffer, "UTF-8");
 
-                        result = result.substring(26);
+                        result = result.substring(27, 30);
                     }
                     else
                     {
                         System.out.println("MDSCSSController - cmdTssGetVersion: unexpected or failed response\n");
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdTssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
             } 
         }
+
+        System.out.println("tss - " + result);
         
         return result;
     }
@@ -369,17 +428,8 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
 
             } 
             catch (IOException ex) 
@@ -472,17 +522,9 @@ public class MDSCSSController
                 
                 buffOut.write(header, 0, 53);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
 
             } 
             catch (IOException ex) 
@@ -515,17 +557,9 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -557,17 +591,10 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -582,7 +609,7 @@ public class MDSCSSController
     {
         DataOutputStream buffOut;
         DataInputStream buffIn;
-        ArrayList<String> result = null;
+        ArrayList<String> result = new ArrayList();
         
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
@@ -599,21 +626,12 @@ public class MDSCSSController
                 header[0] = 5;
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
                     if(returnHeader[3] == 0 && bufferSize > 0)
                     {
-                        result = new ArrayList();
-
                         for(int i = 0; i < bufferSize; i+=2)
                         {
                             buffIn.read(returnBuffer, 0, 2);
@@ -624,7 +642,7 @@ public class MDSCSSController
                     {
                         System.out.println("MDSCSSController - cmdMcssGetInterceptorList: unexpected or failed response\n");
                     }
-                }
+                
 
             } 
             catch (IOException ex) 
@@ -659,14 +677,6 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
@@ -690,7 +700,7 @@ public class MDSCSSController
                     {
                         System.out.println("MDSCSSController - cmdMcssgetState: unexpected or failed response\n");
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -725,14 +735,6 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
                     buffIn.read(returnHeader, 0, 6);
                     bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
@@ -750,7 +752,7 @@ public class MDSCSSController
                         System.out.println("MDSCSSController - cmdMcssGetLaunchSite: unexpected or failed response\n");
                         result = null;
                     }
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -782,28 +784,23 @@ public class MDSCSSController
                 header[0] = 8;
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnBuffer, 0, 6);
                     bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
                     buffIn.read(returnBuffer, 0, bufferSize);
                     result = new String(returnBuffer, "UTF-8");
-
-                    result = result.substring(26);
-                }
+System.out.println("mcss - " + result);
+                    result = result.substring(26, 29);
+                
             } 
             catch (IOException ex) 
             {
                 System.out.println("MDSCSSController - cmdMcssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
             } 
         }
+        
+
         
         return result;
     }
@@ -830,20 +827,13 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnBuffer, 0, 6);
                     bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
                     buffIn.read(returnBuffer, 0, bufferSize);
                     result = new String(returnBuffer, "UTF-8");
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -879,17 +869,10 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -921,17 +904,10 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+               
             } 
             catch (IOException ex) 
             {
@@ -942,7 +918,7 @@ public class MDSCSSController
         return result;
     }
     
-    public boolean cmdSmssPingWatchdog(String missileID)
+    public boolean cmdSmssPingWatchdog(String missileID, int pTimer)
     {
         DataOutputStream buffOut;
         DataInputStream buffIn;
@@ -958,30 +934,21 @@ public class MDSCSSController
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
-                watchdogTime ++;
-
                 // requires an MID? wtf?
                 header[0] = 3;
                 header[1] = (byte)(missileID.charAt(0));
                 header[2] = (byte)(missileID.charAt(1));
                 header[4] = 4;
-                header[5] = (byte)((watchdogTime >> 24) & 0xff);
-                header[6] = (byte)((watchdogTime >> 16) & 0xff);
-                header[7] = (byte)((watchdogTime >> 8) & 0xff);
-                header[8] = (byte)(watchdogTime & 0xff);
+                header[5] = (byte)((pTimer >> 24) & 0xff);
+                header[6] = (byte)((pTimer >> 16) & 0xff);
+                header[7] = (byte)((pTimer >> 8) & 0xff);
+                header[8] = (byte)(pTimer & 0xff);
                 buffOut.write(header, 0, 9);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
 
             } 
             catch (IOException ex) 
@@ -1014,17 +981,10 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -1056,17 +1016,10 @@ public class MDSCSSController
                 header[2] = (byte)(missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnHeader, 0, 6);
                     result = (returnHeader[3] == 0);
-                }
+                
             } 
             catch (IOException ex) 
             {
@@ -1100,21 +1053,14 @@ public class MDSCSSController
 
                 buffOut.write(header, 0, 5);
 
-                int timeoutVar = 0;
-                while(buffIn.available() < 6 && timeoutVar < SOCKET_READ_TIMEOUT)
-                {
-                    timeoutVar++;
-                }
-                
-                if(timeoutVar < SOCKET_READ_TIMEOUT)
-                {
+
                     buffIn.read(returnBuffer, 0, 6);
                     bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
                     buffIn.read(returnBuffer, 0, bufferSize);
                     result = new String(returnBuffer, "UTF-8");
-                    result = result.substring(14);
-                }
+                    result = result.substring(14,18);
+                
             } 
             catch (IOException ex) 
             {

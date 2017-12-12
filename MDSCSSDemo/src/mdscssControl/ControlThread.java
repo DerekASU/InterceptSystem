@@ -5,10 +5,21 @@
  ******************************************************************************/
 package mdscssControl;
 
+import java.util.ArrayList;
+
 public class ControlThread implements Runnable
 {
     private MDSCSSController controlUtility;
-    private boolean bRunning, bCtEstablished;
+    private boolean bRunning;
+    private controlState threadState;
+    
+    private enum controlState
+    { 
+        initializing,
+        connecting,
+        activating,
+        operational
+    }
     
     /***************************************************************************
      * ControlThread
@@ -18,7 +29,7 @@ public class ControlThread implements Runnable
     public ControlThread(MDSCSSController pController)
     {
         bRunning = false;
-        bCtEstablished = false;
+        threadState = controlState.initializing;
         controlUtility = pController;
     }
     
@@ -30,41 +41,64 @@ public class ControlThread implements Runnable
     public void run()
     {
         bRunning = true;
-        boolean tmp = false;
-        System.out.print("Thread Started:");
+        long entryTime = 0;
+        long elapsedTime = 0;
+                
+        System.out.println("ControlThread: Thread Started");
         
         try 
         {       
             while (bRunning) 
             {
-                
-               if(!bCtEstablished)
+               entryTime = System.currentTimeMillis();
+               switch(threadState)
                {
-                   
-                   bCtEstablished = controlUtility.establishConnection();
-                   
-                   controlUtility.cmdSmssActivateSafety("A3");
-                   controlUtility.cmdMcssLaunch("A3");
-                   
-                   controlUtility.cmdMcssThrust("A3", 0, 0, 0);
-                                      
-               }
-               else
-               {                  
-                   controlUtility.cmdSmssPingWatchdog("A3");
-                   controlUtility.cmdMcssThrust("A3", 4, 4, 4);
+                   case initializing: 
+                       if(controlUtility.establishConnection())
+                       {
+                           threadState = controlState.connecting;
+                       }
+                       break;
+                   case connecting: 
+                       if(controlUtility.establishStatus())
+                       {
+                           threadState = controlState.activating;
+                       }
+                       break;
+                   case activating: 
+                       controlUtility.initializeWatchdog();
+                       threadState = controlState.operational;
+                       break;
+                   case operational: 
+                       //ping all watchdogs
+                       controlUtility.handleWatchdogTimer();
 
+                       
+                       //test here, what happens if we pause the simulator, then start again, do we still ping? .... we do not, should we?
+                       //also todo, handle
+                       
+
+                       
+                       
+                       break;
                }
                
-               Thread.sleep(500);
-               
-               
+                elapsedTime = System.currentTimeMillis() - entryTime;
+                if(elapsedTime < 500)
+                {
+                     Thread.sleep(500 - elapsedTime);
+                }
+                else if(elapsedTime > 1000)
+                {
+                    System.out.println("ControlThread -- Warning: latency time approaching 1 second");
+                }
             }
         } 
         catch (InterruptedException e) 
         {
-            System.out.print(" interrupted:");
+            System.out.print("ControlThread -- interrupted: stopping thread");
             bRunning = false;
         }
     }
+    
 }
