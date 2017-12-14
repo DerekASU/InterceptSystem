@@ -14,7 +14,6 @@ public class Interceptor extends Missile
         PRE_FLIGHT,
         IN_FLIGHT,
         DETONATED,
-        DESTRUCTED, 
         UNDEFINED;
     }
     

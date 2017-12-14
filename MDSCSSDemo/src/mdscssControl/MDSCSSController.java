@@ -29,7 +29,6 @@ public class MDSCSSController
     private Thread controller;
     
     private Socket tssTCP, mcssTCP, smssTCP;
-    private boolean bInitialized;
     
     private int watchdogTime;
     
@@ -40,7 +39,6 @@ public class MDSCSSController
      **************************************************************************/
     public MDSCSSController()
     {
-        bInitialized = false;
         mModel = null;
         mView = null;
         
@@ -64,19 +62,18 @@ public class MDSCSSController
         
         controller = new Thread(new ControlThread(this));
         controller.start();
-        
-        bInitialized = true;
     }
     
     public void finalize()
     {        
-        if(bInitialized)
-        {
             try
             {
-                tssTCP.close();
-                mcssTCP.close();
-                smssTCP.close();
+                if(tssTCP != null)
+                    tssTCP.close();
+                if(mcssTCP != null)
+                    mcssTCP.close();
+                if(smssTCP != null)
+                    smssTCP.close();
             } 
             catch(Exception ex)
             {
@@ -84,9 +81,6 @@ public class MDSCSSController
             }
             
             controller.interrupt();
-            
-            bInitialized = false;
-        }
     }
     
     public boolean establishConnection()
@@ -164,15 +158,20 @@ public class MDSCSSController
     
     public void initializeModel()
     {
-        //todo reconcile db with subsystem results, delete deleted, add new
-        //
+        ArrayList<String> missiles = cmdMcssGetInterceptorList();
+        
+        missiles.addAll(cmdTssGetThreatList());
+        
+        mModel.updateDatabase(missiles);
+        
+        mView.handleInitialUpdate();
     }
     
     public void initializeWatchdog()
     {
         int i;
-        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
-        //todo:: replace with getInterceptorList
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        
         for(i = 0; i < interceptors.size(); i++)
         {
             cmdSmssDeactivateSafety(interceptors.get(i));
@@ -185,18 +184,52 @@ public class MDSCSSController
         
     }
     
+    public void updateModel()
+    {
+        ArrayList<String> missiles = mModel.getInterceptorList();
+        Interceptor tmpInt;
+        Missile tmpThreat;
+        int pos[] = new int[3];
+        
+        
+        //todo:: further optimizations, one loop, on getMissiles, with a check on missileType
+        for(int i = 0; i < missiles.size(); i++)
+        {
+            tmpInt = mModel.getInterceptor(missiles.get(i));
+            
+            if(tmpInt.getState() != Interceptor.interceptorState.DETONATED)
+            {
+                tmpInt.setState(cmdMcssgetState(tmpInt.getIdentifier()));
+                //todo:: possible optimization, init position at startup, then only update if in flight 
+                pos = cmdTssTrackInterceptor(tmpInt.getIdentifier());
+                tmpInt.setPosition(pos[0], pos[1], pos[2]);
+            }
+        }
+        
+        missiles = mModel.getThreatList();
+        
+        for(int i = 0; i < missiles.size(); i++)
+        {
+            tmpThreat = mModel.getThreat(missiles.get(i));
+            
+            //todo:: figure out what happens when a threat is destoryed ... is it removed from the list? does a get on position fail?
+            pos = cmdTssTrackThreat(tmpThreat.getIdentifier());
+            tmpThreat.setPosition(pos[0], pos[1], pos[2]);
+        }
+        
+        
+    }
+    
     public void handleWatchdogTimer()
     {
-        watchdogTime++; 
+        ArrayList<String> interceptors = mModel.getInterceptorList();
         
-        //todo, replace with a get to the model
-        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
+        watchdogTime++; 
         
         for(int i = 0; i < interceptors.size(); i++)
         {
             cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
         }
-        
     }
     
     public void handleSocketFailure()
@@ -206,14 +239,11 @@ public class MDSCSSController
         mcssTCP = null;
         smssTCP = null;
         
-        //purge the model
-        
         //TODO:: notify view
-        
+        mView.handleSubsystemFailure();
+                
         controller = new Thread(new ControlThread(this));
         controller.start();
-        
-        bInitialized = true;
     }
     
     /***************************************************************************
@@ -310,7 +340,6 @@ public class MDSCSSController
                     result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
                     result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
                     result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                    System.out.println(result[0]);
                 }
                 else
                 {
@@ -322,6 +351,7 @@ public class MDSCSSController
             catch(SocketTimeoutException ex)
             {
                 System.out.println("MDSCSSController - cmdTssTrackInterceptor: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+                result = null;
             }
             catch (IOException ex) 
             {
@@ -733,17 +763,18 @@ public class MDSCSSController
                 {
                     buffIn.read(returnBuffer, 0, 25);
 
-                    if(returnBuffer[0] == 0)
-                    {
-                        result = Interceptor.interceptorState.DETONATED;
-                    }
-                    else if(returnBuffer[0] == 1)
-                    {
-                        result = Interceptor.interceptorState.PRE_FLIGHT;
-                    }
-                    else if (returnBuffer[0] == 2)
-                    {
-                        result = Interceptor.interceptorState.IN_FLIGHT;
+                    switch (returnBuffer[0]) {
+                        case 0:
+                            result = Interceptor.interceptorState.DETONATED;
+                            break;
+                        case 1:
+                            result = Interceptor.interceptorState.PRE_FLIGHT;
+                            break;
+                        case 2:
+                            result = Interceptor.interceptorState.IN_FLIGHT;
+                            break;
+                        default:
+                            break;
                     }
                 }
                 else

@@ -29,6 +29,6 @@ public class InterceptorClassA extends Interceptor
     public InterceptorClassA(String pId)
     {
         super(pId, FRIC_COEFF_X, FRIC_COEFF_Y, FRIC_COEFF_Z,
-                MAX_THRUST_X, MAX_THRUST_Y, MAX_THRUST_Z, "NA", DET_RANGE);
+                MAX_THRUST_X, MAX_THRUST_Y, MAX_THRUST_Z, "[UNASSIGNED]", DET_RANGE);
     }
 }

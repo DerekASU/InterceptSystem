@@ -5,10 +5,15 @@
  ******************************************************************************/
 package mdscssRoot;
 
+import java.awt.EventQueue;
+import java.awt.event.WindowEvent;
+import javax.swing.SwingUtilities;
+
 
 public class SMCDWrapper extends javax.swing.JFrame 
 {
     SMCDPanel mParent;
+    SMCDWrapper mSelf; 
     
     /***************************************************************************
      * SMCDPanel
@@ -18,12 +23,29 @@ public class SMCDWrapper extends javax.swing.JFrame
     public SMCDWrapper(String pID, SMCDPanel pParent) 
     {
         this.setTitle("SMCD -- " + pID);
+        javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
+        setIconImage(icon.getImage());
+        
         
         initComponents();
         
         sMCDPanel1.setDisplayedInterceptor(pID);
         sMCDPanel1.hideExpandControls();
+        mSelf = this;
         
+    }
+    
+    public void forceClose()
+    {
+        setVisible(false);
+        //TODO:: Make sure this doesn't cause a memory leak
+        EventQueue.invokeLater(new Runnable(){
+            public void run(){
+                mSelf.dispatchEvent(new WindowEvent(mSelf, WindowEvent.WINDOW_CLOSING));
+            }
+        });
+        
+
     }
 
     /***************************************************************************
@@ -39,7 +61,6 @@ public class SMCDWrapper extends javax.swing.JFrame
         sMCDPanel1 = new mdscssRoot.SMCDPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setAlwaysOnTop(true);
         setIconImages(null);
         setMaximumSize(new java.awt.Dimension(347, 599));
         setMinimumSize(new java.awt.Dimension(347, 599));

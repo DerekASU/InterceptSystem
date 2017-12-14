@@ -5,9 +5,21 @@
  ******************************************************************************/
 package mdscssRoot;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import javax.swing.JLabel;
+import javax.swing.RowSorter;
+import javax.swing.SortOrder;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
+import mdscssModel.Interceptor;
+
 public class ThreatOverviewPanel extends javax.swing.JPanel 
 {
-
+    TableRowSorter<TableModel> sorter;
+    
     /***************************************************************************
      * ThreatOverviewPanel
      * 
@@ -18,6 +30,96 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         initComponents();
         
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
+        
+        DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
+        cellRend.setHorizontalAlignment(JLabel.CENTER);
+        tblThreats.getColumnModel().getColumn(0).setCellRenderer(cellRend);
+        tblThreats.getColumnModel().getColumn(1).setCellRenderer(cellRend);
+        tblThreats.getColumnModel().getColumn(2).setCellRenderer(cellRend);
+        
+        sorter = new TableRowSorter<TableModel>(tblThreats.getModel());
+        sorter.setSortable(0, false);
+        sorter.setSortable(1, false);
+        sorter.setSortable(2, false);
+        tblThreats.setRowSorter(sorter);
+    }
+    
+    public void resetView()
+    {
+        DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
+        int tmp = model.getRowCount();
+        
+        for(int i = 0; i < tmp; i++)
+        {
+            model.removeRow(0);
+        }
+
+        //tblInterceptors.setVisible(false);
+    }
+    
+    public void handleInitialUpdate()
+    {
+        tblThreats.setVisible(true);
+        
+    }
+    
+    public void addEntry(String pID, int[] pPos)
+    {
+        String[] rowData = new String[4];
+        DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
+
+        rowData[0] = pID;
+        rowData[1] = "[UNASSIGNED]";
+        rowData[2] = "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]";
+         
+        model.addRow(rowData);
+    }
+    
+    public void updateEntry(String pID, String assignedI, int[] pPos)
+    {
+        String entryID = "";
+        int index = 0;
+        DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
+        
+        for(index = 0; index < model.getRowCount(); index++)
+        {
+            entryID = (String)model.getValueAt(index, 0);
+            if(entryID.equals(pID))
+            {
+                model.setValueAt(assignedI, index, 1);
+                model.setValueAt( "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]", index, 2);
+                break;
+            }
+        }
+        
+        //todo:: do we need to do this every time? or does the sorter handle it? try relocating once we can re-assign, it will optimize
+        sortThreats();
+        
+        tblThreats.clearSelection();
+        
+        for(index = 0; index < model.getRowCount(); index++)
+        {
+        
+            if(model.getValueAt(index, 1).equals("[UNASSIGNED]"))
+                {
+                    //todo:: change row color red; will need to create our own cell renderer class and apply it.  
+                    tblThreats.addRowSelectionInterval(index,index);
+                }
+        }
+    }
+    
+    public void sortThreats()
+    {
+        
+        
+        
+        ArrayList<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
+
+        sortKeys.add(new RowSorter.SortKey(1, SortOrder.DESCENDING));
+        sorter.setSortKeys(sortKeys);
+        
+        
+        
     }
 
     /***************************************************************************
@@ -54,10 +156,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         tblThreats.setForeground(new java.awt.Color(65, 65, 65));
         tblThreats.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null},
-                {null, null, null},
-                {null, null, null},
-                {null, null, null}
+
             },
             new String [] {
                 "Threat ID", "Threat State", "Position (m)"
@@ -71,11 +170,15 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                 return canEdit [columnIndex];
             }
         });
+        tblThreats.setEnabled(false);
         tblThreats.setGridColor(new java.awt.Color(27, 161, 226));
         tblThreats.setIntercellSpacing(new java.awt.Dimension(5, 15));
         tblThreats.setOpaque(false);
         tblThreats.setRowHeight(45);
-        tblThreats.setSelectionBackground(new java.awt.Color(27, 161, 226));
+        tblThreats.setSelectionBackground(new java.awt.Color(255, 51, 0));
+        tblThreats.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+        tblThreats.getTableHeader().setResizingAllowed(false);
+        tblThreats.getTableHeader().setReorderingAllowed(false);
         tableScrollPane.setViewportView(tblThreats);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -97,7 +200,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                 .addContainerGap()
                 .addComponent(lblTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents

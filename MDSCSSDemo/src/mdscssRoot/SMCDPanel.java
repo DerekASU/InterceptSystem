@@ -14,6 +14,7 @@ import java.util.ArrayList;
 public class SMCDPanel extends javax.swing.JPanel 
 {
     ArrayList<SMCDWrapper> windowList;
+    boolean bSeparateWindow;
     
     /***************************************************************************
      * SMCDPanel
@@ -23,8 +24,48 @@ public class SMCDPanel extends javax.swing.JPanel
     public SMCDPanel() 
     {
         windowList = new ArrayList();
+        bSeparateWindow = false;
         
         initComponents();
+    }
+    
+    public void resetView()
+    {
+        btnDestruct.setEnabled(false);
+        btnDetonate.setEnabled(false);
+        btnLaunch.setEnabled(false);
+        btnNewWindow.setVisible(false);
+        tglDisable.setEnabled(false);
+        
+        cmbAssignedThreat.setVisible(false);
+        cmbSelInterceptor.setVisible(false);
+        cmbAssignmentMode.setEnabled(false);
+        cmbDetonateMode.setEnabled(false);
+        
+        txtInterceptorPosition.setText("N/A");
+        txtInterceptorState.setText("N/A");
+        txtThreatDistance.setText("N/A");
+        txtThreatPosition.setText("N/A");
+        
+        SMCDWrapper tmp;
+        for(int i = 0; i < windowList.size(); i++)
+        {
+            tmp = windowList.get(i);
+            if(tmp != null)
+            tmp.forceClose();
+        }
+        
+        windowList.clear();
+    }
+    
+    public void handleInitialUpdate()
+    {
+        
+        if(!bSeparateWindow)
+        {
+            btnNewWindow.setVisible(true);
+        }
+        
     }
 
     /***************************************************************************
@@ -102,7 +143,8 @@ public class SMCDPanel extends javax.swing.JPanel
         txtInterceptorPosition.setEditable(false);
         txtInterceptorPosition.setBackground(new java.awt.Color(27, 161, 226));
         txtInterceptorPosition.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtInterceptorPosition.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtInterceptorPosition.setForeground(new java.awt.Color(255, 255, 255));
+        txtInterceptorPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtInterceptorPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
         lblIPos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -127,13 +169,15 @@ public class SMCDPanel extends javax.swing.JPanel
         txtThreatPosition.setEditable(false);
         txtThreatPosition.setBackground(new java.awt.Color(27, 161, 226));
         txtThreatPosition.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtThreatPosition.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtThreatPosition.setForeground(new java.awt.Color(255, 255, 255));
+        txtThreatPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
         txtThreatDistance.setEditable(false);
         txtThreatDistance.setBackground(new java.awt.Color(27, 161, 226));
         txtThreatDistance.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        txtThreatDistance.setHorizontalAlignment(javax.swing.JTextField.RIGHT);
+        txtThreatDistance.setForeground(new java.awt.Color(255, 255, 255));
+        txtThreatDistance.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatDistance.setPreferredSize(new java.awt.Dimension(69, 30));
 
         lblTDist.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -163,8 +207,8 @@ public class SMCDPanel extends javax.swing.JPanel
         lblDetOvrrd.setText("Detonate Override:");
 
         tglDisable.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        tglDisable.setSelected(true);
-        tglDisable.setText("Enabled");
+        tglDisable.setText("Disabled");
+        tglDisable.setToolTipText("");
         tglDisable.setMaximumSize(new java.awt.Dimension(77, 30));
         tglDisable.setMinimumSize(new java.awt.Dimension(119, 26));
         tglDisable.setPreferredSize(new java.awt.Dimension(127, 30));
@@ -291,7 +335,7 @@ public class SMCDPanel extends javax.swing.JPanel
 
     private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
         SMCDWrapper tmpWindow;
-        
+
         windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this));
         tmpWindow = windowList.get(windowList.size()-1);
         tmpWindow.getContentPane().setBackground(new java.awt.Color(65,65,65));
@@ -310,6 +354,7 @@ public class SMCDPanel extends javax.swing.JPanel
     public void hideExpandControls()
     {
         btnNewWindow.setVisible(false);
+        bSeparateWindow = true;
     }
     
     public void setDisplayedInterceptor(String pID)

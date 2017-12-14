@@ -5,7 +5,7 @@
  ******************************************************************************/
 package mdscssModel;
 
-class Missile 
+public class Missile 
 {
     // Enumerations
     public enum MissileType

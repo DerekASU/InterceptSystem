@@ -4,8 +4,9 @@
  *
  ******************************************************************************/
 package mdscssRoot;
-
+//todo:: add a destructall
 import java.awt.Color;
+import java.util.ArrayList;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 
@@ -13,6 +14,7 @@ public class MMODFrame extends javax.swing.JFrame
 {
     MissileDBManager mModel;
     MDSCSSController mController;
+    private Thread poller = null;
     
     /***************************************************************************
      * MMODFrame
@@ -25,6 +27,7 @@ public class MMODFrame extends javax.swing.JFrame
          //todo:: add a polling thread to the database? might not be necessary, only if latency becomes an issue
         setIconImage(icon.getImage());
         initComponents();
+        resetView();
     }
     
     /***************************************************************************
@@ -59,6 +62,122 @@ public class MMODFrame extends javax.swing.JFrame
         SMSSStatusIndicator.setBackground(Color.GREEN);
         lblSMSSVersion.setText(version);
     }
+    
+    public void handleSubsystemFailure()
+    {
+        TSSStatusIndicator.setBackground(Color.ORANGE);
+        MCSSStatusIndicator.setBackground(Color.ORANGE);
+        SMSSStatusIndicator.setBackground(Color.ORANGE);
+        
+        resetView();
+    }
+    
+    public void handleInitialUpdate()
+    {
+        ArrayList<String> Missiles;
+        Interceptor tmpI;
+        Missile tmpT;
+        
+        cmbSysMode.setEnabled(true);
+        
+        theatreMapPanel1.handleInitialUpdate();
+        sMCDPanel1.handleInitialUpdate();
+        threatOverviewPanel1.handleInitialUpdate();
+        interceptorOverviewPanel1.handleInitialUpdate();
+        
+        Missiles = mModel.getInterceptorList();
+        for(int i = 0; i < Missiles.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(Missiles.get(i));
+            
+            interceptorOverviewPanel1.addEntry(tmpI.getIdentifier(),
+                    tmpI.getState(), tmpI.getAssignedThreat(), tmpI.getPositionVector());
+            
+        }
+        
+        Missiles = mModel.getThreatList();
+        for(int i = 0; i < Missiles.size(); i++)
+        {
+            tmpT = mModel.getThreat(Missiles.get(i));
+            
+            threatOverviewPanel1.addEntry(tmpT.getIdentifier(), tmpT.getPositionVector());
+            
+        }
+        
+        interceptorOverviewPanel1.sortByID();
+        
+        
+        poller = new Thread(new MMODPoller(this));
+        poller.start();
+        
+    }
+    
+    public void periodicUpdate()
+    {
+        updateThreats();
+        updateInterceptors();
+    }
+    
+    private void updateThreats()
+    {
+        ArrayList<String> Interceptors;
+        ArrayList<String> Threats;
+        Interceptor tmpI;
+        Missile tmp;
+        String assignmentLabel = "";
+        
+        Interceptors = mModel.getInterceptorList();
+        Threats = mModel.getThreatList();
+        
+        for(int i = 0; i < Threats.size(); i++)
+        {
+            tmp = mModel.getThreat(Threats.get(i));
+            
+            assignmentLabel = "[UNASSIGNED]";
+            for(int j = 0; j < Interceptors.size(); j++)
+            {
+                tmpI = mModel.getInterceptor(Interceptors.get(j));                
+                
+                if(tmpI.getAssignedThreat().equals(tmp.getIdentifier()))
+                {
+                    assignmentLabel = tmpI.getIdentifier();
+                }
+            }
+            
+            threatOverviewPanel1.updateEntry(tmp.getIdentifier(), assignmentLabel, tmp.getPositionVector());
+        }
+        
+    }
+    
+    private void updateInterceptors()
+    {
+        ArrayList<String> Interceptors;
+        Interceptor tmpI;
+        
+        Interceptors = mModel.getInterceptorList();
+        
+        for(int i = 0; i < Interceptors.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(Interceptors.get(i));
+            
+            interceptorOverviewPanel1.updateEntry(tmpI.getIdentifier(), tmpI.getState(), 
+                    tmpI.getAssignedThreat(), tmpI.getPositionVector());
+        }
+        
+    }
+    
+    private void resetView()
+    {
+        if(poller!= null)
+            poller.interrupt();
+        
+        cmbSysMode.setEnabled(false);
+        
+        theatreMapPanel1.resetView();
+        sMCDPanel1.resetView();
+        threatOverviewPanel1.resetView();
+        interceptorOverviewPanel1.resetView();
+    }
 
     /***************************************************************************
      * initComponents
@@ -91,7 +210,7 @@ public class MMODFrame extends javax.swing.JFrame
         setTitle("MDSCSS Human Machine Interface");
         setAutoRequestFocus(false);
         setBackground(java.awt.Color.gray);
-        setLocation(new java.awt.Point(25, 25));
+        setLocation(new java.awt.Point(205, 25));
         setMinimumSize(new java.awt.Dimension(1280, 1024));
         setResizable(false);
         setSize(new java.awt.Dimension(1280, 1024));
@@ -143,7 +262,7 @@ public class MMODFrame extends javax.swing.JFrame
 
         lblMDSCSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblMDSCSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblMDSCSSVersion.setText("1.1A");
+        lblMDSCSSVersion.setText("0.4B");
 
         cmbSysMode.setBackground(new java.awt.Color(65, 65, 65));
         cmbSysMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -187,24 +306,24 @@ public class MMODFrame extends javax.swing.JFrame
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(lblSysControl)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(cmbSysMode, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(sMCDPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addComponent(cmbSysMode, javax.swing.GroupLayout.PREFERRED_SIZE, 120, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(lblSMSS)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblSMSSVersion)
-                                .addGap(56, 56, 56)
-                                .addComponent(MCSSStatusIndicator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblMCSS)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(lblMCSSVersion)
-                                .addGap(315, 315, 315)
-                                .addComponent(lblMDSCSSVersion))
-                            .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(17, Short.MAX_VALUE))
+                        .addComponent(lblSMSS)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblSMSSVersion)
+                        .addGap(56, 56, 56)
+                        .addComponent(MCSSStatusIndicator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblMCSS)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(lblMCSSVersion)
+                        .addGap(315, 315, 315)
+                        .addComponent(lblMDSCSSVersion))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(21, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)

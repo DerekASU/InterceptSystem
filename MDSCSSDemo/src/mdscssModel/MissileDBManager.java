@@ -32,6 +32,7 @@ public class MissileDBManager
     public Interceptor getInterceptor(String pId)
     {
         Missile tmp = activeMissiles.get(pId);
+        Interceptor tmp2;
         
         if(tmp != null && tmp.getType() == Missile.MissileType.INTERCEPTOR)
         {
@@ -73,14 +74,16 @@ public class MissileDBManager
     
     public ArrayList<String> getMissileList()
     {
-        Missile tmp;
-        Set missileSet = activeMissiles.entrySet();
-        Iterator missileIt = missileSet.iterator();
+        Missile tmp = null;
+        String missileID = "";
         ArrayList<String> res = new ArrayList();
-        
-        while(missileIt.hasNext())
+
+
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
         {
-            tmp = ((Missile)(missileIt.next()));
+            missileID = (String)it.next().getKey();
+            tmp = activeMissiles.get(missileID);
+
             res.add(tmp.getIdentifier());
         }
 
@@ -89,14 +92,15 @@ public class MissileDBManager
     
     public ArrayList<String> getThreatList()
     {
-        Missile tmp;
-        Set missileSet = activeMissiles.entrySet();
-        Iterator missileIt = missileSet.iterator();
+        Missile tmp = null;
+        String missileID = "";
         ArrayList<String> res = new ArrayList();
-        
-        while(missileIt.hasNext())
+
+
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
         {
-            tmp = ((Missile)(missileIt.next()));
+            missileID = (String)it.next().getKey();
+            tmp = activeMissiles.get(missileID);
             
             if(tmp.getType() == Missile.MissileType.THREAT)
             {
@@ -107,16 +111,22 @@ public class MissileDBManager
         return res;
     }
     
+    public ArrayList<String> getThreatUnassignedThreats()
+    {
+    return null;
+    }
+    
     public ArrayList<String> getInterceptorList()
     {
-        Missile tmp;
-        Set missileSet = activeMissiles.entrySet();
-        Iterator missileIt = missileSet.iterator();
+        Missile tmp = null;
+        String missileID = "";
         ArrayList<String> res = new ArrayList();
-        
-        while(missileIt.hasNext())
+
+
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
         {
-            tmp = ((Missile)(missileIt.next()));
+            missileID = (String)it.next().getKey();
+            tmp = activeMissiles.get(missileID);
             
             if(tmp.getType() == Missile.MissileType.INTERCEPTOR)
             {
@@ -131,20 +141,13 @@ public class MissileDBManager
     {
         Missile tmp = null;
         String missileID = "";
-        Set missileSet = activeMissiles.keySet();
-        Iterator missileIt = missileSet.iterator();
-        /*
-        prereqs:  determine how the data comes back from the TSS
-        if a threat has been elminated, does it still show up in the list?
-        ----if it does, then controller needs to filter it out of the list before giving it to the db
-        */
         
-        while(missileIt.hasNext())
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
         {
-            missileID = (String)missileIt.next();
+            missileID = (String)it.next().getKey();
             if(!idList.contains(missileID))
             {
-                activeMissiles.remove(missileID);
+                it.remove();
             }
         }
         
@@ -183,7 +186,6 @@ public class MissileDBManager
                         break;
                 }
             }
-        }
-        
+        }        
     }
 }

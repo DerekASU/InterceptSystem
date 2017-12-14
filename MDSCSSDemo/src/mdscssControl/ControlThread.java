@@ -73,8 +73,8 @@ public class ControlThread implements Runnable
                    case operational: 
                        //ping all watchdogs
                        controlUtility.handleWatchdogTimer();
-
                        
+                       controlUtility.updateModel();
                        
 
                        

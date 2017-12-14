@@ -18,6 +18,16 @@ public class TheatreMapPanel extends javax.swing.JPanel
     {
         initComponents();
     }
+    
+    public void resetView()
+    {
+    
+    }
+    
+    public void handleInitialUpdate()
+    {
+        
+    }
 
     /***************************************************************************
      * initComponents
