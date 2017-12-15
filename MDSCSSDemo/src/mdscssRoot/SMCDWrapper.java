@@ -8,6 +8,7 @@ package mdscssRoot;
 import java.awt.EventQueue;
 import java.awt.event.WindowEvent;
 import javax.swing.SwingUtilities;
+import mdscssModel.MissileDBManager;
 
 
 public class SMCDWrapper extends javax.swing.JFrame 
@@ -20,7 +21,7 @@ public class SMCDWrapper extends javax.swing.JFrame
      * 
      * Constructor
      **************************************************************************/
-    public SMCDWrapper(String pID, SMCDPanel pParent) 
+    public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel) 
     {
         this.setTitle("SMCD -- " + pID);
         javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
@@ -29,7 +30,10 @@ public class SMCDWrapper extends javax.swing.JFrame
         
         initComponents();
         
-        sMCDPanel1.setDisplayedInterceptor(pID);
+        sMCDPanel1.initialize(pModel, null);
+        
+        sMCDPanel1.handleInitialUpdate();
+       // sMCDPanel1.handleSelChange(pID);
         sMCDPanel1.hideExpandControls();
         mSelf = this;
         

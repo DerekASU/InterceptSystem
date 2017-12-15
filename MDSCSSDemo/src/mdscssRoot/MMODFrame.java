@@ -7,6 +7,7 @@ package mdscssRoot;
 //todo:: add a destructall
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Collections;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 
@@ -27,6 +28,7 @@ public class MMODFrame extends javax.swing.JFrame
          //todo:: add a polling thread to the database? might not be necessary, only if latency becomes an issue
         setIconImage(icon.getImage());
         initComponents();
+        
         resetView();
     }
     
@@ -43,6 +45,9 @@ public class MMODFrame extends javax.swing.JFrame
     {
         mModel = pModel;
         mController = pController;
+        
+        interceptorOverviewPanel1.setParent(this);
+        sMCDPanel1.initialize(mModel, this);
     }
     
     public void tssConnected(String version)
@@ -75,7 +80,7 @@ public class MMODFrame extends javax.swing.JFrame
     public void handleInitialUpdate()
     {
         ArrayList<String> Missiles;
-        Interceptor tmpI;
+        Interceptor tmpI = null;
         Missile tmpT;
         
         cmbSysMode.setEnabled(true);
@@ -84,8 +89,13 @@ public class MMODFrame extends javax.swing.JFrame
         sMCDPanel1.handleInitialUpdate();
         threatOverviewPanel1.handleInitialUpdate();
         interceptorOverviewPanel1.handleInitialUpdate();
+        updateInterceptors();
+        
+        
+        
         
         Missiles = mModel.getInterceptorList();
+        Collections.sort(Missiles);
         for(int i = 0; i < Missiles.size(); i++)
         {
             tmpI = mModel.getInterceptor(Missiles.get(i));
@@ -95,7 +105,9 @@ public class MMODFrame extends javax.swing.JFrame
             
         }
         
+        
         Missiles = mModel.getThreatList();
+        Collections.sort(Missiles);
         for(int i = 0; i < Missiles.size(); i++)
         {
             tmpT = mModel.getThreat(Missiles.get(i));
@@ -104,8 +116,12 @@ public class MMODFrame extends javax.swing.JFrame
             
         }
         
-        interceptorOverviewPanel1.sortByID();
-        
+        //todo:: find a better way to do this
+        if(tmpI != null)
+        {
+            interceptorOverviewPanel1.handleSelChange(tmpI.getIdentifier());
+            sMCDPanel1.handleSelChange(tmpI.getIdentifier());
+        }
         
         poller = new Thread(new MMODPoller(this));
         poller.start();
@@ -116,6 +132,8 @@ public class MMODFrame extends javax.swing.JFrame
     {
         updateThreats();
         updateInterceptors();
+        
+        sMCDPanel1.updatePanelContents();
     }
     
     private void updateThreats()
@@ -164,6 +182,16 @@ public class MMODFrame extends javax.swing.JFrame
                     tmpI.getAssignedThreat(), tmpI.getPositionVector());
         }
         
+    }
+    
+    public void ChangeSMCDSel(String pID)
+    {
+        sMCDPanel1.handleSelChange(pID);
+    }
+    
+    public void ChangeIOverviewSel(String pID)
+    {
+        interceptorOverviewPanel1.handleSelChange(pID);
     }
     
     private void resetView()

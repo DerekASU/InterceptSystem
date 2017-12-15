@@ -53,8 +53,6 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         {
             model.removeRow(0);
         }
-
-        //tblInterceptors.setVisible(false);
     }
     
     public void handleInitialUpdate()

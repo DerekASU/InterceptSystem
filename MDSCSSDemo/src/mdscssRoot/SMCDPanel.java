@@ -5,7 +5,15 @@
  ******************************************************************************/
 package mdscssRoot;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
+import mdscssModel.Interceptor;
+import mdscssModel.Missile;
+import mdscssModel.MissileDBManager;
 
 
 //!!!!!! TODO:  do we need to add implementation for controller software version on a per interceptor basis?
@@ -14,7 +22,9 @@ import java.util.ArrayList;
 public class SMCDPanel extends javax.swing.JPanel 
 {
     ArrayList<SMCDWrapper> windowList;
-    boolean bSeparateWindow;
+    MissileDBManager mModel;
+    MMODFrame mParent;
+    boolean bSeparateWindow, bIsActive;
     
     /***************************************************************************
      * SMCDPanel
@@ -25,27 +35,33 @@ public class SMCDPanel extends javax.swing.JPanel
     {
         windowList = new ArrayList();
         bSeparateWindow = false;
+        bIsActive = false;
         
         initComponents();
+        
+        ((JLabel)cmbAssignedThreat.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        ((JLabel)cmbSelInterceptor.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
     }
     
     public void resetView()
     {
+        bIsActive = false;
+        
         btnDestruct.setEnabled(false);
         btnDetonate.setEnabled(false);
         btnLaunch.setEnabled(false);
         btnNewWindow.setVisible(false);
         tglDisable.setEnabled(false);
         
-        cmbAssignedThreat.setVisible(false);
-        cmbSelInterceptor.setVisible(false);
+        cmbAssignedThreat.setEnabled(false);
+        cmbSelInterceptor.setEnabled(false);
         cmbAssignmentMode.setEnabled(false);
         cmbDetonateMode.setEnabled(false);
         
-        txtInterceptorPosition.setText("N/A");
-        txtInterceptorState.setText("N/A");
-        txtThreatDistance.setText("N/A");
-        txtThreatPosition.setText("N/A");
+        txtInterceptorPosition.setText("[NA]");
+        txtInterceptorState.setText("[NA]");
+        txtThreatDistance.setText("[NA]");
+        txtThreatPosition.setText("[NA]");
         
         SMCDWrapper tmp;
         for(int i = 0; i < windowList.size(); i++)
@@ -56,16 +72,165 @@ public class SMCDPanel extends javax.swing.JPanel
         }
         
         windowList.clear();
+        
     }
     
     public void handleInitialUpdate()
     {
+        //populate dropdowns,  only unassigned threats shown
         
+        ArrayList<String> missiles;
+        Interceptor tmpI;
+        
+        cmbSelInterceptor.removeAllItems();
+        cmbAssignedThreat.removeAllItems();
+        
+        cmbAssignedThreat.addItem("[UNASSIGNED]");
+        cmbAssignedThreat.setSelectedItem("[UNASSIGNED]");
+        
+        missiles = mModel.getInterceptorList();
+        Collections.sort(missiles);
+        for(int i = 0; i < missiles.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(missiles.get(i)); 
+            cmbSelInterceptor.addItem(missiles.get(i));
+        }
+        
+        missiles = mModel.getThreatList();
+        for(int i = 0; i < missiles.size(); i++)
+        {
+
+            cmbAssignedThreat.addItem(missiles.get(i));
+            
+        }
+                
+        
+    }
+    
+    public void handleSelChange(String pID)
+    {
         if(!bSeparateWindow)
         {
             btnNewWindow.setVisible(true);
         }
+        bIsActive = true;
         
+        btnNewWindow.setVisible(true);
+        
+        cmbSelInterceptor.setEnabled(true);
+        cmbSelInterceptor.setSelectedItem(pID);
+        
+        updatePanelContents();
+    }
+    
+    public void updatePanelContents()
+    {
+        Interceptor tmp = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
+        Missile tmpT;
+        String assignedThreat = tmp.getAssignedThreat();
+        int[] pos = tmp.getPositionVector();
+        int[] tPos;
+        
+        if(!bIsActive)
+            return;
+        
+        
+        if(!tmp.isDisabled())
+        {
+            tglDisable.setText("Enabled");
+            tglDisable.setSelected(true);
+        }
+        else
+        {
+            tglDisable.setText("Disabled");
+            tglDisable.setSelected(false);
+            cmbAssignmentMode.setEnabled(false);
+            cmbAssignedThreat.setEnabled(false);
+            cmbDetonateMode.setEnabled(false);
+            btnDestruct.setEnabled(false);
+            btnLaunch.setEnabled(false);
+        }
+        
+        //todo optimization, do nothing if we are in the detonated or disabled ... state, nothing will change ....?
+        switch (tmp.getState()) {
+            case DETONATED:
+                txtInterceptorState.setText("Detonated");
+                cmbAssignmentMode.setEnabled(false);
+                cmbAssignedThreat.setEnabled(false);
+                cmbDetonateMode.setEnabled(false);
+                btnDestruct.setEnabled(false);
+                btnLaunch.setEnabled(false);
+                tglDisable.setEnabled(false);
+                break;
+            case PRE_FLIGHT:
+                txtInterceptorState.setText("Pre-Flight");
+                cmbAssignmentMode.setEnabled(true);
+                cmbAssignedThreat.setEnabled(true);
+                cmbDetonateMode.setEnabled(true);
+                btnDestruct.setEnabled(false);
+                btnLaunch.setEnabled(true);
+                tglDisable.setEnabled(true);
+                break;
+            case IN_FLIGHT:
+                txtInterceptorState.setText("In-Flight");
+                cmbAssignmentMode.setEnabled(false);
+                cmbAssignedThreat.setEnabled(false);
+                cmbDetonateMode.setEnabled(true);
+                btnDestruct.setEnabled(true);
+                btnLaunch.setEnabled(false);
+                tglDisable.setEnabled(false);
+                break;
+            default:
+                txtInterceptorState.setText("[UNKNOWN]");
+                //todo ... disable controls
+                break;
+        }
+        
+        txtInterceptorPosition.setText( "[" + pos[0] + "," + pos[1] + "," + pos[2] + "] m");
+        cmbAssignedThreat.setSelectedItem(assignedThreat);
+        
+        if(assignedThreat.equals("[UNASSIGNED]"))
+        {
+            txtThreatDistance.setText("[NA]");
+            txtThreatPosition.setText("[NA]");
+        }
+        else
+        {
+            tmpT = mModel.getThreat(assignedThreat);
+            if(tmpT != null)
+            {
+                DecimalFormat rounder = new DecimalFormat("0.000");
+                tPos = tmpT.getPositionVector();
+                txtThreatPosition.setText( "[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
+                
+                double distance = Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2);
+                txtThreatDistance.setText(rounder.format(Math.sqrt(distance)) + " m");
+            }
+        }
+        
+        if(tmp.isAssignmentOverriden())
+        {
+            cmbAssignmentMode.setSelectedIndex(0);
+        }
+        else
+        {
+            cmbAssignmentMode.setSelectedIndex(1);
+        }
+        
+        if(tmp.isDetonateOverriden())
+        {
+            cmbDetonateMode.setSelectedIndex(0);
+        }
+        else
+        {
+            cmbDetonateMode.setSelectedIndex(1);
+        }
+    }
+    
+    public void initialize(MissileDBManager pModel, MMODFrame pParent)
+    {
+        mModel = pModel;
+        mParent = pParent;
     }
 
     /***************************************************************************
@@ -121,9 +286,13 @@ public class SMCDPanel extends javax.swing.JPanel
         cmbSelInterceptor.setBackground(new java.awt.Color(65, 65, 65));
         cmbSelInterceptor.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cmbSelInterceptor.setForeground(new java.awt.Color(65, 65, 65));
-        cmbSelInterceptor.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "X1" }));
         cmbSelInterceptor.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbSelInterceptor.setPreferredSize(new java.awt.Dimension(47, 30));
+        cmbSelInterceptor.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cmbSelInterceptorActionPerformed(evt);
+            }
+        });
 
         lblInterceptor.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblInterceptor.setForeground(new java.awt.Color(255, 255, 255));
@@ -135,21 +304,21 @@ public class SMCDPanel extends javax.swing.JPanel
 
         txtInterceptorState.setEditable(false);
         txtInterceptorState.setBackground(new java.awt.Color(27, 161, 226));
-        txtInterceptorState.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtInterceptorState.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         txtInterceptorState.setForeground(new java.awt.Color(255, 255, 255));
         txtInterceptorState.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtInterceptorState.setPreferredSize(new java.awt.Dimension(69, 30));
 
         txtInterceptorPosition.setEditable(false);
         txtInterceptorPosition.setBackground(new java.awt.Color(27, 161, 226));
-        txtInterceptorPosition.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtInterceptorPosition.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         txtInterceptorPosition.setForeground(new java.awt.Color(255, 255, 255));
         txtInterceptorPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtInterceptorPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
         lblIPos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblIPos.setForeground(new java.awt.Color(255, 255, 255));
-        lblIPos.setText("InterceptorPosition:");
+        lblIPos.setText("Interceptor Position:");
 
         lblThreat.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         lblThreat.setForeground(new java.awt.Color(255, 255, 255));
@@ -158,7 +327,6 @@ public class SMCDPanel extends javax.swing.JPanel
         cmbAssignedThreat.setBackground(new java.awt.Color(65, 65, 65));
         cmbAssignedThreat.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cmbAssignedThreat.setForeground(new java.awt.Color(65, 65, 65));
-        cmbAssignedThreat.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "X1" }));
         cmbAssignedThreat.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbAssignedThreat.setPreferredSize(new java.awt.Dimension(47, 30));
 
@@ -168,14 +336,14 @@ public class SMCDPanel extends javax.swing.JPanel
 
         txtThreatPosition.setEditable(false);
         txtThreatPosition.setBackground(new java.awt.Color(27, 161, 226));
-        txtThreatPosition.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtThreatPosition.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         txtThreatPosition.setForeground(new java.awt.Color(255, 255, 255));
         txtThreatPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
         txtThreatDistance.setEditable(false);
         txtThreatDistance.setBackground(new java.awt.Color(27, 161, 226));
-        txtThreatDistance.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        txtThreatDistance.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         txtThreatDistance.setForeground(new java.awt.Color(255, 255, 255));
         txtThreatDistance.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatDistance.setPreferredSize(new java.awt.Dimension(69, 30));
@@ -191,14 +359,14 @@ public class SMCDPanel extends javax.swing.JPanel
         cmbAssignmentMode.setBackground(new java.awt.Color(65, 65, 65));
         cmbAssignmentMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cmbAssignmentMode.setForeground(new java.awt.Color(65, 65, 65));
-        cmbAssignmentMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default" }));
+        cmbAssignmentMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default", "Manual" }));
         cmbAssignmentMode.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbAssignmentMode.setPreferredSize(new java.awt.Dimension(75, 30));
 
         cmbDetonateMode.setBackground(new java.awt.Color(65, 65, 65));
         cmbDetonateMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         cmbDetonateMode.setForeground(new java.awt.Color(65, 65, 65));
-        cmbDetonateMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default" }));
+        cmbDetonateMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default", "Manual" }));
         cmbDetonateMode.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbDetonateMode.setPreferredSize(new java.awt.Dimension(75, 30));
 
@@ -336,7 +504,7 @@ public class SMCDPanel extends javax.swing.JPanel
     private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
         SMCDWrapper tmpWindow;
 
-        windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this));
+        windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this, mModel));
         tmpWindow = windowList.get(windowList.size()-1);
         tmpWindow.getContentPane().setBackground(new java.awt.Color(65,65,65));
         tmpWindow.setVisible(true);
@@ -350,6 +518,17 @@ public class SMCDPanel extends javax.swing.JPanel
         
     }//GEN-LAST:event_btnDetonateMousePressed
 
+    private void cmbSelInterceptorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cmbSelInterceptorActionPerformed
+
+       if(!bSeparateWindow && mParent != null)
+       {
+            JComboBox dropdown = (JComboBox) evt.getSource();
+            mParent.ChangeIOverviewSel((String)dropdown.getSelectedItem());
+       }
+
+
+    }//GEN-LAST:event_cmbSelInterceptorActionPerformed
+
     
     public void hideExpandControls()
     {
@@ -357,13 +536,6 @@ public class SMCDPanel extends javax.swing.JPanel
         bSeparateWindow = true;
     }
     
-    public void setDisplayedInterceptor(String pID)
-    {
-        
-    }
-    
-  
-
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDestruct;

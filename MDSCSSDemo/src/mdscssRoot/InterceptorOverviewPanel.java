@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.RowSorter;
 import javax.swing.SortOrder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
@@ -18,7 +20,7 @@ import mdscssModel.Interceptor;
 
 public class InterceptorOverviewPanel extends javax.swing.JPanel 
 {
-
+    MMODFrame mParent;
     /***************************************************************************
      * InterceptorOverviewPanel
      * 
@@ -28,6 +30,8 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
     {
         initComponents();
         
+        mParent = null;
+        
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
         
         DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
@@ -36,10 +40,21 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         tblInterceptors.getColumnModel().getColumn(1).setCellRenderer(cellRend);
         tblInterceptors.getColumnModel().getColumn(2).setCellRenderer(cellRend);
         tblInterceptors.getColumnModel().getColumn(3).setCellRenderer(cellRend);
+        
+        //todo:: move to initcomponents when no longer using gui builder
+        tblInterceptors.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
+            public void valueChanged(ListSelectionEvent evt){
+                tblInterceptorsRowSelected(evt);
+            }
+        });
+        
     }
     
     public void resetView()
     {
+        
+        System.out.println("IN RESET");
+        
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         int tmp = model.getRowCount();
         
@@ -48,7 +63,6 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
             model.removeRow(0);
         }
 
-        //tblInterceptors.setVisible(false);
     }
     
     public void handleInitialUpdate()
@@ -116,17 +130,34 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         }
     }
     
-    public void sortByID()
+    
+    
+    public void handleSelChange(String pID)
     {
-        TableRowSorter<TableModel> sorter = new TableRowSorter<TableModel>(tblInterceptors.getModel());
-        tblInterceptors.setRowSorter(sorter);
+        DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         
-        
-        ArrayList<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
-
-        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-        sorter.setSortKeys(sortKeys);
-        
+        for(int i = 0; i < model.getRowCount(); i++)
+        {
+            if (model.getValueAt(i, 0).equals(pID))
+            {
+                tblInterceptors.changeSelection(i, 0, false, false);
+            }
+        }
+    }
+    
+    private void tblInterceptorsRowSelected(ListSelectionEvent evt)
+    {
+        if(evt.getValueIsAdjusting() && mParent != null)
+        {
+            int index = tblInterceptors.getSelectedRow();
+            String id = (String)(tblInterceptors.getModel().getValueAt(index, 0));
+            mParent.ChangeSMCDSel(id);
+        }
+    }
+    
+    public void setParent(MMODFrame pParent)
+    {
+        mParent = pParent;
     }
 
     /***************************************************************************
