@@ -32,6 +32,14 @@ public class MDSCSSController
     
     private int watchdogTime;
     
+    private controlMode operationalState;
+    public enum controlMode
+    { 
+        Manual,
+        Automatic,
+        Forgiving
+    }
+    
     /***************************************************************************
      * MDSCSSController
      * 
@@ -59,9 +67,53 @@ public class MDSCSSController
     {
         mModel = pModel;
         mView = pView;
-        
+        operationalState = controlMode.Manual;
         controller = new Thread(new ControlThread(this));
         controller.start();
+    }
+    
+    
+    public void handleOperationalControl()
+    {
+        switch(operationalState)
+        {
+            case Manual:
+                ArrayList<String> interceptors = mModel.getInterceptorList();
+                Interceptor tmpI;
+                
+                for(int i = 0; i < interceptors.size(); i++)
+                {
+                    tmpI = mModel.getInterceptor(interceptors.get(i));
+                    
+                    if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT)
+                    {
+                        //todo:: interceptorcontrolmagic
+                        tmpI.setThrustValue(0, 0, tmpI.maxThrustZ);
+                        cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
+                    }
+                    
+                }
+                
+                
+                
+                break;
+            case Automatic:
+                break;
+            case Forgiving:
+                break;
+        }
+    }
+    
+    
+    
+    public void setControlMode(controlMode pMode)
+    {
+        operationalState = pMode;
+    }
+    
+    public controlMode getControlMode()
+    {
+        return operationalState;
     }
     
     public void finalize()
@@ -197,12 +249,19 @@ public class MDSCSSController
         {
             tmpInt = mModel.getInterceptor(missiles.get(i));
             
+            tmpInt.setState(cmdMcssgetState(tmpInt.getIdentifier()));
+            
             if(tmpInt.getState() != Interceptor.interceptorState.DETONATED)
             {
-                tmpInt.setState(cmdMcssgetState(tmpInt.getIdentifier()));
                 //todo:: possible optimization, init position at startup, then only update if in flight 
                 pos = cmdTssTrackInterceptor(tmpInt.getIdentifier());
+                //todo :: bug here if we get a non-req id (ie 3 digit ID this is null, and all of our representations are ....
+                if(pos != null)
                 tmpInt.setPosition(pos[0], pos[1], pos[2]);
+            }
+            else if(!tmpInt.getAssignedThreat().equals("[UNASSIGNED]"))
+            {               
+                tmpInt.setAssignedThreat("[UNASSIGNED]");
             }
         }
         
@@ -214,7 +273,43 @@ public class MDSCSSController
             
             //todo:: figure out what happens when a threat is destoryed ... is it removed from the list? does a get on position fail?
             pos = cmdTssTrackThreat(tmpThreat.getIdentifier());
-            tmpThreat.setPosition(pos[0], pos[1], pos[2]);
+            
+            if(pos != null)
+            {
+                tmpThreat.setPosition(pos[0], pos[1], pos[2]);
+            }
+            else
+            {                
+                ArrayList<String> threats = cmdTssGetThreatList();
+                
+                if(!threats.contains(tmpThreat.getIdentifier()))
+                {
+                    System.out.println(tmpThreat.getIdentifier() + " is no longer in the list TSS");
+                    
+                    //if theres an interceptor in flight after this threat, send a destruct, if theres one in preflight, unassign
+                    ArrayList<String> interceptors = mModel.getInterceptorList();
+                    for(int j = 0; j < interceptors.size(); j++)
+                    {
+                        tmpInt = mModel.getInterceptor(interceptors.get(j));
+                        if(tmpInt.getAssignedThreat().equals(tmpThreat.getIdentifier()))
+                        {
+                            if(tmpInt.getState() == Interceptor.interceptorState.IN_FLIGHT)
+                            {
+                                cmdMcssDestruct(tmpInt.getIdentifier());
+                            }
+                            else
+                            {
+                                tmpInt.setAssignedThreat("[UNASSIGNED]");
+                            }
+                        }
+                    }
+                    
+                    
+                    mView.handleThreatDestruction(tmpThreat.getIdentifier());
+                    mModel.removeThreat(tmpThreat.getIdentifier());
+                }
+                
+            }
         }
         
         
@@ -223,11 +318,15 @@ public class MDSCSSController
     public void handleWatchdogTimer()
     {
         ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
         
         watchdogTime++; 
         
         for(int i = 0; i < interceptors.size(); i++)
         {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            
+            if(tmpI.getState() != Interceptor.interceptorState.DETONATED)
             cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
         }
     }
@@ -367,7 +466,7 @@ public class MDSCSSController
     {
         DataOutputStream buffOut;
         DataInputStream buffIn;
-        ArrayList<String> result = null;
+        ArrayList<String> result = new ArrayList();
         
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
@@ -534,7 +633,7 @@ public class MDSCSSController
                 header[4] = (byte)48;    
                 
                 // set the thrust time values all to 1 second
-                header[8] = header[12] = header[16] = header[20] = header[24] = header[28] = 0x1;
+                header[8] = header[12] = header[16] = header[20] = header[24] = header[28] = 0x2;
                 
                 if(pwrX > 0)
                 {

@@ -21,7 +21,7 @@ public class SMCDWrapper extends javax.swing.JFrame
      * 
      * Constructor
      **************************************************************************/
-    public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel) 
+    public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel, MMODFrame pMMOD) 
     {
         this.setTitle("SMCD -- " + pID);
         javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
@@ -30,13 +30,18 @@ public class SMCDWrapper extends javax.swing.JFrame
         
         initComponents();
         
-        sMCDPanel1.initialize(pModel, null);
+        sMCDPanel1.initialize(pModel, pMMOD);
         
         sMCDPanel1.handleInitialUpdate();
-       // sMCDPanel1.handleSelChange(pID);
+        sMCDPanel1.handleSelChange(pID);
         sMCDPanel1.hideExpandControls();
         mSelf = this;
         
+    }
+    
+    public void update()
+    {
+        sMCDPanel1.updatePanelContents();
     }
     
     public void forceClose()

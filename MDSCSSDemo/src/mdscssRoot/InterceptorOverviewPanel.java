@@ -71,20 +71,23 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         
     }
     
-    public void addEntry(String pID, Interceptor.interceptorState pState, String pThreat, int[] pPos)
+    public void addEntry(String pID, Interceptor.interceptorState pState, String pThreat, int[] pPos, boolean isDisabled)
     {
         String[] rowData = new String[4];
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         
         switch (pState) {
             case DETONATED:
-                rowData[1] = "Detonated";
+                rowData[1] = "Destroyed";
                 break;
             case PRE_FLIGHT:
-                rowData[1] = "Pre-Flight";
+                if(isDisabled)
+                    rowData[1] = "Disabled";
+                else
+                    rowData[1] = "Ready";                  
                 break;
             case IN_FLIGHT:
-                rowData[1] = "In-Flight";
+                rowData[1] = "Launched";
                 break;
             default:
                 rowData[1] = "[UNKNOWN]";
@@ -98,9 +101,10 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         model.addRow(rowData);
     }
     
-    public void updateEntry(String pID, Interceptor.interceptorState pState, String assignment, int[] pPos)
+    public void updateEntry(String pID, Interceptor.interceptorState pState, String assignment, int[] pPos, boolean isDisabled)
     {
         String entryID = "";
+        boolean oneLaunched = false;
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         
         for(int i = 0; i < model.getRowCount(); i++)
@@ -109,24 +113,40 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
             if(entryID.equals(pID))
             {
                 switch (pState) {
-            case DETONATED:
-                model.setValueAt("Detonated", i, 1);
-                break;
-            case PRE_FLIGHT:
-                model.setValueAt("Pre-Flight", i, 1);
-                break;
-            case IN_FLIGHT:
-                model.setValueAt("In-Flight", i, 1);
-                break;
-            default:
-                model.setValueAt("[UNKNOWN]", i, 1);
-                break;
-        }
+                    case DETONATED:
+                        model.setValueAt("Destroyed", i, 1);
+                        break;
+                    case PRE_FLIGHT:
+                        if(isDisabled)
+                            model.setValueAt("Disabled", i, 1);
+                        else
+                            model.setValueAt("Ready", i, 1);
+                        break;
+                    case IN_FLIGHT:
+                        model.setValueAt("Launched", i, 1);
+                        break;
+                    default:
+                        model.setValueAt("[UNKNOWN]", i, 1);
+                        break;
+                }
                 
                 model.setValueAt(assignment, i, 2);
                 model.setValueAt( "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]", i, 3);
-                break;
             }
+            
+            if (model.getValueAt(i, 1).equals("Launched"))
+            {
+                oneLaunched = true;
+            }
+        }
+        
+        if(oneLaunched)
+        {
+            btnDestruct.setEnabled(true);
+        }
+        else
+        {
+            btnDestruct.setEnabled(false);
         }
     }
     
@@ -173,6 +193,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         lblTable = new javax.swing.JLabel();
         tableScrollPane = new javax.swing.JScrollPane();
         tblInterceptors = new javax.swing.JTable();
+        btnDestruct = new javax.swing.JButton();
 
         setBackground(new java.awt.Color(27, 161, 226));
         setMaximumSize(new java.awt.Dimension(622, 299));
@@ -219,6 +240,16 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         tblInterceptors.getTableHeader().setReorderingAllowed(false);
         tableScrollPane.setViewportView(tblInterceptors);
 
+        btnDestruct.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnDestruct.setText("Emergency Destruct");
+        btnDestruct.setEnabled(false);
+        btnDestruct.setPreferredSize(new java.awt.Dimension(127, 30));
+        btnDestruct.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDestructActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -229,22 +260,39 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
                     .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 602, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTable)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(lblTable)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 242, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(lblTable)
+                    .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    private void btnDestructActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDestructActionPerformed
+        DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
+        
+        for(int i = 0; i < model.getRowCount(); i++)
+        {
+            if (model.getValueAt(i, 1).equals("Launched"))
+            {
+                mParent.forwardDestruct((String)model.getValueAt(i, 0));
+            }
+        }
+
+    }//GEN-LAST:event_btnDestructActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnDestruct;
     private javax.swing.JLabel lblTable;
     private javax.swing.JScrollPane tableScrollPane;
     private javax.swing.JTable tblInterceptors;

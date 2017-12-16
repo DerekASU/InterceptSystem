@@ -21,6 +21,7 @@ public class ControlThread implements Runnable
         operational
     }
     
+    
     /***************************************************************************
      * ControlThread
      * 
@@ -71,12 +72,12 @@ public class ControlThread implements Runnable
                        threadState = controlState.operational;
                        break;
                    case operational: 
-                       //ping all watchdogs
+                       //ping all watchdogs, todo:: timer for if > 5 status is red, and all things would detonate? or should that be in the catch in the controller commands
                        controlUtility.handleWatchdogTimer();
                        
                        controlUtility.updateModel();
                        
-
+                       controlUtility.handleOperationalControl();
                        
                        elapsedTime = System.currentTimeMillis() - entryTime;
                         if(elapsedTime < 500)
@@ -99,5 +100,5 @@ public class ControlThread implements Runnable
             bRunning = false;
         }
     }
-    
+
 }

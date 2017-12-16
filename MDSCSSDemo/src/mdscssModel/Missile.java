@@ -21,7 +21,7 @@ public class Missile
     protected int posX, posY, posZ;
     protected int thrustX, thrustY, thrustZ;
     protected double fricX, fricY, fricZ;
-    protected int maxThrustX, maxThrustY, maxThrustZ;
+    public int maxThrustX, maxThrustY, maxThrustZ;
     
     /***************************************************************************
      * Missile

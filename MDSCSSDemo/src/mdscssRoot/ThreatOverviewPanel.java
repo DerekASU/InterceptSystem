@@ -73,10 +73,28 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         model.addRow(rowData);
     }
     
+
+    public void removeEntry(String pID)
+    {
+        String entryID = "";
+        DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
+        
+        for(int index = 0; index < model.getRowCount(); index++)
+        {
+            entryID = (String)model.getValueAt(index, 0);
+            if(entryID.equals(pID))
+            {
+                model.removeRow(index);
+            }
+        }
+    }
+    
     public void updateEntry(String pID, String assignedI, int[] pPos)
     {
         String entryID = "";
         int index = 0;
+        int tmp;
+        boolean resort = false;
         DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
         
         for(index = 0; index < model.getRowCount(); index++)
@@ -84,36 +102,48 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
             entryID = (String)model.getValueAt(index, 0);
             if(entryID.equals(pID))
             {
-                model.setValueAt(assignedI, index, 1);
+                if(!assignedI.equals((String)model.getValueAt(index, 1)))
+                {
+                    model.setValueAt(assignedI, index, 1);
+                    resort = true;
+                }
+                
+                
                 model.setValueAt( "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]", index, 2);
                 break;
             }
         }
         
-        //todo:: do we need to do this every time? or does the sorter handle it? try relocating once we can re-assign, it will optimize
+
+        if(resort)
         sortThreats();
         
-        tblThreats.clearSelection();
+        
         
         for(index = 0; index < model.getRowCount(); index++)
         {
-        
+            tmp = tblThreats.convertRowIndexToView(index);
+            
             if(model.getValueAt(index, 1).equals("[UNASSIGNED]"))
                 {
-                    //todo:: change row color red; will need to create our own cell renderer class and apply it.  
-                    tblThreats.addRowSelectionInterval(index,index);
+                    tblThreats.addRowSelectionInterval(tmp,tmp);
                 }
+            else
+            {
+                tblThreats.removeRowSelectionInterval(tmp, tmp);
+                
+            }
         }
     }
     
     public void sortThreats()
     {
         
-        
+        sorter.setModel(tblThreats.getModel());
         
         ArrayList<RowSorter.SortKey> sortKeys = new ArrayList<>(25);
 
-        sortKeys.add(new RowSorter.SortKey(1, SortOrder.DESCENDING));
+        sortKeys.add(new RowSorter.SortKey(1, SortOrder.ASCENDING));
         sorter.setSortKeys(sortKeys);
         
         
@@ -189,7 +219,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTitle)
                         .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(tableScrollPane))
+                    .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 557, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -198,7 +228,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                 .addContainerGap()
                 .addComponent(lblTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents

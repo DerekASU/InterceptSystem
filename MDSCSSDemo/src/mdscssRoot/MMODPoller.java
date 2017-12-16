@@ -38,9 +38,9 @@ public class MMODPoller implements Runnable
                 mView.periodicUpdate();
                        
                 elapsedTime = System.currentTimeMillis() - entryTime;
-                if(elapsedTime < 1000)
+                if(elapsedTime < 900)
                 {
-                    Thread.sleep(500 - elapsedTime);
+                    Thread.sleep(900 - elapsedTime);
                 }
                 else if(elapsedTime > 1500)
                 {

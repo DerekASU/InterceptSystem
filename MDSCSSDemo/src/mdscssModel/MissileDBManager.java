@@ -62,7 +62,8 @@ public class MissileDBManager
     {       
        Missile tmp = activeMissiles.get(pId);
        
-       if(tmp == null)
+       
+       if(tmp != null)
        {
            return true;
        }
@@ -111,9 +112,26 @@ public class MissileDBManager
         return res;
     }
     
-    public ArrayList<String> getThreatUnassignedThreats()
+    public ArrayList<String> getAssignedThreats()
     {
-    return null;
+        Interceptor tmp = null;
+        String missileID = "";
+        ArrayList<String> res = new ArrayList();
+        
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
+        {
+            missileID = (String)it.next().getKey();
+
+            if(activeMissiles.get(missileID).getType() == Missile.MissileType.INTERCEPTOR)
+            {
+                tmp = (Interceptor)activeMissiles.get(missileID);
+                
+                if(!tmp.getAssignedThreat().equals("[UNASSIGNED]"))
+                    res.add(tmp.getAssignedThreat());
+            }
+        }
+        
+        return res;
     }
     
     public ArrayList<String> getInterceptorList()
@@ -135,6 +153,16 @@ public class MissileDBManager
         }
         
         return res;
+    }
+    
+    public void removeThreat(String pId)
+    {
+        Missile tmp = activeMissiles.get(pId);
+        
+        if(tmp != null && tmp.getType() == Missile.MissileType.THREAT)
+        {
+            activeMissiles.remove(pId);
+        }
     }
     
     public void updateDatabase(ArrayList<String> idList)

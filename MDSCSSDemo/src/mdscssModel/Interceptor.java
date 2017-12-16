@@ -5,6 +5,8 @@
  ******************************************************************************/
 package mdscssModel;
 
+import java.sql.Timestamp;
+
 public class Interceptor extends Missile
 {
     //todo:: add controler sw version string as an attribute to this and the view, remove the destructed state?
@@ -26,6 +28,8 @@ public class Interceptor extends Missile
     protected boolean bDetonationEnabled;
     protected boolean bDetonateOverride;
     protected boolean bAssignmentOverride;
+    
+    protected Timestamp timestamp;
     
     /***************************************************************************
      * Interceptor
@@ -51,6 +55,8 @@ public class Interceptor extends Missile
         state = interceptorState.PRE_FLIGHT;
         assignedThreat = pAssigned;
         detonationRange = pDetRng;
+        
+        timestamp = null;
     }
     
     /***************************************************************************
@@ -141,6 +147,11 @@ public class Interceptor extends Missile
         return bAssignmentOverride;
     }
     
+    public Timestamp getTimestamp()
+    {
+        return timestamp;
+    }
+    
     /***************************************************************************
      * setState
      * 
@@ -214,6 +225,11 @@ public class Interceptor extends Missile
     public void setAssignmentOverriden(boolean pOverride)
     {
         bAssignmentOverride = pOverride;
+    }
+    
+    public void setTimestamp(Timestamp pTime)
+    {
+        timestamp = pTime;
     }
 }
 

@@ -6,10 +6,14 @@
 package mdscssRoot;
 //todo:: add a destructall
 import java.awt.Color;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import javax.swing.JComboBox;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
+import mdscssControl.MDSCSSController.controlMode;
 
 public class MMODFrame extends javax.swing.JFrame 
 {
@@ -28,6 +32,15 @@ public class MMODFrame extends javax.swing.JFrame
          //todo:: add a polling thread to the database? might not be necessary, only if latency becomes an issue
         setIconImage(icon.getImage());
         initComponents();
+        
+        cmbSysMode.addItemListener(new ItemListener(){
+            @Override
+            public void itemStateChanged(ItemEvent ie) {
+                if(ie.getStateChange() == ItemEvent.SELECTED){
+                  handleSysModeSelection(ie);
+               } 
+            }
+        });
         
         resetView();
     }
@@ -101,7 +114,7 @@ public class MMODFrame extends javax.swing.JFrame
             tmpI = mModel.getInterceptor(Missiles.get(i));
             
             interceptorOverviewPanel1.addEntry(tmpI.getIdentifier(),
-                    tmpI.getState(), tmpI.getAssignedThreat(), tmpI.getPositionVector());
+                    tmpI.getState(), tmpI.getAssignedThreat(), tmpI.getPositionVector(), tmpI.isDisabled());
             
         }
         
@@ -125,6 +138,12 @@ public class MMODFrame extends javax.swing.JFrame
         
         poller = new Thread(new MMODPoller(this));
         poller.start();
+        
+    }
+    
+    public void handleThreatDestruction(String pID)
+    {
+        threatOverviewPanel1.removeEntry(pID);
         
     }
     
@@ -165,6 +184,13 @@ public class MMODFrame extends javax.swing.JFrame
             threatOverviewPanel1.updateEntry(tmp.getIdentifier(), assignmentLabel, tmp.getPositionVector());
         }
         
+        if(mController.getControlMode() == controlMode.Manual)
+            cmbSysMode.setSelectedIndex(0);
+        else if(mController.getControlMode() == controlMode.Automatic)
+            cmbSysMode.setSelectedIndex(1);
+        else
+            cmbSysMode.setSelectedIndex(2);
+        
     }
     
     private void updateInterceptors()
@@ -179,7 +205,7 @@ public class MMODFrame extends javax.swing.JFrame
             tmpI = mModel.getInterceptor(Interceptors.get(i));
             
             interceptorOverviewPanel1.updateEntry(tmpI.getIdentifier(), tmpI.getState(), 
-                    tmpI.getAssignedThreat(), tmpI.getPositionVector());
+                    tmpI.getAssignedThreat(), tmpI.getPositionVector(), tmpI.isDisabled());
         }
         
     }
@@ -207,6 +233,24 @@ public class MMODFrame extends javax.swing.JFrame
         interceptorOverviewPanel1.resetView();
     }
 
+    public void forwardLaunchCmd(String pID)
+    {
+        mController.cmdMcssLaunch(pID);
+    }
+    
+    public void forwardDetonate(String pID)
+    {
+        mController.cmdSmssDetEnable(pID);
+        mController.cmdMcssDetonate(pID);
+    }
+    
+    public void forwardDestruct(String pID)
+    {
+        mController.cmdMcssDestruct(pID);
+    }
+    
+    
+    
     /***************************************************************************
      * initComponents
      * 
@@ -395,6 +439,18 @@ public class MMODFrame extends javax.swing.JFrame
         mController.finalize();
     }//GEN-LAST:event_formWindowClosing
 
+    private void handleSysModeSelection(ItemEvent evt)
+    {
+        JComboBox dropdown = (JComboBox) evt.getSource();
+          
+        if(dropdown.getSelectedIndex() == 0)
+            mController.setControlMode(controlMode.Manual);
+        else if(dropdown.getSelectedIndex() == 1)
+            mController.setControlMode(controlMode.Automatic);
+        else
+            mController.setControlMode(controlMode.Forgiving);
+    }
+    
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField MCSSStatusIndicator;
