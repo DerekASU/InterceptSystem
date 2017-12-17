@@ -285,6 +285,7 @@ public class SMCDPanel extends javax.swing.JPanel
         {
             txtThreatDistance.setText("[NA]");
             txtThreatPosition.setText("[NA]");
+            txtThreatDistance.setForeground(java.awt.Color.white);
         }
         else
         {
@@ -296,9 +297,11 @@ public class SMCDPanel extends javax.swing.JPanel
                 txtThreatPosition.setText( "[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
                 
                 double distance = Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2);
-                txtThreatDistance.setText(rounder.format(Math.sqrt(distance)) + " m");
+                distance = Math.sqrt(distance);
+                txtThreatDistance.setText(rounder.format(distance) + " m");
                 
-                if(tmp.getDetonationRange() >= distance)
+                
+                if(distance <= tmp.getDetonationRange())
                 {
                     txtThreatDistance.setForeground(java.awt.Color.green);
                 }

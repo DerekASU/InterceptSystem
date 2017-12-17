@@ -273,4 +273,24 @@ public class Missile
         }
     }
     
+    public void setThrustX(int pThrustX)
+    {
+        thrustX = pThrustX;
+    }
+    
+    public void setThrustY(int pThrustY)
+    {
+        thrustX = pThrustY;
+    }
+    
+    public void setThrustZ(int pThrustZ)
+    {
+        thrustX = pThrustZ;
+    }
+    
+    public char getMissileClass()
+    {
+        return id.charAt(0);
+    }
+    
 }

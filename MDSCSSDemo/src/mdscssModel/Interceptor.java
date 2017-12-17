@@ -31,6 +31,8 @@ public class Interceptor extends Missile
     
     protected Timestamp timestamp;
     
+    protected double thrust_d, thrust_i;
+    
     /***************************************************************************
      * Interceptor
      * 
@@ -57,6 +59,8 @@ public class Interceptor extends Missile
         detonationRange = pDetRng;
         
         timestamp = null;
+        
+        thrust_d =thrust_i = 0;
     }
     
     /***************************************************************************
@@ -230,6 +234,25 @@ public class Interceptor extends Missile
     public void setTimestamp(Timestamp pTime)
     {
         timestamp = pTime;
+    }
+    
+    
+    public double getCtrlThrustD()
+    {
+        return thrust_d;
+    }
+    public double getCtrlThrustI()
+    {
+        return thrust_i;
+    }
+    
+    public void setCtrlThrustD(double pThrust)
+    {
+        thrust_d = pThrust;
+    }
+    public void setCtrlThrustI(double pThrust)
+    {
+        thrust_i = pThrust;
     }
 }
 

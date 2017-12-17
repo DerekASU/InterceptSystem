@@ -24,6 +24,7 @@ public class MDSCSSController
     private static final int TSS_SOCKET = 27017;
     private static final int SOCKET_TIMEOUT_MS = 2000;
     
+    private InterceptorController inCtrl;
     private MissileDBManager mModel;
     private MMODFrame mView;
     private Thread controller;
@@ -49,6 +50,7 @@ public class MDSCSSController
     {
         mModel = null;
         mView = null;
+        inCtrl = null;
         
         watchdogTime = 0;
     }
@@ -68,6 +70,7 @@ public class MDSCSSController
         mModel = pModel;
         mView = pView;
         operationalState = controlMode.Manual;
+        inCtrl = new InterceptorController();
         controller = new Thread(new ControlThread(this));
         controller.start();
     }
@@ -80,6 +83,7 @@ public class MDSCSSController
             case Manual:
                 ArrayList<String> interceptors = mModel.getInterceptorList();
                 Interceptor tmpI;
+                Missile tmpT;
                 
                 for(int i = 0; i < interceptors.size(); i++)
                 {
@@ -87,9 +91,18 @@ public class MDSCSSController
                     
                     if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT)
                     {
-                        //todo:: interceptorcontrolmagic
-                        tmpI.setThrustValue(0, 0, tmpI.maxThrustZ);
-                        cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
+                        tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+                        
+                        if(tmpT != null)
+                        {
+                            inCtrl.trackMissilePair(tmpI, tmpT);
+                            
+                            cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
+                        }
+                        else
+                        {
+                            System.out.println("manual control, tracking threat thats not assigned ERROR");
+                        }
                     }
                     
                 }
@@ -633,7 +646,7 @@ public class MDSCSSController
                 header[4] = (byte)48;    
                 
                 // set the thrust time values all to 1 second
-                header[8] = header[12] = header[16] = header[20] = header[24] = header[28] = 0x2;
+                header[8] = header[12] = header[16] = header[20] = header[24] = header[28] = 0x6;
                 
                 if(pwrX > 0)
                 {

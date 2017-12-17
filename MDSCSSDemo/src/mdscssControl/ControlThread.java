@@ -44,6 +44,7 @@ public class ControlThread implements Runnable
         bRunning = true;
         long entryTime = 0;
         long elapsedTime = 0;
+
                 
         System.out.println("ControlThread: Thread Started");
         
@@ -77,7 +78,10 @@ public class ControlThread implements Runnable
                        
                        controlUtility.updateModel();
                        
-                       controlUtility.handleOperationalControl();
+
+                            controlUtility.handleOperationalControl();
+
+
                        
                        elapsedTime = System.currentTimeMillis() - entryTime;
                         if(elapsedTime < 500)
