@@ -31,7 +31,7 @@ public class Interceptor extends Missile
     
     protected Timestamp timestamp;
     
-    protected double thrust_d, thrust_i;
+    protected double thrust_dx, thrust_ix, thrust_dy, thrust_iy, thrust_dz, thrust_iz;
     
     /***************************************************************************
      * Interceptor
@@ -60,7 +60,7 @@ public class Interceptor extends Missile
         
         timestamp = null;
         
-        thrust_d =thrust_i = 0;
+        thrust_dx= thrust_ix= thrust_dy= thrust_iy= thrust_dz= thrust_iz = 0;
     }
     
     /***************************************************************************
@@ -237,22 +237,58 @@ public class Interceptor extends Missile
     }
     
     
-    public double getCtrlThrustD()
+    public double getCtrlThrustDX()
     {
-        return thrust_d;
+        return thrust_dx;
     }
-    public double getCtrlThrustI()
+    public double getCtrlThrustIX()
     {
-        return thrust_i;
+        return thrust_ix;
     }
     
-    public void setCtrlThrustD(double pThrust)
+    public void setCtrlThrustDX(double pThrust)
     {
-        thrust_d = pThrust;
+        thrust_dx = pThrust;
     }
-    public void setCtrlThrustI(double pThrust)
+    public void setCtrlThrustIX(double pThrust)
     {
-        thrust_i = pThrust;
+        thrust_ix = pThrust;
+    }
+    
+    public double getCtrlThrustDY()
+    {
+        return thrust_dy;
+    }
+    public double getCtrlThrustIY()
+    {
+        return thrust_iy;
+    }
+    
+    public void setCtrlThrustDY(double pThrust)
+    {
+        thrust_dy = pThrust;
+    }
+    public void setCtrlThrustIY(double pThrust)
+    {
+        thrust_iy = pThrust;
+    }
+    
+    public double getCtrlThrustDZ()
+    {
+        return thrust_dz;
+    }
+    public double getCtrlThrustIZ()
+    {
+        return thrust_iz;
+    }
+    
+    public void setCtrlThrustDZ(double pThrust)
+    {
+        thrust_dz = pThrust;
+    }
+    public void setCtrlThrustIZ(double pThrust)
+    {
+        thrust_iz = pThrust;
     }
 }
 

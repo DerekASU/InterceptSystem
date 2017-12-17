@@ -280,12 +280,12 @@ public class Missile
     
     public void setThrustY(int pThrustY)
     {
-        thrustX = pThrustY;
+        thrustY = pThrustY;
     }
     
     public void setThrustZ(int pThrustZ)
     {
-        thrustX = pThrustZ;
+        thrustZ = pThrustZ;
     }
     
     public char getMissileClass()

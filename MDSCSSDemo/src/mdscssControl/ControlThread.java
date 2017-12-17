@@ -44,6 +44,7 @@ public class ControlThread implements Runnable
         bRunning = true;
         long entryTime = 0;
         long elapsedTime = 0;
+        boolean everyother = false;
 
                 
         System.out.println("ControlThread: Thread Started");
@@ -78,8 +79,13 @@ public class ControlThread implements Runnable
                        
                        controlUtility.updateModel();
                        
-
+                        if(everyother)
+                        {
                             controlUtility.handleOperationalControl();
+                            everyother = false;
+                        }
+                        else
+                            everyother = true;
 
 
                        
@@ -88,7 +94,7 @@ public class ControlThread implements Runnable
                         {
                              Thread.sleep(500 - elapsedTime);
                         }
-                        else if(elapsedTime > 1000)
+                        else if(elapsedTime > 500)
                         {
                             System.out.println("ControlThread -- Warning: latency time approaching 1 second");
                         }

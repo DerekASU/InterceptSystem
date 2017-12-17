@@ -17,7 +17,7 @@ public class InterceptorClassC extends Interceptor
     private static final double FRIC_COEFF_Y = 0.03;
     private static final double FRIC_COEFF_Z = 0.04;
     
-    private static final int DET_RANGE = 100;
+    private static final int DET_RANGE = 200;
     
     /***************************************************************************
      * InterceptorClassC
