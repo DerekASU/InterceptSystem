@@ -31,11 +31,23 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
         
+        ((DefaultTableCellRenderer)tblThreats.getTableHeader().getDefaultRenderer())
+    .setHorizontalAlignment(JLabel.CENTER);
+        
         DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
         cellRend.setHorizontalAlignment(JLabel.CENTER);
         tblThreats.getColumnModel().getColumn(0).setCellRenderer(cellRend);
         tblThreats.getColumnModel().getColumn(1).setCellRenderer(cellRend);
         tblThreats.getColumnModel().getColumn(2).setCellRenderer(cellRend);
+        
+        tblThreats.getColumnModel().getColumn(0).setMaxWidth(120);
+        tblThreats.getColumnModel().getColumn(0).setMinWidth(120);
+        tblThreats.getColumnModel().getColumn(0).setPreferredWidth(120);
+        
+        tblThreats.getColumnModel().getColumn(1).setMaxWidth(120);
+        tblThreats.getColumnModel().getColumn(1).setMinWidth(120);
+        tblThreats.getColumnModel().getColumn(1).setPreferredWidth(120);
+        
         
         sorter = new TableRowSorter<TableModel>(tblThreats.getModel());
         sorter.setSortable(0, false);
@@ -68,7 +80,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
 
         rowData[0] = pID;
         rowData[1] = "[UNASSIGNED]";
-        rowData[2] = "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]";
+        rowData[2] = "[" + pPos[0] + ", " + pPos[1] + ", " + pPos[2] + "]";
          
         model.addRow(rowData);
     }
@@ -109,7 +121,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                 }
                 
                 
-                model.setValueAt( "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]", index, 2);
+                model.setValueAt( "[" + pPos[0] + ", " + pPos[1] + ", " + pPos[2] + "] ", index, 2);
                 break;
             }
         }
@@ -187,7 +199,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
 
             },
             new String [] {
-                "Threat ID", "Threat State", "Position (m)"
+                "Threat ID", "Assignment State", "Position"
             }
         ) {
             boolean[] canEdit = new boolean [] {

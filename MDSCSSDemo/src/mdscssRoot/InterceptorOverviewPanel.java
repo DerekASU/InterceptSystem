@@ -34,12 +34,28 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
         
+        ((DefaultTableCellRenderer)tblInterceptors.getTableHeader().getDefaultRenderer())
+    .setHorizontalAlignment(JLabel.CENTER);
+        
         DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
         cellRend.setHorizontalAlignment(JLabel.CENTER);
         tblInterceptors.getColumnModel().getColumn(0).setCellRenderer(cellRend);
         tblInterceptors.getColumnModel().getColumn(1).setCellRenderer(cellRend);
         tblInterceptors.getColumnModel().getColumn(2).setCellRenderer(cellRend);
         tblInterceptors.getColumnModel().getColumn(3).setCellRenderer(cellRend);
+        
+        tblInterceptors.getColumnModel().getColumn(0).setMaxWidth(120);
+        tblInterceptors.getColumnModel().getColumn(0).setMinWidth(120);
+        tblInterceptors.getColumnModel().getColumn(0).setPreferredWidth(120);
+        
+        tblInterceptors.getColumnModel().getColumn(1).setMaxWidth(120);
+        tblInterceptors.getColumnModel().getColumn(1).setMinWidth(120);
+        tblInterceptors.getColumnModel().getColumn(1).setPreferredWidth(120);
+        
+        tblInterceptors.getColumnModel().getColumn(2).setMaxWidth(120);
+        tblInterceptors.getColumnModel().getColumn(2).setMinWidth(120);
+        tblInterceptors.getColumnModel().getColumn(2).setPreferredWidth(120);
+        
         
         //todo:: move to initcomponents when no longer using gui builder
         tblInterceptors.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
@@ -96,7 +112,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         
         rowData[0] = pID;
         rowData[2] = pThreat;
-        rowData[3] = "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]";
+        rowData[3] = "[" + pPos[0] + ", " + pPos[1] + ", " + pPos[2] + "]";
          
         model.addRow(rowData);
     }
@@ -131,7 +147,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
                 }
                 
                 model.setValueAt(assignment, i, 2);
-                model.setValueAt( "[" + pPos[0] + "," + pPos[1] + "," + pPos[2] + "]", i, 3);
+                model.setValueAt( "[" + pPos[0] + ", " + pPos[1] + ", " + pPos[2] + "]", i, 3);
             }
             
             if (model.getValueAt(i, 1).equals("Launched"))
@@ -218,7 +234,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
 
             },
             new String [] {
-                "Interceptor ID", "Interceptor State", "Assigned Threat", "Position (m)"
+                "Interceptor ID", "Interceptor State", "Assigned Threat", "Position"
             }
         ) {
             boolean[] canEdit = new boolean [] {

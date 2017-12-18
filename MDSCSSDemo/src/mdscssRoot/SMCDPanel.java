@@ -44,6 +44,9 @@ public class SMCDPanel extends javax.swing.JPanel
         ((JLabel)cmbAssignedThreat.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
         ((JLabel)cmbSelInterceptor.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
         
+        ((JLabel)cmbAssignmentMode.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        ((JLabel)cmbDetonateMode.getRenderer()).setHorizontalAlignment(SwingConstants.CENTER);
+        
         
         
         cmbAssignedThreat.addItemListener(new ItemListener(){
@@ -183,7 +186,8 @@ public class SMCDPanel extends javax.swing.JPanel
         Interceptor tmp = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
         ArrayList<String> threats = mModel.getThreatList();
         Missile tmpT;
-        
+        String posText = "";
+        DecimalFormat sciNote =  new DecimalFormat("0.##E0");
         
         
         if(tmp != null){
@@ -278,7 +282,25 @@ public class SMCDPanel extends javax.swing.JPanel
                 break;
         }
         
-        txtInterceptorPosition.setText( "[" + pos[0] + "," + pos[1] + "," + pos[2] + "] m");
+        posText = ("[" + pos[0] + "," + pos[1] + "," + pos[2] + "] m");
+        txtInterceptorPosition.setToolTipText(posText);
+        
+        if(pos[0] > 999999 || pos[0] < -99999)
+            posText = sciNote.format(pos[0]) +",";
+        else
+            posText = (pos[0] + ",");
+        
+        if(pos[1] > 999999 || pos[1] < -99999)
+            posText += sciNote.format(pos[1]) +",";
+        else
+            posText += (pos[1] + ",");
+        
+        if(pos[2] > 999999 || pos[2] < -99999)
+            posText += sciNote.format(pos[2]);
+        else
+            posText += pos[2];
+        
+        txtInterceptorPosition.setText(posText);
         cmbAssignedThreat.setSelectedItem(assignedThreat);
         
         if(assignedThreat.equals("[UNASSIGNED]"))
@@ -294,7 +316,26 @@ public class SMCDPanel extends javax.swing.JPanel
             {
                 DecimalFormat rounder = new DecimalFormat("0.000");
                 tPos = tmpT.getPositionVector();
-                txtThreatPosition.setText( "[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
+                
+                posText = ("[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
+        txtThreatPosition.setToolTipText(posText);
+        
+        if(tPos[0] > 999999 || tPos[0] < -99999)
+            posText = sciNote.format(tPos[0]) +",";
+        else
+            posText = (tPos[0] + ",");
+        
+        if(tPos[1] > 999999 || tPos[1] < -99999)
+            posText += sciNote.format(tPos[1]) +",";
+        else
+            posText += (tPos[1] + ",");
+        
+        if(tPos[2] > 999999 || tPos[2] < -99999)
+            posText += sciNote.format(tPos[2]);
+        else
+            posText += tPos[2];
+        
+        txtThreatPosition.setText(posText);
                 
                 double distance = Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2);
                 distance = Math.sqrt(distance);
