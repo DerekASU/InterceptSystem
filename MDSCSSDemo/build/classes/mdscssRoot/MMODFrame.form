@@ -45,11 +45,6 @@
               <EmptySpace min="35" pref="35" max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
                   <Group type="102" attributes="0">
-                      <Component id="interceptorOverviewPanel1" min="-2" pref="661" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="threatOverviewPanel1" min="-2" pref="538" max="-2" attributes="0"/>
-                  </Group>
-                  <Group type="102" attributes="0">
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
                               <Component id="TSSStatusIndicator" min="-2" max="-2" attributes="0"/>
@@ -79,10 +74,17 @@
                       <EmptySpace min="-2" pref="315" max="-2" attributes="0"/>
                       <Component id="lblMDSCSSVersion" min="-2" max="-2" attributes="0"/>
                   </Group>
-                  <Group type="102" alignment="0" attributes="0">
-                      <Component id="sMCDPanel1" min="-2" pref="339" max="-2" attributes="0"/>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="theatreMapPanel1" min="-2" pref="860" max="-2" attributes="0"/>
+                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
+                      <Group type="102" alignment="0" attributes="0">
+                          <Component id="sMCDPanel1" min="-2" pref="339" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="theatreMapPanel1" pref="0" max="32767" attributes="0"/>
+                      </Group>
+                      <Group type="102" attributes="0">
+                          <Component id="interceptorOverviewPanel1" min="-2" pref="661" max="-2" attributes="0"/>
+                          <EmptySpace max="-2" attributes="0"/>
+                          <Component id="threatOverviewPanel1" min="-2" pref="538" max="-2" attributes="0"/>
+                      </Group>
                   </Group>
               </Group>
               <EmptySpace pref="21" max="32767" attributes="0"/>
@@ -118,13 +120,15 @@
               </Group>
               <EmptySpace pref="17" max="32767" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="sMCDPanel1" alignment="1" min="-2" max="-2" attributes="0"/>
-                  <Component id="theatreMapPanel1" alignment="1" min="-2" max="-2" attributes="0"/>
-              </Group>
-              <EmptySpace max="-2" attributes="0"/>
-              <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="interceptorOverviewPanel1" min="-2" max="-2" attributes="0"/>
-                  <Component id="threatOverviewPanel1" min="-2" max="-2" attributes="0"/>
+                  <Group type="102" attributes="0">
+                      <Component id="sMCDPanel1" min="-2" max="-2" attributes="0"/>
+                      <EmptySpace max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Component id="interceptorOverviewPanel1" min="-2" max="-2" attributes="0"/>
+                          <Component id="threatOverviewPanel1" min="-2" max="-2" attributes="0"/>
+                      </Group>
+                  </Group>
+                  <Component id="theatreMapPanel1" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
           </Group>
@@ -292,20 +296,7 @@
     </Component>
     <Component class="mdscssRoot.ThreatOverviewPanel" name="threatOverviewPanel1">
     </Component>
-    <Container class="mdscssRoot.TheatreMapPanel" name="theatreMapPanel1">
-
-      <Layout>
-        <DimensionLayout dim="0">
-          <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
-          </Group>
-        </DimensionLayout>
-        <DimensionLayout dim="1">
-          <Group type="103" groupAlignment="0" attributes="0">
-              <EmptySpace min="0" pref="573" max="32767" attributes="0"/>
-          </Group>
-        </DimensionLayout>
-      </Layout>
-    </Container>
+    <Component class="mdscssRoot.TheatreMapPanel" name="theatreMapPanel1">
+    </Component>
   </SubComponents>
 </Form>
