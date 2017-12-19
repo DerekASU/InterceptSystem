@@ -10,7 +10,10 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 import mdscssControl.MDSCSSController.controlMode;
@@ -20,6 +23,7 @@ public class MMODFrame extends javax.swing.JFrame
     MissileDBManager mModel;
     MDSCSSController mController;
     private Thread poller = null;
+    
     
     /***************************************************************************
      * MMODFrame
@@ -87,7 +91,43 @@ public class MMODFrame extends javax.swing.JFrame
         MCSSStatusIndicator.setBackground(Color.ORANGE);
         SMSSStatusIndicator.setBackground(Color.ORANGE);
         
+        
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+            JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has detected a connection failure with\n" +
+                                                    "one or more MDS subsystems.  If the connection\n" +
+                                                    "cannot be re-established in 5 minutes, all interceptors\n" +
+                                                    "will be destructed.\n", 
+                                                    "Subsystem Connection Failure", 
+                                                    JOptionPane.WARNING_MESSAGE);
+        }
+    });
+  t.start();
+        
+        
+        
         resetView();
+    }
+    
+    public void handleCodeRed()
+    {
+        TSSStatusIndicator.setBackground(Color.RED);
+        MCSSStatusIndicator.setBackground(Color.RED);
+        SMSSStatusIndicator.setBackground(Color.RED);
+        
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+           JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has been unable to establis a connection\n" +
+                                            "with an MDS subsystem.  All interceptors have been \n" +
+                                            "destructed.\n", 
+                                            "Subsystem Failure", 
+                                            JOptionPane.ERROR_MESSAGE);
+        }
+    });
+  t.start();
+        
+        
+        
     }
     
     public void handleInitialUpdate()

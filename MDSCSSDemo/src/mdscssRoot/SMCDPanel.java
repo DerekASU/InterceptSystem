@@ -266,7 +266,7 @@ public class SMCDPanel extends javax.swing.JPanel
                 if(!tmp.isDisabled()){
                     cmbDetonateMode.setEnabled(true);
                     btnDestruct.setEnabled(true);
-                    btnDetonate.setEnabled(true);
+                    
                 }
                 cmbAssignmentMode.setEnabled(false);
                 cmbAssignedThreat.setEnabled(false);
@@ -345,10 +345,14 @@ public class SMCDPanel extends javax.swing.JPanel
                 if(distance <= tmp.getDetonationRange())
                 {
                     txtThreatDistance.setForeground(java.awt.Color.green);
+                    
+                    if(!tmp.isDisabled() && tmp.getState() == Interceptor.interceptorState.IN_FLIGHT)
+                    btnDetonate.setEnabled(true);
                 }
                 else
                 {
                     txtThreatDistance.setForeground(java.awt.Color.white);
+                    btnDetonate.setEnabled(false);
                 }
                 
             }

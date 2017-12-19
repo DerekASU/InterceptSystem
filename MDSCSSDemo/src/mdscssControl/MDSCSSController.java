@@ -7,6 +7,7 @@ package mdscssControl;
 
 import java.io.*;
 import java.net.*;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,7 +30,10 @@ public class MDSCSSController
     private MMODFrame mView;
     private Thread controller;
     
+    private boolean purgeWatchdog;
+    
     private Socket tssTCP, mcssTCP, smssTCP;
+    Timestamp failureTimer;
     
     private int watchdogTime;
     
@@ -52,6 +56,7 @@ public class MDSCSSController
         mView = null;
         inCtrl = null;
         
+        purgeWatchdog = false;
         watchdogTime = 0;
     }
     
@@ -72,6 +77,7 @@ public class MDSCSSController
         operationalState = controlMode.Manual;
         inCtrl = new InterceptorController();
         controller = new Thread(new ControlThread(this));
+        failureTimer = null;
         controller.start();
     }
     
@@ -150,33 +156,91 @@ public class MDSCSSController
     
     public boolean establishConnection()
     {
-        try
-        {
-            // Connect the sockets and update the GUI's status Indicators and versions
+        boolean tssPass = false, mcssPass = false, smssPass = false;
+
+        try{
             if(tssTCP == null)
             {
+                //123::REMOVE
+                //if(failureTimer == null){
                 tssTCP = new Socket("localhost", TSS_SOCKET);
                 tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                tssPass = true;//}
             }
+            else
+            {
+                tssPass = true;
+            }
+        }
+        catch(Exception ex)
+        {
+            System.out.println("MDSCSSController - establishConnection: TSS socket failure\n" + ex.getMessage() +"\n");
+        }
+        
+        try{
             if(mcssTCP == null)
             {
+                
                 mcssTCP = new Socket("localhost", MCSS_SOCKET);
                 mcssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                mcssPass = true;
             }
+            else
+            {
+                mcssPass = true;
+            }
+        }
+        catch(Exception ex)
+        {
+            System.out.println("MDSCSSController - establishConnection: MCSS socket failure\n" + ex.getMessage() +"\n");
+        }
+            
+        try{
             if(smssTCP == null)
             {
                 smssTCP = new Socket("localhost", SMSS_SOCKET);
                 smssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                smssPass = true;
             }
-
-           return true;
-        } 
+            else
+            {
+                smssPass = true;
+            }
+        }
         catch(Exception ex)
         {
-            System.out.println("MDSCSSController - establishConnection: socket failure\n" + ex.getMessage() +"\n");
+            System.out.println("MDSCSSController - establishConnection: SMSS socket failure\n" + ex.getMessage() +"\n");
+        }
+
+        if(smssPass && tssPass && mcssPass)
+        {
+            failureTimer = null;
+            return true;
+            
+        }
+        else
+        {
             return false;
         }
+
     }   
+    
+    public void checkForFailure()
+    {
+        Timestamp tmp = new Timestamp(System.currentTimeMillis());
+        int i;
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+
+        ///123 change to 300000
+        if(failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 10000)
+        {
+            mView.handleCodeRed();
+            
+            failureTimer = null;
+            
+            purgeWatchdog = true;
+        }
+    }
     
     public boolean establishStatus()
     {
@@ -240,12 +304,10 @@ public class MDSCSSController
         for(i = 0; i < interceptors.size(); i++)
         {
             cmdSmssDeactivateSafety(interceptors.get(i));
-        }
-        
-        for(i = 0; i < interceptors.size(); i++)
-        {
+            
             cmdSmssActivateSafety(interceptors.get(i));
         }
+        
         
     }
     
@@ -333,6 +395,9 @@ public class MDSCSSController
         ArrayList<String> interceptors = mModel.getInterceptorList();
         Interceptor tmpI;
         
+        if(purgeWatchdog)
+            return;
+        
         watchdogTime++; 
         
         for(int i = 0; i < interceptors.size(); i++)
@@ -352,9 +417,11 @@ public class MDSCSSController
         smssTCP = null;
         
         //TODO:: notify view
+        failureTimer = new Timestamp(System.currentTimeMillis());
         mView.handleSubsystemFailure();
                 
         controller = new Thread(new ControlThread(this));
+        purgeWatchdog = false;
         controller.start();
     }
     
