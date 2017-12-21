@@ -45,6 +45,7 @@ public class ControlThread implements Runnable
         long entryTime = 0;
         long elapsedTime = 0;
         boolean everyother = false;
+        boolean active = false;
 
                 
         System.out.println("ControlThread: Thread Started");
@@ -54,7 +55,7 @@ public class ControlThread implements Runnable
             while (bRunning) 
             {
                entryTime = System.currentTimeMillis();
-               controlUtility.handleWatchdogTimer();
+               
                
                switch(threadState)
                {
@@ -67,24 +68,27 @@ public class ControlThread implements Runnable
                        else
                        {
                            controlUtility.checkForFailure();
+
                        }
                            
+                       controlUtility.disableWatchdog();
+                       
+
 
                        controlUtility.establishStatus();
-
 
                        
                        break;
                    case activating: 
                        controlUtility.initializeModel();
                        controlUtility.initializeWatchdog();
+
                        threadState = controlState.operational;
                        
                        break;
                    case operational: 
-                       //ping all watchdogs, todo:: timer for if > 5 status is red, and all things would detonate? or should that be in the catch in the controller commands
-                       
-                       
+                     
+                       controlUtility.handleWatchdogTimer();
                        controlUtility.updateModel();
                        
                         if(everyother)

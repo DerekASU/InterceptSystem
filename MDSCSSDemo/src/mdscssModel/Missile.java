@@ -242,6 +242,7 @@ public class Missile
         posZ = paramZ;
     }
     
+    //todo:: doesn't work right, fix in cleanup phase
     /***************************************************************************
      * setThrustValue
      * 
@@ -251,7 +252,7 @@ public class Missile
      * @param paramY - thrust in the y direction
      * @param paramZ - thrust in the z direction
      **************************************************************************/
-    public void setThrustValue(int paramX, int paramY, int paramZ)
+   /* public void setThrustValue(int paramX, int paramY, int paramZ)
     {
         if(paramX > maxThrustX || paramY > maxThrustY || paramZ > maxThrustZ)
         {
@@ -271,7 +272,7 @@ public class Missile
             thrustY = paramY;
             thrustZ = paramZ;
         }
-    }
+    }*/
     
     public void setThrustX(int pThrustX)
     {

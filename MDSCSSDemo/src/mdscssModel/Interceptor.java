@@ -9,7 +9,7 @@ import java.sql.Timestamp;
 
 public class Interceptor extends Missile
 {
-    //todo:: add controler sw version string as an attribute to this and the view, remove the destructed state?
+
     // Enumerations
     public enum interceptorState
     {

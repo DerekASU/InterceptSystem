@@ -102,7 +102,6 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
             pInterceptor.setThrustX(final_thrust);
         }
         
@@ -154,7 +153,6 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
             pInterceptor.setThrustY(final_thrust);
         }
         
@@ -206,7 +204,7 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
+
             pInterceptor.setThrustZ(final_thrust);
         }
     }

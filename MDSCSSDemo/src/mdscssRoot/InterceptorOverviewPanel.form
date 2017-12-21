@@ -3,7 +3,7 @@
 <Form version="1.6" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JPanelFormInfo">
   <Properties>
     <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-      <Color blue="e2" green="a1" red="1b" type="rgb"/>
+      <Color blue="e2" green="a6" red="1b" type="rgb"/>
     </Property>
     <Property name="maximumSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
       <Dimension value="[622, 299]"/>
@@ -33,10 +33,10 @@
           <Group type="102" alignment="0" attributes="0">
               <EmptySpace max="-2" attributes="0"/>
               <Group type="103" groupAlignment="0" attributes="0">
-                  <Component id="tableScrollPane" pref="602" max="32767" attributes="0"/>
+                  <Component id="tableScrollPane" max="32767" attributes="0"/>
                   <Group type="102" attributes="0">
                       <Component id="lblTable" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace max="32767" attributes="0"/>
+                      <EmptySpace pref="247" max="32767" attributes="0"/>
                       <Component id="btnDestruct" min="-2" pref="155" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -53,7 +53,7 @@
                   <Component id="btnDestruct" alignment="3" min="-2" max="-2" attributes="0"/>
               </Group>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="tableScrollPane" min="-2" pref="241" max="-2" attributes="0"/>
+              <Component id="tableScrollPane" pref="235" max="32767" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
@@ -63,10 +63,7 @@
     <Component class="javax.swing.JLabel" name="lblTable">
       <Properties>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
-          <Font name="Segoe UI" size="18" style="0"/>
-        </Property>
-        <Property name="foreground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-          <Color blue="ff" green="ff" red="ff" type="rgb"/>
+          <Font name="Segoe UI Semibold" size="20" style="0"/>
         </Property>
         <Property name="text" type="java.lang.String" value="Interceptor Overview:"/>
       </Properties>
@@ -79,7 +76,7 @@
         <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
           <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
             <LineBorder>
-              <Color PropertyName="color" blue="e2" green="a1" red="1b" type="rgb"/>
+              <Color PropertyName="color" blue="e2" green="a6" red="1b" type="rgb"/>
             </LineBorder>
           </Border>
         </Property>
@@ -100,7 +97,7 @@
             <Property name="border" type="javax.swing.border.Border" editor="org.netbeans.modules.form.editors2.BorderEditor">
               <Border info="org.netbeans.modules.form.compat2.border.LineBorderInfo">
                 <LineBorder>
-                  <Color PropertyName="color" blue="e2" green="a1" red="1b" type="rgb"/>
+                  <Color PropertyName="color" blue="e2" green="a6" red="1b" type="rgb"/>
                 </LineBorder>
               </Border>
             </Property>
@@ -122,7 +119,7 @@
               <Color id="Default Cursor"/>
             </Property>
             <Property name="gridColor" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="e2" green="a1" red="1b" type="rgb"/>
+              <Color blue="e2" green="a6" red="1b" type="rgb"/>
             </Property>
             <Property name="intercellSpacing" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
               <Dimension value="[5, 15]"/>
@@ -130,7 +127,10 @@
             <Property name="opaque" type="boolean" value="false"/>
             <Property name="rowHeight" type="int" value="45"/>
             <Property name="selectionBackground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
-              <Color blue="e2" green="a1" red="1b" type="rgb"/>
+              <Color blue="e2" green="a6" red="1b" type="rgb"/>
+            </Property>
+            <Property name="selectionForeground" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+              <Color blue="0" green="0" red="0" type="rgb"/>
             </Property>
             <Property name="selectionModel" type="javax.swing.ListSelectionModel" editor="org.netbeans.modules.form.editors2.JTableSelectionModelEditor">
               <JTableSelectionModel selectionMode="0"/>
@@ -144,6 +144,9 @@
     </Container>
     <Component class="javax.swing.JButton" name="btnDestruct">
       <Properties>
+        <Property name="background" type="java.awt.Color" editor="org.netbeans.beaninfo.editors.ColorEditor">
+          <Color blue="e2" green="a6" red="1b" type="rgb"/>
+        </Property>
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Segoe UI" size="14" style="0"/>
         </Property>

@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 import mdscssModel.*;
 import mdscssRoot.MMODFrame;
 
-//TODO::: handle a different exception for timeouts? 
+
 /* note install wireshark and https://nmap.org/npcap/ to do loopback testing of tcp messages */
 
 public class MDSCSSController 
@@ -161,11 +161,10 @@ public class MDSCSSController
         try{
             if(tssTCP == null)
             {
-                //123::REMOVE
-                //if(failureTimer == null){
+
                 tssTCP = new Socket("localhost", TSS_SOCKET);
                 tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
-                tssPass = true;//}
+                tssPass = true;
             }
             else
             {
@@ -231,14 +230,15 @@ public class MDSCSSController
         int i;
         ArrayList<String> interceptors = mModel.getInterceptorList();
 
-        ///123 change to 300000
-        if(failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 10000)
+        if(failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 300000)
         {
             mView.handleCodeRed();
             
             failureTimer = null;
             
             purgeWatchdog = true;
+            initializeWatchdog();
+            
         }
     }
     
@@ -302,13 +302,22 @@ public class MDSCSSController
         ArrayList<String> interceptors = mModel.getInterceptorList();
         
         for(i = 0; i < interceptors.size(); i++)
-        {
-            cmdSmssDeactivateSafety(interceptors.get(i));
-            
+        {            
             cmdSmssActivateSafety(interceptors.get(i));
         }
         
         
+    }
+    
+    public void disableWatchdog()
+    {
+         int i;
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        
+        for(i = 0; i < interceptors.size(); i++)
+        {
+            cmdSmssDeactivateSafety(interceptors.get(i));
+        }
     }
     
     public void updateModel()
@@ -319,7 +328,7 @@ public class MDSCSSController
         int pos[] = new int[3];
         
         
-        //todo:: further optimizations, one loop, on getMissiles, with a check on missileType
+        
         for(int i = 0; i < missiles.size(); i++)
         {
             tmpInt = mModel.getInterceptor(missiles.get(i));
@@ -328,7 +337,7 @@ public class MDSCSSController
             
             if(tmpInt.getState() != Interceptor.interceptorState.DETONATED)
             {
-                //todo:: possible optimization, init position at startup, then only update if in flight 
+                
                 pos = cmdTssTrackInterceptor(tmpInt.getIdentifier());
                 //todo :: bug here if we get a non-req id (ie 3 digit ID this is null, and all of our representations are ....
                 if(pos != null)
@@ -346,7 +355,7 @@ public class MDSCSSController
         {
             tmpThreat = mModel.getThreat(missiles.get(i));
             
-            //todo:: figure out what happens when a threat is destoryed ... is it removed from the list? does a get on position fail?
+            
             pos = cmdTssTrackThreat(tmpThreat.getIdentifier());
             
             if(pos != null)
@@ -416,7 +425,7 @@ public class MDSCSSController
         mcssTCP = null;
         smssTCP = null;
         
-        //TODO:: notify view
+
         failureTimer = new Timestamp(System.currentTimeMillis());
         mView.handleSubsystemFailure();
                 

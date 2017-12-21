@@ -258,8 +258,8 @@ public class SMCDPanel extends javax.swing.JPanel
                 btnDestruct.setEnabled(false);
                 btnDetonate.setEnabled(false);
                 
-                txtInterceptorPosition.setForeground(java.awt.Color.WHITE);
-                txtInterceptorState.setForeground(java.awt.Color.WHITE);
+                txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
+                txtInterceptorState.setForeground(java.awt.Color.BLACK);
                 break;
             case IN_FLIGHT:
                 txtInterceptorState.setText("Launched");
@@ -273,8 +273,8 @@ public class SMCDPanel extends javax.swing.JPanel
                 btnLaunch.setEnabled(false);
                 tglDisable.setEnabled(false);
                 
-                txtInterceptorPosition.setForeground(java.awt.Color.WHITE);
-                txtInterceptorState.setForeground(java.awt.Color.WHITE);
+                txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
+                txtInterceptorState.setForeground(java.awt.Color.BLACK);
                 break;
             default:
                 txtInterceptorState.setText("[UNKNOWN]");
@@ -307,7 +307,7 @@ public class SMCDPanel extends javax.swing.JPanel
         {
             txtThreatDistance.setText("[NA]");
             txtThreatPosition.setText("[NA]");
-            txtThreatDistance.setForeground(java.awt.Color.white);
+            txtThreatDistance.setForeground(java.awt.Color.BLACK);
         }
         else
         {
@@ -351,7 +351,7 @@ public class SMCDPanel extends javax.swing.JPanel
                 }
                 else
                 {
-                    txtThreatDistance.setForeground(java.awt.Color.white);
+                    txtThreatDistance.setForeground(java.awt.Color.BLACK);
                     btnDetonate.setEnabled(false);
                 }
                 
@@ -429,13 +429,12 @@ public class SMCDPanel extends javax.swing.JPanel
         jSeparator1 = new javax.swing.JSeparator();
         lblLaunchTime = new javax.swing.JLabel();
 
-        setBackground(new java.awt.Color(27, 161, 226));
-        setMaximumSize(new java.awt.Dimension(323, 573));
-        setMinimumSize(new java.awt.Dimension(323, 573));
+        setBackground(new java.awt.Color(27, 166, 226));
+        setMaximumSize(new java.awt.Dimension(323, 500));
+        setMinimumSize(new java.awt.Dimension(323, 500));
         setPreferredSize(new java.awt.Dimension(323, 573));
 
-        lblTitle.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        lblTitle.setForeground(new java.awt.Color(255, 255, 255));
+        lblTitle.setFont(new java.awt.Font("Segoe UI Semibold", 0, 20)); // NOI18N
         lblTitle.setText("Interceptor Control:");
 
         btnNewWindow.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/openIcon2.png"))); // NOI18N
@@ -445,105 +444,90 @@ public class SMCDPanel extends javax.swing.JPanel
             }
         });
 
-        cmbSelInterceptor.setBackground(new java.awt.Color(65, 65, 65));
-        cmbSelInterceptor.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cmbSelInterceptor.setForeground(new java.awt.Color(65, 65, 65));
+        cmbSelInterceptor.setBackground(new java.awt.Color(0, 102, 153));
+        cmbSelInterceptor.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         cmbSelInterceptor.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbSelInterceptor.setPreferredSize(new java.awt.Dimension(47, 30));
 
-        lblInterceptor.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblInterceptor.setForeground(new java.awt.Color(255, 255, 255));
+        lblInterceptor.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblInterceptor.setText("Selected Interceptor:");
 
-        lblIState.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblIState.setForeground(new java.awt.Color(255, 255, 255));
+        lblIState.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblIState.setText("Interceptor State:");
 
         txtInterceptorState.setEditable(false);
-        txtInterceptorState.setBackground(new java.awt.Color(27, 161, 226));
-        txtInterceptorState.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        txtInterceptorState.setForeground(new java.awt.Color(255, 255, 255));
+        txtInterceptorState.setBackground(new java.awt.Color(27, 166, 226));
+        txtInterceptorState.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         txtInterceptorState.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtInterceptorState.setPreferredSize(new java.awt.Dimension(69, 30));
 
         txtInterceptorPosition.setEditable(false);
-        txtInterceptorPosition.setBackground(new java.awt.Color(27, 161, 226));
-        txtInterceptorPosition.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        txtInterceptorPosition.setForeground(new java.awt.Color(255, 255, 255));
+        txtInterceptorPosition.setBackground(new java.awt.Color(27, 166, 226));
+        txtInterceptorPosition.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         txtInterceptorPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtInterceptorPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
-        lblIPos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblIPos.setForeground(new java.awt.Color(255, 255, 255));
+        lblIPos.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblIPos.setText("Interceptor Position:");
 
-        lblThreat.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblThreat.setForeground(new java.awt.Color(255, 255, 255));
+        lblThreat.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblThreat.setText("Assigned Threat:");
 
-        cmbAssignedThreat.setBackground(new java.awt.Color(65, 65, 65));
-        cmbAssignedThreat.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cmbAssignedThreat.setForeground(new java.awt.Color(65, 65, 65));
+        cmbAssignedThreat.setBackground(new java.awt.Color(0, 102, 153));
+        cmbAssignedThreat.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         cmbAssignedThreat.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbAssignedThreat.setPreferredSize(new java.awt.Dimension(47, 30));
 
-        lblTPos.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblTPos.setForeground(new java.awt.Color(255, 255, 255));
+        lblTPos.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblTPos.setText("Threat Position:");
 
         txtThreatPosition.setEditable(false);
-        txtThreatPosition.setBackground(new java.awt.Color(27, 161, 226));
-        txtThreatPosition.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        txtThreatPosition.setForeground(new java.awt.Color(255, 255, 255));
+        txtThreatPosition.setBackground(new java.awt.Color(27, 166, 226));
+        txtThreatPosition.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         txtThreatPosition.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatPosition.setPreferredSize(new java.awt.Dimension(69, 30));
 
         txtThreatDistance.setEditable(false);
-        txtThreatDistance.setBackground(new java.awt.Color(27, 161, 226));
-        txtThreatDistance.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-        txtThreatDistance.setForeground(new java.awt.Color(255, 255, 255));
+        txtThreatDistance.setBackground(new java.awt.Color(27, 166, 226));
+        txtThreatDistance.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         txtThreatDistance.setHorizontalAlignment(javax.swing.JTextField.CENTER);
         txtThreatDistance.setPreferredSize(new java.awt.Dimension(69, 30));
 
-        lblTDist.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblTDist.setForeground(new java.awt.Color(255, 255, 255));
+        lblTDist.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblTDist.setText("Distance To Threat:");
 
-        lblAssignOvrrd.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblAssignOvrrd.setForeground(new java.awt.Color(255, 255, 255));
+        lblAssignOvrrd.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblAssignOvrrd.setText("Assignment Override:");
 
-        cmbAssignmentMode.setBackground(new java.awt.Color(65, 65, 65));
-        cmbAssignmentMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cmbAssignmentMode.setForeground(new java.awt.Color(65, 65, 65));
+        cmbAssignmentMode.setBackground(new java.awt.Color(0, 102, 153));
+        cmbAssignmentMode.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         cmbAssignmentMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default", "Manual" }));
         cmbAssignmentMode.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbAssignmentMode.setPreferredSize(new java.awt.Dimension(75, 30));
 
-        cmbDetonateMode.setBackground(new java.awt.Color(65, 65, 65));
-        cmbDetonateMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        cmbDetonateMode.setForeground(new java.awt.Color(65, 65, 65));
+        cmbDetonateMode.setBackground(new java.awt.Color(0, 102, 153));
+        cmbDetonateMode.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         cmbDetonateMode.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Default", "Manual" }));
         cmbDetonateMode.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
         cmbDetonateMode.setPreferredSize(new java.awt.Dimension(75, 30));
 
-        lblDetOvrrd.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblDetOvrrd.setForeground(new java.awt.Color(255, 255, 255));
+        lblDetOvrrd.setFont(new java.awt.Font("Segoe UI Semibold", 0, 16)); // NOI18N
         lblDetOvrrd.setText("Detonate Override:");
 
-        tglDisable.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        tglDisable.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         tglDisable.setText("Disabled");
         tglDisable.setToolTipText("");
         tglDisable.setMaximumSize(new java.awt.Dimension(77, 30));
         tglDisable.setMinimumSize(new java.awt.Dimension(119, 26));
-        tglDisable.setPreferredSize(new java.awt.Dimension(127, 30));
+        tglDisable.setPreferredSize(new java.awt.Dimension(130, 30));
         tglDisable.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 tglDisableActionPerformed(evt);
             }
         });
 
-        btnDestruct.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnDestruct.setBackground(new java.awt.Color(27, 166, 226));
+        btnDestruct.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         btnDestruct.setText("Destruct");
         btnDestruct.setEnabled(false);
         btnDestruct.setPreferredSize(new java.awt.Dimension(127, 30));
@@ -553,7 +537,8 @@ public class SMCDPanel extends javax.swing.JPanel
             }
         });
 
-        btnDetonate.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnDetonate.setBackground(new java.awt.Color(27, 166, 226));
+        btnDetonate.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         btnDetonate.setText("Detonate");
         btnDetonate.setPreferredSize(new java.awt.Dimension(127, 30));
         btnDetonate.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -562,17 +547,17 @@ public class SMCDPanel extends javax.swing.JPanel
             }
         });
 
-        btnLaunch.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
+        btnLaunch.setBackground(new java.awt.Color(27, 166, 226));
+        btnLaunch.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         btnLaunch.setText("Launch");
-        btnLaunch.setPreferredSize(new java.awt.Dimension(127, 30));
+        btnLaunch.setPreferredSize(new java.awt.Dimension(130, 30));
         btnLaunch.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnLaunchActionPerformed(evt);
             }
         });
 
-        lblLaunchTime.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
-        lblLaunchTime.setForeground(new java.awt.Color(255, 255, 255));
+        lblLaunchTime.setFont(new java.awt.Font("Segoe UI Semibold", 0, 14)); // NOI18N
         lblLaunchTime.setText("Time of Launch:");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
@@ -596,35 +581,31 @@ public class SMCDPanel extends javax.swing.JPanel
                             .addComponent(lblThreat)
                             .addComponent(lblTPos)
                             .addComponent(lblTDist))
-                        .addGap(25, 25, 25)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(txtInterceptorState, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtInterceptorPosition, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cmbAssignedThreat, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(txtThreatPosition, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(txtThreatDistance, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(cmbSelInterceptor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(lblDetOvrrd)
-                        .addGap(33, 33, 33)
-                        .addComponent(cmbDetonateMode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(cmbAssignedThreat, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtInterceptorPosition, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtInterceptorState, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cmbSelInterceptor, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(txtThreatDistance, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblAssignOvrrd)
-                        .addGap(18, 18, 18)
-                        .addComponent(cmbAssignmentMode, 0, 153, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(8, 8, 8)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(tglDisable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnLaunch, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 26, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnDetonate, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, 128, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(9, 9, 9))
+                        .addGap(16, 16, 16)
+                        .addComponent(cmbAssignmentMode, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblLaunchTime)
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                            .addComponent(lblDetOvrrd, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(tglDisable, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(btnLaunch, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(35, 35, 35)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cmbDetonateMode, 0, 124, Short.MAX_VALUE)
+                            .addComponent(btnDetonate, javax.swing.GroupLayout.DEFAULT_SIZE, 128, Short.MAX_VALUE)
+                            .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, 1, Short.MAX_VALUE))))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -638,45 +619,45 @@ public class SMCDPanel extends javax.swing.JPanel
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 10, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblInterceptor)
-                    .addComponent(cmbSelInterceptor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmbSelInterceptor, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblInterceptor))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblIState)
-                    .addComponent(txtInterceptorState, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtInterceptorState, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblIState))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblIPos)
-                    .addComponent(txtInterceptorPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30)
+                    .addComponent(txtInterceptorPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblIPos))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblThreat)
-                    .addComponent(cmbAssignedThreat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmbAssignedThreat, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblThreat))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblTPos)
-                    .addComponent(txtThreatPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtThreatPosition, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblTPos))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblTDist)
-                    .addComponent(txtThreatDistance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30)
+                    .addComponent(txtThreatDistance, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblTDist))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblAssignOvrrd)
-                    .addComponent(cmbAssignmentMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmbAssignmentMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblAssignOvrrd))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(lblDetOvrrd)
-                    .addComponent(cmbDetonateMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30)
+                    .addComponent(cmbDetonateMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lblDetOvrrd))
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(tglDisable, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnDetonate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnLaunch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 25, Short.MAX_VALUE)
+                    .addComponent(btnLaunch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDetonate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 79, Short.MAX_VALUE)
                 .addComponent(lblLaunchTime)
                 .addContainerGap())
         );
