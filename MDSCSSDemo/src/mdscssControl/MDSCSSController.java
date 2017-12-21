@@ -82,47 +82,202 @@ public class MDSCSSController
     }
     
     
-    public void handleOperationalControl()
+    public void handleThrustControl()
+    {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+        Missile tmpT;
+
+        for(int i = 0; i < interceptors.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+
+            if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT)
+            {
+                tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+
+                if(tmpT != null)
+                {
+                    inCtrl.trackMissilePair(tmpI, tmpT);
+
+                    cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
+                }
+                else
+                {
+                    System.out.println("manual control, tracking threat thats not assigned ERROR");
+                }
+            }
+        }
+                    
+    }
+    
+    public void handleControlLogic()
     {
         switch(operationalState)
         {
-            case Manual:
-                ArrayList<String> interceptors = mModel.getInterceptorList();
-                Interceptor tmpI;
-                Missile tmpT;
-                
-                for(int i = 0; i < interceptors.size(); i++)
-                {
-                    tmpI = mModel.getInterceptor(interceptors.get(i));
-                    
-                    if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT)
-                    {
-                        tmpT = mModel.getThreat(tmpI.getAssignedThreat());
-                        
-                        if(tmpT != null)
-                        {
-                            inCtrl.trackMissilePair(tmpI, tmpT);
-                            
-                            cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
-                        }
-                        else
-                        {
-                            System.out.println("manual control, tracking threat thats not assigned ERROR");
-                        }
-                    }
-                    
-                }
-                
-                
-                
-                break;
             case Automatic:
+                handleAutomaticControl();
                 break;
             case Forgiving:
+                handleForgivingControl();
+                break;
+            default:
                 break;
         }
     }
     
+    private void handleAutomaticControl()
+    {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        ArrayList<String> threats = mModel.getUnassignedThreats();
+        Interceptor tmpI;
+        Missile tmpT;
+        
+        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
+
+        
+        
+        for(int i = 0; i < interceptors.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+            
+            // detonate interce ptors in range to their threat
+            if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT && 
+               tmpI.isDetonateOverriden() == false &&
+               tmpT != null)
+            {
+                int[] pos = tmpI.getPositionVector();
+                int[] tPos = tmpT.getPositionVector();
+                double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+                                
+                if(distance <= (tmpI.getDetonationRange() - 8))
+                {
+                    cmdSmssDetEnable(interceptors.get(i));
+                    cmdMcssDetonate(interceptors.get(i));
+                }
+            }
+            else if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
+                    tmpI.isAssignmentOverriden() == false &&
+                    tmpT == null)
+            {
+                switch(tmpI.getMissileClass())
+                {
+                    case 'A':
+                        aInts.add(interceptors.get(i));
+                        break;
+                    case 'B':
+                        bInts.add(interceptors.get(i));
+                        break;
+                    case 'C':
+                        cInts.add(interceptors.get(i));
+                        break;
+                }
+            }
+            else if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
+                    tmpI.isAssignmentOverriden() == false &&
+                    tmpT != null)
+            {
+                cmdMcssLaunch(interceptors.get(i));
+            }
+        }
+        
+        //assign threats to interceptors and launch
+        for(int i = 0; i < threats.size(); )
+        {
+            tmpT = mModel.getThreat(threats.get(i));
+            
+            if(tmpT.getMissileClass() == 'Y')
+            {
+                if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                }
+                else if(aInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                }
+                
+                threats.remove(i);
+            }
+            else
+            {
+                i++;
+            }  
+        }
+        
+        for(int i = 0; i < threats.size(); )
+        {
+            tmpT = mModel.getThreat(threats.get(i));
+            
+            if(tmpT.getMissileClass() == 'Z')
+            {
+                if(bInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                }
+                else if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                }
+                
+                threats.remove(i);
+            }
+            else
+            {
+                i++;
+            }  
+        }
+        
+        for(int i = 0; i < threats.size(); )
+        {
+            tmpT = mModel.getThreat(threats.get(i));
+            
+            if(tmpT.getMissileClass() == 'X')
+            {
+                if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                }
+                else if(aInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                }
+                else if(bInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                }
+                
+                
+                threats.remove(i);
+            }
+            else
+            {
+                i++;
+            }  
+        }
+                
+        
+    }
+    
+    private void handleForgivingControl()
+    {
+        
+    }
     
     
     public void setControlMode(controlMode pMode)

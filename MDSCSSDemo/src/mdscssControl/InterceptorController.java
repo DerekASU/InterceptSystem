@@ -196,7 +196,7 @@ public class InterceptorController
         pInterceptor.setCtrlThrustDZ(thrust_d);
 
         //position and final thrust
-        System.out.println((pThreat.getPosX() - pInterceptor.getPosX()) + " " + (pThreat.getPosY() - pInterceptor.getPosY()) + " " + (pThreat.getPosZ() - pInterceptor.getPosZ()));
+        //System.out.println((pThreat.getPosX() - pInterceptor.getPosX()) + " " + (pThreat.getPosY() - pInterceptor.getPosY()) + " " + (pThreat.getPosZ() - pInterceptor.getPosZ()));
      
         if(Math.abs(error1) > D_SYS)
         {

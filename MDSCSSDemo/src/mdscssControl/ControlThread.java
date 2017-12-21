@@ -90,10 +90,11 @@ public class ControlThread implements Runnable
                      
                        controlUtility.handleWatchdogTimer();
                        controlUtility.updateModel();
+                       controlUtility.handleControlLogic();
                        
                         if(everyother)
                         {
-                            controlUtility.handleOperationalControl();
+                            controlUtility.handleThrustControl();
                             everyother = false;
                         }
                         else

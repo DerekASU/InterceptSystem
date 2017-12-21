@@ -1,0 +1,71 @@
+{
+
+	"Name": "TrackingTestAssignment",
+		"interceptors" : [
+			{ 
+				"ID": "C0",
+				"Position": {
+					"x": 0,
+					"y": 0,
+					"z": 0
+				}
+			}
+,			{ 
+				"ID": "B1",
+				"Position": {
+					"x": 0,
+					"y": 0,
+					"z": 0
+				}
+			}
+,			{ 
+				"ID": "A3",
+				"Position": {
+					"x": 0,
+					"y": 0,
+					"z": 0
+				}
+			}
+		],
+		"threats" : [
+			{ 
+				"ID": "Z3",
+				"Position": {
+					"x": 400,
+					"y": 400,
+					"z": 400
+				},
+				"Velocity": {
+					"x": 4,
+					"y": 6,
+					"z": 6
+				}
+			}
+,			{ 
+				"ID": "Y2",
+				"Position": {
+					"x": 400,
+					"y": 400,
+					"z": 400
+				},
+				"Velocity": {
+					"x": 4,
+					"y": 6,
+					"z": 6
+				}
+			}
+,			{ 
+				"ID": "X0",
+				"Position": {
+					"x": 400,
+					"y": 400,
+					"z": 400
+				},
+				"Velocity": {
+					"x": 4,
+					"y": 4,
+					"z": 4
+				}
+			}
+		]
+}

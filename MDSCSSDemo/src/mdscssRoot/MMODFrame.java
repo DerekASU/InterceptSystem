@@ -145,6 +145,7 @@ public class MMODFrame extends javax.swing.JFrame
 
   if (reply == JOptionPane.YES_OPTION) {
 
+      mController.finalize();
     System.exit(0);
 
   }
@@ -485,9 +486,8 @@ public class MMODFrame extends javax.swing.JFrame
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        // TODO add your handling code here:
-        System.out.println("closing");
-        mController.finalize();
+
+        
     }//GEN-LAST:event_formWindowClosing
 
     private void handleSysModeSelection(ItemEvent evt)
