@@ -30,7 +30,12 @@ public class MDSCSSController
     private MMODFrame mView;
     private Thread controller;
     
-    private boolean purgeWatchdog;
+    ArrayList<String> rejectedInterceptors;
+    Missile curForgivingThreat;
+    boolean forgivingRejected, forgivingApproved;
+    Timestamp forgivingAssignTime;
+    
+    private boolean purgeWatchdog, manualLaunchMode;
     
     private Socket tssTCP, mcssTCP, smssTCP;
     Timestamp failureTimer;
@@ -57,6 +62,9 @@ public class MDSCSSController
         inCtrl = null;
         
         purgeWatchdog = false;
+        forgivingRejected = false;
+        forgivingApproved = false;
+        curForgivingThreat = null;
         watchdogTime = 0;
     }
     
@@ -76,9 +84,12 @@ public class MDSCSSController
         mView = pView;
         operationalState = controlMode.Manual;
         inCtrl = new InterceptorController();
+        rejectedInterceptors = new ArrayList();
         controller = new Thread(new ControlThread(this));
         failureTimer = null;
+        forgivingAssignTime = null;
         controller.start();
+        manualLaunchMode = false;
     }
     
     
@@ -274,15 +285,209 @@ public class MDSCSSController
         
     }
     
-    private void handleForgivingControl()
+    private boolean handleForgivingAssignment()
     {
+        ArrayList<String> interceptors = mModel.getUnassignedInterceptors();
+        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
+        Interceptor tmpI;
+        boolean newlyAssigned = false;
+        
+        for(int i = 0; i < interceptors.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            
+            if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
+               tmpI.isAssignmentOverriden() == false && 
+               !rejectedInterceptors.contains(interceptors.get(i)))
+            {
+                switch(tmpI.getMissileClass())
+                {
+                    case 'A':
+                        aInts.add(interceptors.get(i));
+                        break;
+                    case 'B':
+                        bInts.add(interceptors.get(i));
+                        break;
+                    case 'C':
+                        cInts.add(interceptors.get(i));
+                        break;
+                }
+            }
+        }
+        
+        
+
+            if(curForgivingThreat.getMissileClass() == 'Y')
+            {
+                if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+                else if(aInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+            }
+            else if(curForgivingThreat.getMissileClass() == 'Z')
+            {
+                if(bInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+                else if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+
+            }
+            else if(curForgivingThreat.getMissileClass() == 'X')
+            {
+                if(cInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+                else if(aInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+                else if(bInts.size()>0)
+                {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
+                    newlyAssigned = true;
+                }
+            }
+
+            return newlyAssigned;
         
     }
     
+    private void handleForgivingControl()
+    {
+        ArrayList<String>  threats = mModel.getUnassignedThreats();
+        Timestamp tmp = new Timestamp(System.currentTimeMillis());
+        boolean bAssigned = false;
+        
+
+        if(threats.size() > 0)
+        {
+
+            if(curForgivingThreat == null)
+            {
+
+                rejectedInterceptors.clear();
+                curForgivingThreat = mModel.getThreat(threats.get(0));
+                bAssigned = handleForgivingAssignment();
+                forgivingAssignTime = tmp;
+                
+                if(!bAssigned)
+                {
+
+                    curForgivingThreat = null;
+                    
+                    if(!manualLaunchMode)
+                    {
+                    forceManualAssignment();
+                    manualLaunchMode = true;
+                    }
+                }
+                else
+                {
+                    manualLaunchMode = false;
+                }
+
+            }
+            else if(curForgivingThreat != null && forgivingRejected)
+            {
+                forgivingRejected = false;
+                rejectedInterceptors.add(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier()));
+                mModel.getInterceptor(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier())).setAssignedThreat("[UNASSIGNED]");
+                forgivingAssignTime = tmp;
+                
+                bAssigned = handleForgivingAssignment();
+       
+                if(!bAssigned)
+                {
+                 
+                    curForgivingThreat = null;
+                    if(!manualLaunchMode)
+                    {
+                    forceManualAssignment();
+                    manualLaunchMode = true;
+                    }
+                }
+            }
+        }
+        
+        if(curForgivingThreat != null &&
+          ((tmp.getTime() - forgivingAssignTime.getTime()) >40000 || forgivingApproved))
+        {
+      
+            cmdMcssLaunch(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier()));
+            forgivingRejected = false;
+            forgivingApproved = false;
+            curForgivingThreat = null;
+        }
+        
+        // todo:: handle detonation coverage
+    }
+    
+    public String getForgivingAssignmentState()
+    {
+        if(curForgivingThreat != null && forgivingApproved == false && forgivingRejected == false)
+            return ("Threat [" + curForgivingThreat.getIdentifier() + "] has been assigned to Interceptor ["+mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier())+"]");
+        else
+            return null;
+    }
+    
+    public void approveForgivingAssignment()
+    {
+        forgivingApproved = true;
+    }
+    
+    public void rejectForgivingAssignment()
+    {
+        forgivingRejected = true;
+    }
+
+    private void forceManualAssignment()
+    {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+        
+        for(int i = 0; i < interceptors.size(); i++)
+        {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            tmpI.setAssignmentOverriden(true);
+        }
+        
+        mView.handleLaunchModeChange();
+    }
     
     public void setControlMode(controlMode pMode)
     {
+        
+        if(operationalState != pMode)
+        {
         operationalState = pMode;
+        rejectedInterceptors.clear();
+        forgivingRejected = false;
+        curForgivingThreat = null;
+        forgivingAssignTime = null;
+        forgivingApproved = false;
+        }
     }
     
     public controlMode getControlMode()

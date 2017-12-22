@@ -44,6 +44,27 @@ public class MissileDBManager
         }
     }
     
+    public String getAssignedInterceptor(String pId)
+    {
+       Interceptor tmp = null;
+       String missileID = "";
+        
+        for(Iterator<HashMap.Entry<String, Missile>> it = activeMissiles.entrySet().iterator(); it.hasNext();)
+        {
+            missileID = (String)it.next().getKey();
+
+            if(activeMissiles.get(missileID).getType() == Missile.MissileType.INTERCEPTOR)
+            {
+                tmp = (Interceptor)activeMissiles.get(missileID);
+                
+                if(tmp.getAssignedThreat().equals(pId))
+                    return tmp.getIdentifier();
+            }
+        }
+        
+        return null;
+    }
+    
     public Missile getThreat(String pId)
     {
         Missile tmp = activeMissiles.get(pId);

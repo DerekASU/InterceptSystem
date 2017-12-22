@@ -6,16 +6,23 @@
 package mdscssRoot;
 //todo:: add a destructall
 import java.awt.Color;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JOptionPane;
+import javax.swing.Timer;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 import mdscssControl.MDSCSSController.controlMode;
@@ -139,6 +146,20 @@ public class MMODFrame extends javax.swing.JFrame
         
     }
     
+    public void handleLaunchModeChange()
+    {
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+           JOptionPane.showMessageDialog(null,  "\nAn alternative interceptor for threat assignment has\n" +
+                                            "not been found.  The system has reverted to maunual assignment \n" +
+                                            "and launch mode.\n", 
+                                            "Automatic Launch Mode Change", 
+                                            JOptionPane.ERROR_MESSAGE);
+        }
+    });
+  t.start();
+    }
+    
     public void handleClosing()
     {
         int reply = JOptionPane.showConfirmDialog(null, "Are you sure you wish to exit?", "Exit MDSCSS", JOptionPane.YES_NO_OPTION);
@@ -213,8 +234,44 @@ public class MMODFrame extends javax.swing.JFrame
     {
         updateThreats();
         updateInterceptors();
-        
         sMCDPanel1.updatePanelContents();
+
+        
+        String tmp = mController.getForgivingAssignmentState();
+        
+        if(tmp != null)
+        {
+            JOptionPane msg = new JOptionPane(tmp + ".\n Do you wish to approve this assignment?", JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
+            JDialog dlg = msg.createDialog("Approve or Reject Forgiving Assignment");
+            dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            
+            dlg.addComponentListener(new ComponentAdapter() {
+                public void componentShown(ComponentEvent e) {
+                    super.componentShown(e);
+                    Timer t = new Timer(40000,new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            dlg.setVisible(false);
+                        }
+                    });
+                    t.start();
+                }
+            });
+        
+            dlg.setVisible(true);
+        
+        if(msg.getValue().equals(0))
+        {
+            mController.approveForgivingAssignment();
+        }
+        else if(msg.getValue().equals(1))
+        {
+            mController.rejectForgivingAssignment();
+        }
+           
+            
+        }
+        
     }
     
     private void updateThreats()
