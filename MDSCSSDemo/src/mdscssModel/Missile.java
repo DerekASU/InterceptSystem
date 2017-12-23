@@ -242,7 +242,6 @@ public class Missile
         posZ = paramZ;
     }
     
-    //todo:: doesn't work right, fix in cleanup phase
     /***************************************************************************
      * setThrustValue
      * 
@@ -252,43 +251,56 @@ public class Missile
      * @param paramY - thrust in the y direction
      * @param paramZ - thrust in the z direction
      **************************************************************************/
-   /* public void setThrustValue(int paramX, int paramY, int paramZ)
+    public void setThrustValue(int paramX, int paramY, int paramZ)
     {
-        if(paramX > maxThrustX || paramY > maxThrustY || paramZ > maxThrustZ)
-        {
-            thrustX = maxThrustX;
-            thrustY = maxThrustY;
-            thrustZ = maxThrustZ;
-        }
-        else if(paramX < (maxThrustX * -1) || paramY < (maxThrustY * -1) || paramZ < (maxThrustZ * -1))
-        {
-            thrustX = (maxThrustX * -1);
-            thrustY = (maxThrustY * -1);
-            thrustZ = (maxThrustZ * -1);
-        }
-        else
-        {
-            thrustX = paramX;
-            thrustY = paramY;
-            thrustZ = paramZ;
-        }
-    }*/
+        thrustX = paramX;
+        thrustY = paramY;
+        thrustZ = paramZ;
+    }
     
+    /***************************************************************************
+     * setThrustX
+     * 
+     * updates the acceleration of the missile in the x direction
+     * 
+     * @param pThrustX - thrust in the x direction
+     **************************************************************************/
     public void setThrustX(int pThrustX)
     {
         thrustX = pThrustX;
     }
     
+    /***************************************************************************
+     * setThrustY
+     * 
+     * updates the acceleration of the missile in the y direction
+     * 
+     * @param pThrustY - thrust in the y direction
+     **************************************************************************/
     public void setThrustY(int pThrustY)
     {
         thrustY = pThrustY;
     }
     
+    /***************************************************************************
+     * setThrustZ
+     * 
+     * updates the acceleration of the missile in the z direction
+     * 
+     * @param pThrustZ - thrust in the z direction
+     **************************************************************************/
     public void setThrustZ(int pThrustZ)
     {
         thrustZ = pThrustZ;
     }
     
+    /***************************************************************************
+     * getMissileClass
+     * 
+     * retrieves the class of the missile
+     * 
+     * @return a char representing the class of the missile
+     **************************************************************************/
     public char getMissileClass()
     {
         return id.charAt(0);

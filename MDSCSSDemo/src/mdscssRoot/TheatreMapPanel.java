@@ -24,11 +24,16 @@ import gov.nasa.worldwind.util.*;
 import gov.nasa.worldwindx.examples.util.*;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import mdscssModel.Interceptor;
+import mdscssModel.MissileDBManager;
 
 public class TheatreMapPanel extends javax.swing.JPanel 
 {
-
+    MissileDBManager mModel;
+    MMODFrame mParent;
+    
     /***************************************************************************
      * TheatreMapPanel
      * 
@@ -40,14 +45,53 @@ public class TheatreMapPanel extends javax.swing.JPanel
         this.worldWindowGLCanvas1.setModel(new BasicModel());
     }
     
+    public void initialize(MissileDBManager pModel, MMODFrame pParent)
+    {
+        mModel = pModel;
+        mParent = pParent;
+    }
+    
     public void resetView()
     {
-    
+        // this function gets called when connection is lost with tyhe subsystems.  
+        // this function should remove everything from the map, and get the map to be as if it was 
+        // just starting for the first time
     }
     
     public void handleInitialUpdate()
     {
+        // this is called only once, on initial startup, or when connection has been re-established after being lost
+        // this may or may not be necessary for this panel, when this is called, it means all entries in the database
+        // are valid and populated
+    }
+    
+    public void updatePanelContents()
+    {
+        // this is called every second, this is the periodic update, you should query the database here
+        // and then update the map with new positions, states, assignments, etc
         
+        
+        
+        // below is an example on how to traverse the model for every interceptor , this can easily be done for threats, or all missiles.  I reccomend you look at the 
+        // MDSCSSController and the MissileDBManager, i updated all the functions with headers that explain their
+        // functionality
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+
+        for (int i = 0; i < interceptors.size(); i++) {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            
+            // or position, assignment, .....
+            //tmpI.getState()
+        }
+        
+    }
+    
+    public void markThreatDestroyed(String threatID)
+    {
+        // called when a threat is destroyed and removed from the database.  after this is called, the threat
+        // is removed from the database and any query to the database for this threat will result in a null
+        // you should handle logic here that updates the map to show the threat has been destroyed
     }
 
     /***************************************************************************

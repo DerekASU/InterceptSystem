@@ -81,6 +81,7 @@ public class MMODFrame extends javax.swing.JFrame
         
         interceptorOverviewPanel1.setParent(this);
         sMCDPanel1.initialize(mModel, this);
+        theatreMapPanel1.initialize(mModel, this);
     }
     
     public void tssConnected(String version)
@@ -195,7 +196,7 @@ public class MMODFrame extends javax.swing.JFrame
         
         cmbSysMode.setEnabled(true);
         
-        //theatreMapPanel1.handleInitialUpdate();
+        theatreMapPanel1.handleInitialUpdate();
         sMCDPanel1.handleInitialUpdate();
         threatOverviewPanel1.handleInitialUpdate();
         interceptorOverviewPanel1.handleInitialUpdate();
@@ -241,7 +242,7 @@ public class MMODFrame extends javax.swing.JFrame
     public void handleThreatDestruction(String pID)
     {
         threatOverviewPanel1.removeEntry(pID);
-        
+        theatreMapPanel1.markThreatDestroyed(pID);
     }
     
     public void periodicUpdate()
@@ -249,7 +250,7 @@ public class MMODFrame extends javax.swing.JFrame
         updateThreats();
         updateInterceptors();
         sMCDPanel1.updatePanelContents();
-
+        theatreMapPanel1.updatePanelContents();
         
         String tmp = mController.getForgivingAssignmentState();
         
@@ -397,7 +398,7 @@ public class MMODFrame extends javax.swing.JFrame
         
         cmbSysMode.setEnabled(false);
         
-        //theatreMapPanel1.resetView();
+        theatreMapPanel1.resetView();
         sMCDPanel1.resetView();
         threatOverviewPanel1.resetView();
         interceptorOverviewPanel1.resetView();

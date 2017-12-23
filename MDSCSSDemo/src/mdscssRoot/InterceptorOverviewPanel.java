@@ -1,26 +1,23 @@
 /*******************************************************************************
  * File: InterceptorOverviewPanel.java
- * Description:
+ * Description:GUI Class that populates and controls the list of interceptors
+ * presented to the operator
  *
  ******************************************************************************/
 package mdscssRoot;
 
-import java.util.ArrayList;
 import javax.swing.JLabel;
-import javax.swing.RowSorter;
-import javax.swing.SortOrder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-import javax.swing.table.TableRowSorter;
 import mdscssModel.Interceptor;
 
 
 public class InterceptorOverviewPanel extends javax.swing.JPanel 
 {
     MMODFrame mParent;
+    
     /***************************************************************************
      * InterceptorOverviewPanel
      * 
@@ -35,8 +32,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,166,226));
         tblInterceptors.getTableHeader().setBackground(new java.awt.Color(27,166,226));
         
-        ((DefaultTableCellRenderer)tblInterceptors.getTableHeader().getDefaultRenderer())
-    .setHorizontalAlignment(JLabel.CENTER);
+        ((DefaultTableCellRenderer)tblInterceptors.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
         
         DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
         cellRend.setHorizontalAlignment(JLabel.CENTER);
@@ -57,8 +53,6 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         tblInterceptors.getColumnModel().getColumn(2).setMinWidth(120);
         tblInterceptors.getColumnModel().getColumn(2).setPreferredWidth(120);
         
-        
-        //todo:: move to initcomponents when no longer using gui builder
         tblInterceptors.getSelectionModel().addListSelectionListener(new ListSelectionListener(){
             public void valueChanged(ListSelectionEvent evt){
                 tblInterceptorsRowSelected(evt);
@@ -67,11 +61,14 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         
     }
     
+    /***************************************************************************
+     * resetView
+     * 
+     * Called when the MDSCSS looses connection to the subsystems. This function
+     * clears the table and disables the destruct button.
+     **************************************************************************/
     public void resetView()
     {
-        
-        System.out.println("IN RESET");
-        
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         int tmp = model.getRowCount();
         
@@ -79,15 +76,35 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         {
             model.removeRow(0);
         }
+        
+        btnDestruct.setEnabled(false);
 
     }
     
+    /***************************************************************************
+     * handleInitialUpdate
+     * 
+     * Called when the MDSCSS achieves connection to the subsystems. This function
+     * ensures that the table is visable and ready to be populated
+     **************************************************************************/
     public void handleInitialUpdate()
     {
         tblInterceptors.setVisible(true);
         
     }
     
+    /***************************************************************************
+     * addEntry
+     * 
+     * Called by the MMODFrame's initial update function to populate the table
+     * with interceptors.
+     * 
+     * @param pID - the id of the interceptor
+     * @param pState - the state of the interceptor
+     * @param pThreat - the assigned threat of the interceptor
+     * @param pPos - an array of 3 integers representing the threats position
+     * @param isDisabled - the disabled state of the interceptor
+     **************************************************************************/
     public void addEntry(String pID, Interceptor.interceptorState pState, String pThreat, int[] pPos, boolean isDisabled)
     {
         String[] rowData = new String[4];
@@ -118,6 +135,18 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         model.addRow(rowData);
     }
     
+    /***************************************************************************
+     * addEntry
+     * 
+     * Called periodically to update the table  with the interceptor's latest 
+     * attributes
+     * 
+     * @param pID - the id of the interceptor
+     * @param pState - the state of the interceptor
+     * @param assignment - the assigned threat of the interceptor
+     * @param pPos - an array of 3 integers representing the threats position
+     * @param isDisabled - the disabled state of the interceptor
+     **************************************************************************/
     public void updateEntry(String pID, Interceptor.interceptorState pState, String assignment, int[] pPos, boolean isDisabled)
     {
         String entryID = "";
@@ -167,8 +196,14 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         }
     }
     
-    
-    
+    /***************************************************************************
+     * handleSelChange
+     * 
+     * Called when a new interceptor has been selected by the SMCD; makes it so
+     * the new active interceptor selection has its corresponding row highlighted
+     * 
+     * @param pID - the new active interceptor to select
+     **************************************************************************/
     public void handleSelChange(String pID)
     {
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
@@ -182,6 +217,14 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         }
     }
     
+    /***************************************************************************
+     * tblInterceptorsRowSelected
+     * 
+     * Event handler for when a row is selected in the table.  The MMOD is notified
+     * so that it can tell the SMCD panel to update its selection
+     * 
+     * @param evt - the event object
+     **************************************************************************/
     private void tblInterceptorsRowSelected(ListSelectionEvent evt)
     {
         if(evt.getValueIsAdjusting() && mParent != null)
@@ -192,6 +235,14 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         }
     }
     
+    /***************************************************************************
+     * setParent
+     * 
+     * Called by the MMOD to give the interceptor overview panel a reference
+     * to itself.
+     * 
+     * @param pParent - the reference pointer to the MMOD frame
+     **************************************************************************/
     public void setParent(MMODFrame pParent)
     {
         mParent = pParent;
@@ -295,6 +346,14 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         );
     }// </editor-fold>//GEN-END:initComponents
 
+    /***************************************************************************
+     * btnDestructActionPerformed
+     * 
+     * Action handler for when the emergency destruct button is pressed.  The 
+     * destruct command is forwarded to the MMOD for each airborne interceptor 
+     * 
+     * @param evt - the event object
+     **************************************************************************/
     private void btnDestructActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDestructActionPerformed
         DefaultTableModel model = (DefaultTableModel)tblInterceptors.getModel();
         
@@ -307,7 +366,6 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         }
 
     }//GEN-LAST:event_btnDestructActionPerformed
-
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnDestruct;

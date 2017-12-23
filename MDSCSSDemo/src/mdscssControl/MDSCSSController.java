@@ -1,137 +1,494 @@
-/*******************************************************************************
+/** *****************************************************************************
  * File: MDSCSSController.java
- * Description:
- *
- ******************************************************************************/
+ * Description: Utility object utilized by the control thread.  This object contains
+ * interface definitions to the major subsystems and helper functions utilized by the
+ * control thread to control the system
+ ***************************************************************************** */
 package mdscssControl;
 
 import java.io.*;
 import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import mdscssModel.*;
 import mdscssRoot.MMODFrame;
 
+public class MDSCSSController {
 
-/* note install wireshark and https://nmap.org/npcap/ to do loopback testing of tcp messages */
-
-public class MDSCSSController 
-{
+    // Connection Constants
     private static final int SMSS_SOCKET = 27015;
     private static final int MCSS_SOCKET = 27016;
     private static final int TSS_SOCKET = 27017;
     private static final int SOCKET_TIMEOUT_MS = 2000;
-    
+
+    // System pointers
     private InterceptorController inCtrl;
     private MissileDBManager mModel;
     private MMODFrame mView;
     private Thread controller;
-    
-    ArrayList<String> rejectedInterceptors;
-    Missile curForgivingThreat;
-    Interceptor curForgivingInt;
-    boolean forgivingRejected, forgivingApproved, forgivingDetRejected, forgivingDetApproved, assignmentcomplete;
-    Timestamp forgivingAssignTime, forgivingDetTime;
-    
-    private boolean purgeWatchdog, manualLaunchMode;
-    
+
+    // Forgiving control assignment variables
+    private ArrayList<String> fgvRejectInterceptors;
+    private Missile fgvCurrentThreat;
+    private boolean bFgvAssignmentRejected, bFgvAssignmentApproved, bFgvAssignmentDone, bForceManualLaunch;
+    private Timestamp fgvAssignmentTime;
+
+    // Forgiving control detonation variables
+    private Interceptor fgvCurrentInterceptor;
+    private boolean bFgvDetonateRejected, bFgvDetonateApproved;
+    private Timestamp bFgvDetonateTime;
+
+    // Watchdog control variables
+    private boolean bPurgeWatchdog;
+    private int watchdogTime;
+
+    // Socket control variables
     private Socket tssTCP, mcssTCP, smssTCP;
     Timestamp failureTimer;
-    
-    private int watchdogTime;
-    
+
+    // System control variables
     private controlMode operationalState;
-    public enum controlMode
-    { 
+
+    public enum controlMode {
         Manual,
         Automatic,
         Forgiving
     }
-    
+
     /***************************************************************************
      * MDSCSSController
-     * 
+     *
      * Constructor
      **************************************************************************/
-    public MDSCSSController()
-    {
+    public MDSCSSController() {
         mModel = null;
         mView = null;
         inCtrl = null;
-        
-        purgeWatchdog = false;
-        forgivingRejected = false;
-        forgivingApproved = false;
-        forgivingDetApproved = false;
-        forgivingDetRejected = false;
-        curForgivingThreat = null;
-        curForgivingInt = null;
+        fgvCurrentThreat = null;
+        fgvCurrentInterceptor = null;
+        fgvAssignmentTime = null;
+        failureTimer = null;
+        bFgvDetonateTime = null;
+
+        bPurgeWatchdog = false;
+        bFgvAssignmentRejected = false;
+        bFgvAssignmentApproved = false;
+        bFgvDetonateApproved = false;
+        bFgvDetonateRejected = false;
+        bFgvAssignmentDone = false;
+        bForceManualLaunch = false;
+
         watchdogTime = 0;
-        assignmentcomplete = false;
     }
-    
+
     /***************************************************************************
      * initialize
-     * 
-     * initializes the controller on startup.  References to the view and 
-     * model are established; initial socket connection to subsystems performed;
+     *
+     * initializes the controller on startup. References to the view and model
+     * are established; initial socket connection to subsystems performed;
      * control thread is started
-     * 
+     *
      * @param pModel - Reference to the Missile DB
      * @param pView - Reference to the GUI
      **************************************************************************/
-    public void initialize(MissileDBManager pModel, MMODFrame pView) 
-    {
+    public void initialize(MissileDBManager pModel, MMODFrame pView) {
         mModel = pModel;
         mView = pView;
-        operationalState = controlMode.Manual;
         inCtrl = new InterceptorController();
-        rejectedInterceptors = new ArrayList();
+        fgvRejectInterceptors = new ArrayList();
+
+        operationalState = controlMode.Manual;
+
         controller = new Thread(new ControlThread(this));
-        failureTimer = null;
-        forgivingAssignTime = null;
-        forgivingDetTime = null;
         controller.start();
-        manualLaunchMode = false;
     }
-    
-    
-    public void handleThrustControl()
-    {
+
+    /***************************************************************************
+     * finalize
+     *
+     * finalizes the controller on shutdown. All TCP sockets are safely closed
+     * and control thread stopped
+     **************************************************************************/
+    public void finalize() {
+        try {
+            if (tssTCP != null) {
+                tssTCP.close();
+            }
+            if (mcssTCP != null) {
+                mcssTCP.close();
+            }
+            if (smssTCP != null) {
+                smssTCP.close();
+            }
+        } catch (Exception ex) {
+            System.out.println("MDSCSSController - finalize: socket failure\n" + ex.getMessage() + "\n");
+        }
+
+        controller.interrupt();
+    }
+
+    /** *************************************************************************
+     * establishConnection
+     *
+     * Called by the control thread to establish a connection with all the
+     * subsystems.
+     *
+     * @return true if all subsystems have been connected over TCP
+     **************************************************************************/
+    public boolean establishConnection() {
+        boolean tssPass = false, mcssPass = false, smssPass = false;
+
+        try {
+            if (tssTCP == null) {
+
+                tssTCP = new Socket("localhost", TSS_SOCKET);
+                tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                tssPass = true;
+            } else {
+                tssPass = true;
+            }
+        } catch (Exception ex) {
+            System.out.println("MDSCSSController - establishConnection: TSS socket failure\n" + ex.getMessage() + "\n");
+        }
+
+        try {
+            if (mcssTCP == null) {
+
+                mcssTCP = new Socket("localhost", MCSS_SOCKET);
+                mcssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                mcssPass = true;
+            } else {
+                mcssPass = true;
+            }
+        } catch (Exception ex) {
+            System.out.println("MDSCSSController - establishConnection: MCSS socket failure\n" + ex.getMessage() + "\n");
+        }
+
+        try {
+            if (smssTCP == null) {
+                smssTCP = new Socket("localhost", SMSS_SOCKET);
+                smssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                smssPass = true;
+            } else {
+                smssPass = true;
+            }
+        } catch (Exception ex) {
+            System.out.println("MDSCSSController - establishConnection: SMSS socket failure\n" + ex.getMessage() + "\n");
+        }
+
+        if (smssPass && tssPass && mcssPass) {
+            failureTimer = null;
+            return true;
+
+        } else {
+            return false;
+        }
+
+    }
+
+    /***************************************************************************
+     * establishStatus
+     *
+     * Called by the control thread to get the version of each subsystem, as
+     * well as their connection status. This function also pushes this data to
+     * the GUI so that the operator is notified
+     **************************************************************************/
+    public boolean establishStatus() {
+        String tmp = "";
+
+        if (tssTCP != null) {
+            tmp = cmdTssGetVersion();
+            if (tmp != null) {
+                mView.tssConnected(cmdTssGetVersion());
+            } else {
+                return false;
+            }
+        }
+
+        if (mcssTCP != null) {
+            tmp = cmdMcssGetVersion();
+            if (tmp != null) {
+                mView.mcssConnected(tmp);
+            } else {
+                return false;
+            }
+        }
+
+        if (smssTCP != null && mcssTCP != null) {
+            ArrayList<String> interceptors = cmdMcssGetInterceptorList();
+
+            if (interceptors.size() > 0) {
+                tmp = cmdSmssGetVersion(interceptors.get(0));
+                if (tmp != null) {
+                    mView.smssConnected(tmp);
+                } else {
+                    return false;
+                }
+            } else {
+                mView.smssConnected("N/A");
+            }
+        }
+
+        return true;
+    }
+
+    /***************************************************************************
+     * handleSocketFailure
+     *
+     * Called when connection to a subsystem has been lost, or communication has
+     * been deemed erroneous. This function closes the TCP sockets, resets the
+     * controller's internal state, and begins monitoring of the process to
+     * establish reconnection with the subsystems
+     **************************************************************************/
+    private void handleSocketFailure() {
+        finalize();
+        tssTCP = null;
+        mcssTCP = null;
+        smssTCP = null;
+
+        failureTimer = new Timestamp(System.currentTimeMillis());
+        mView.handleSubsystemFailure();
+
+        controller = new Thread(new ControlThread(this));
+        bPurgeWatchdog = false;
+        setControlMode(operationalState);
+        controller.start();
+    }
+
+    /***************************************************************************
+     * handleSocketFailure
+     *
+     * Called when the control thread is attempting to establish connection. if
+     * connection is attempting to be re-established after a failure, this
+     * function maintains track if 5 minutes have elapsed since the failure and
+     * updates the GUI and detonates all air-borne interceptors
+     **************************************************************************/
+    public void checkForFailure() {
+        Timestamp tmp = new Timestamp(System.currentTimeMillis());
+        int i;
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+
+        if (failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 300000) {
+            mView.handleCodeRed();
+
+            failureTimer = null;
+
+            bPurgeWatchdog = true;
+            initializeWatchdog();
+
+        }
+    }
+
+    /***************************************************************************
+     * initializeModel
+     *
+     * Called by the control thread when connection is first established.  This
+     * function populates the internal missile database.
+     **************************************************************************/
+    public void initializeModel() {
+        ArrayList<String> missiles = cmdMcssGetInterceptorList();
+
+        missiles.addAll(cmdTssGetThreatList());
+
+        mModel.updateDatabase(missiles);
+
+        mView.handleInitialUpdate();
+    }
+
+    /***************************************************************************
+     * initializeWatchdog
+     *
+     * Called by the control thread after connection with the subsystems and the
+     * missile database is initialized.  This function enables the safety for all 
+     * interceptors 
+     **************************************************************************/
+    public void initializeWatchdog() {
+        int i;
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+
+        for (i = 0; i < interceptors.size(); i++) {
+            cmdSmssActivateSafety(interceptors.get(i));
+        }
+
+    }
+
+    /***************************************************************************
+     * disableWatchdog
+     *
+     * This function disables the safety for all interceptors 
+     **************************************************************************/
+    public void disableWatchdog() {
+        int i;
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+
+        for (i = 0; i < interceptors.size(); i++) {
+            cmdSmssDeactivateSafety(interceptors.get(i));
+        }
+    }
+
+    /***************************************************************************
+     * handleWatchdogTimer
+     *
+     * This function is called by the control thread every 0.5 seconds to notify
+     * the SMSS that the MDSCSS is still operational
+     **************************************************************************/
+    public void handleWatchdogTimer() {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+        watchdogTime++;
+
+        for (int i = 0; i < interceptors.size(); i++) {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            
+            if (bPurgeWatchdog && tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT) {
+                continue;
+            }
+
+            if (tmpI.getState() != Interceptor.interceptorState.DETONATED) {
+                cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
+            }
+        }
+    }
+
+    /***************************************************************************
+     * updateModel
+     *
+     * This function is called by the control thread every 0.5 seconds to update
+     * the internal database entries with new information from the TSS and MCSS
+     **************************************************************************/
+    public void updateModel() {
+        ArrayList<String> missiles = mModel.getInterceptorList();
+        Interceptor tmpInt;
+        Missile tmpThreat;
+        int pos[] = new int[3];
+
+        for (int i = 0; i < missiles.size(); i++) {
+            tmpInt = mModel.getInterceptor(missiles.get(i));
+
+            tmpInt.setState(cmdMcssgetState(tmpInt.getIdentifier()));
+
+            if (tmpInt.getState() != Interceptor.interceptorState.DETONATED) {
+
+                pos = cmdTssTrackInterceptor(tmpInt.getIdentifier());
+                //todo :: bug here if we get a non-req id (ie 3 digit ID this is null, and all of our representations are ....
+                if (pos != null) {
+                    tmpInt.setPosition(pos[0], pos[1], pos[2]);
+                }
+            } else if (!tmpInt.getAssignedThreat().equals("[UNASSIGNED]")) {
+                tmpInt.setAssignedThreat("[UNASSIGNED]");
+            }
+        }
+
+        missiles = mModel.getThreatList();
+
+        for (int i = 0; i < missiles.size(); i++) {
+            tmpThreat = mModel.getThreat(missiles.get(i));
+
+            pos = cmdTssTrackThreat(tmpThreat.getIdentifier());
+
+            if (pos != null) {
+                tmpThreat.setPosition(pos[0], pos[1], pos[2]);
+            } else {
+                ArrayList<String> threats = cmdTssGetThreatList();
+
+                if (!threats.contains(tmpThreat.getIdentifier())) {
+                    System.out.println(tmpThreat.getIdentifier() + " is no longer in the list TSS");
+
+                    //if theres an interceptor in flight after this threat, send a destruct, if theres one in preflight, unassign
+                    ArrayList<String> interceptors = mModel.getInterceptorList();
+                    for (int j = 0; j < interceptors.size(); j++) {
+                        tmpInt = mModel.getInterceptor(interceptors.get(j));
+                        if (tmpInt.getAssignedThreat().equals(tmpThreat.getIdentifier())) {
+                            if (tmpInt.getState() == Interceptor.interceptorState.IN_FLIGHT) {
+                                cmdMcssDestruct(tmpInt.getIdentifier());
+                            } else {
+                                tmpInt.setAssignedThreat("[UNASSIGNED]");
+                            }
+                        }
+                    }
+
+                    mView.handleThreatDestruction(tmpThreat.getIdentifier());
+                    mModel.removeThreat(tmpThreat.getIdentifier());
+                }
+
+            }
+        }
+
+    }
+
+    /***************************************************************************
+     * handleThrustControl
+     *
+     * This function is called by the control thread every second to determine
+     * the power levels of each in-flight interceptor and send the thrust commands
+     **************************************************************************/
+    public void handleThrustControl() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
         Interceptor tmpI;
         Missile tmpT;
 
-        for(int i = 0; i < interceptors.size(); i++)
-        {
+        for (int i = 0; i < interceptors.size(); i++) {
             tmpI = mModel.getInterceptor(interceptors.get(i));
 
-            if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT)
-            {
+            if (tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT) {
                 tmpT = mModel.getThreat(tmpI.getAssignedThreat());
 
-                if(tmpT != null)
-                {
+                if (tmpT != null) {
                     inCtrl.trackMissilePair(tmpI, tmpT);
 
                     cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
-                }
-                else
-                {
+                } else {
                     System.out.println("manual control, tracking threat thats not assigned ERROR");
                 }
             }
         }
-                    
+
     }
-    
-    public void handleControlLogic()
-    {
-        switch(operationalState)
-        {
+
+    /***************************************************************************
+     * getControlMode
+     *
+     * Retrieves the system control mode
+     * 
+     * @return a controlMode enumeration value that corresponds with the systems
+     *         control state
+     **************************************************************************/
+    public controlMode getControlMode() {
+        return operationalState;
+    }
+
+    /***************************************************************************
+     * getControlMode
+     *
+     * Sets the system control mode
+     * 
+     * @param pMode - the new system control mode
+     **************************************************************************/
+    public void setControlMode(controlMode pMode) {
+        if (operationalState != pMode) {
+            operationalState = pMode;
+            fgvRejectInterceptors.clear();
+            bFgvAssignmentRejected = false;
+            fgvCurrentThreat = null;
+            fgvAssignmentTime = null;
+            bFgvDetonateTime = null;
+            bFgvAssignmentApproved = false;
+            fgvCurrentInterceptor = null;
+            bFgvDetonateApproved = false;
+            bFgvDetonateRejected = false;
+            bFgvAssignmentDone = false;
+        }
+    }
+
+    /***************************************************************************
+     * handleControlLogic
+     *
+     * Called periodically by the control thread to handle automatic or forgiving
+     * control logic dictated by the system control mode
+     **************************************************************************/
+    public void handleControlLogic() {
+        switch (operationalState) {
             case Automatic:
                 handleAutomaticControl();
                 break;
@@ -142,890 +499,548 @@ public class MDSCSSController
                 break;
         }
     }
-    
-    private void handleAutomaticControl()
-    {
-        ArrayList<String> interceptors = mModel.getInterceptorList();
+
+    /***************************************************************************
+     * handleForgivingControl
+     *
+     * Handles logic to perform forgiving assignment and detonation
+     **************************************************************************/
+    private void handleForgivingControl() {
         ArrayList<String> threats = mModel.getUnassignedThreats();
-        Interceptor tmpI;
-        Missile tmpT;
-        
-        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
-
-        
-        
-        for(int i = 0; i < interceptors.size(); i++)
-        {
-            tmpI = mModel.getInterceptor(interceptors.get(i));
-            tmpT = mModel.getThreat(tmpI.getAssignedThreat());
-            
-            // detonate interce ptors in range to their threat
-            if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT && 
-               tmpI.isDetonateOverriden() == false &&
-               tmpT != null)
-            {
-                int[] pos = tmpI.getPositionVector();
-                int[] tPos = tmpT.getPositionVector();
-                double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
-                                
-                if(distance <= (tmpI.getDetonationRange() - 8))
-                {
-                    cmdSmssDetEnable(interceptors.get(i));
-                    cmdMcssDetonate(interceptors.get(i));
-                }
-            }
-            else if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
-                    tmpI.isAssignmentOverriden() == false &&
-                    tmpI.isDisabled() == false &&
-                    tmpT == null)
-            {
-                switch(tmpI.getMissileClass())
-                {
-                    case 'A':
-                        aInts.add(interceptors.get(i));
-                        break;
-                    case 'B':
-                        bInts.add(interceptors.get(i));
-                        break;
-                    case 'C':
-                        cInts.add(interceptors.get(i));
-                        break;
-                }
-            }
-            else if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
-                    tmpI.isAssignmentOverriden() == false &&
-                    tmpT != null)
-            {
-                cmdMcssLaunch(interceptors.get(i));
-            }
-        }
-        
-        //assign threats to interceptors and launch
-        for(int i = 0; i < threats.size(); )
-        {
-            tmpT = mModel.getThreat(threats.get(i));
-            
-            if(tmpT.getMissileClass() == 'Y')
-            {
-                if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                }
-                else if(aInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    aInts.remove(0);
-                }
-                
-                threats.remove(i);
-            }
-            else
-            {
-                i++;
-            }  
-        }
-        
-        for(int i = 0; i < threats.size(); )
-        {
-            tmpT = mModel.getThreat(threats.get(i));
-            
-            if(tmpT.getMissileClass() == 'Z')
-            {
-                if(bInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(bInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    bInts.remove(0);
-                }
-                else if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                }
-                
-                threats.remove(i);
-            }
-            else
-            {
-                i++;
-            }  
-        }
-        
-        for(int i = 0; i < threats.size(); )
-        {
-            tmpT = mModel.getThreat(threats.get(i));
-            
-            if(tmpT.getMissileClass() == 'X')
-            {
-                if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                }
-                else if(aInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    aInts.remove(0);
-                }
-                else if(bInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(bInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    bInts.remove(0);
-                }
-                
-                
-                threats.remove(i);
-            }
-            else
-            {
-                i++;
-            }  
-        }
-                
-        
-    }
-    
-    private boolean handleForgivingAssignment()
-    {
-        ArrayList<String> interceptors = mModel.getUnassignedInterceptors();
-        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
-        Interceptor tmpI;
-        boolean newlyAssigned = false;
-        
-        for(int i = 0; i < interceptors.size(); i++)
-        {
-            tmpI = mModel.getInterceptor(interceptors.get(i));
-            
-            if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
-               tmpI.isAssignmentOverriden() == false && 
-               tmpI.isDisabled() == false &&
-               !rejectedInterceptors.contains(interceptors.get(i)))
-            {
-                switch(tmpI.getMissileClass())
-                {
-                    case 'A':
-                        aInts.add(interceptors.get(i));
-                        break;
-                    case 'B':
-                        bInts.add(interceptors.get(i));
-                        break;
-                    case 'C':
-                        cInts.add(interceptors.get(i));
-                        break;
-                }
-            }
-        }
-        
-        
-
-            if(curForgivingThreat.getMissileClass() == 'Y')
-            {
-                if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-                else if(aInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-            }
-            else if(curForgivingThreat.getMissileClass() == 'Z')
-            {
-                if(bInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(bInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-                else if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-
-            }
-            else if(curForgivingThreat.getMissileClass() == 'X')
-            {
-                if(cInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-                else if(aInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-                else if(bInts.size()>0)
-                {
-                    tmpI = mModel.getInterceptor(bInts.get(0));
-                    tmpI.setAssignedThreat(curForgivingThreat.getIdentifier());
-                    newlyAssigned = true;
-                }
-            }
-
-            return newlyAssigned;
-        
-    }
-    
-    private void handleForgivingControl()
-    {
-        ArrayList<String>  threats = mModel.getUnassignedThreats();
         ArrayList<String> interceptors = mModel.getInterceptorList();
         Interceptor tmpI;
         Missile tmpT;
         Timestamp tmp = new Timestamp(System.currentTimeMillis());
         boolean bAssigned = false;
-        
 
-        if(threats.size() > 0 && assignmentcomplete == false)
-        {
+        if (threats.size() > 0 && bFgvAssignmentDone == false) {
 
-            if(curForgivingThreat == null)
-            {
+            if (fgvCurrentThreat == null) {
 
-                rejectedInterceptors.clear();
-                curForgivingThreat = mModel.getThreat(threats.get(0));
+                fgvRejectInterceptors.clear();
+                fgvCurrentThreat = mModel.getThreat(threats.get(0));
                 bAssigned = handleForgivingAssignment();
-                forgivingAssignTime = tmp;
-                
-                if(!bAssigned)
-                {
+                fgvAssignmentTime = tmp;
 
-                    curForgivingThreat = null;
-                    
-                    if(!manualLaunchMode)
-                    {
-                    forceManualAssignment();
-                    manualLaunchMode = true;
+                if (!bAssigned) {
+
+                    fgvCurrentThreat = null;
+
+                    if (!bForceManualLaunch) {
+                        forceManualAssignment();
+                        bForceManualLaunch = true;
                     }
-                }
-                else
-                {
-                    manualLaunchMode = false;
+                } else {
+                    bForceManualLaunch = false;
                 }
 
-            }
-            else if(curForgivingThreat != null && forgivingRejected)
-            {
-                forgivingRejected = false;
-                rejectedInterceptors.add(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier()));
-                mModel.getInterceptor(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier())).setAssignedThreat("[UNASSIGNED]");
-                forgivingAssignTime = tmp;
-                
+            } else if (fgvCurrentThreat != null && bFgvAssignmentRejected) {
+                bFgvAssignmentRejected = false;
+                fgvRejectInterceptors.add(mModel.getAssignedInterceptor(fgvCurrentThreat.getIdentifier()));
+                mModel.getInterceptor(mModel.getAssignedInterceptor(fgvCurrentThreat.getIdentifier())).setAssignedThreat("[UNASSIGNED]");
+                fgvAssignmentTime = tmp;
+
                 bAssigned = handleForgivingAssignment();
-       
-                if(!bAssigned)
-                {
-                 
-                    curForgivingThreat = null;
-                    if(!manualLaunchMode)
-                    {
-                    forceManualAssignment();
-                    manualLaunchMode = true;
+
+                if (!bAssigned) {
+
+                    fgvCurrentThreat = null;
+                    if (!bForceManualLaunch) {
+                        forceManualAssignment();
+                        bForceManualLaunch = true;
                     }
                 }
             }
+        } else if (bFgvAssignmentDone == false) {
+            bFgvAssignmentDone = true;
         }
-        else if(assignmentcomplete ==false)
-            assignmentcomplete = true;
-        
-        if(curForgivingThreat != null &&
-          ((tmp.getTime() - forgivingAssignTime.getTime()) >= 4000 || forgivingApproved))
-        {
-      
-            cmdMcssLaunch(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier()));
-            forgivingRejected = false;
-            forgivingApproved = false;
-            curForgivingThreat = null;
+
+        if (fgvCurrentThreat != null
+                && ((tmp.getTime() - fgvAssignmentTime.getTime()) >= 4000 || bFgvAssignmentApproved)) {
+
+            cmdMcssLaunch(mModel.getAssignedInterceptor(fgvCurrentThreat.getIdentifier()));
+            bFgvAssignmentRejected = false;
+            bFgvAssignmentApproved = false;
+            fgvCurrentThreat = null;
         }
-        
-        
 
-        if(assignmentcomplete){
-        
-        if(curForgivingInt == null)
-        {
-            for(int i = 0; i < interceptors.size(); i++)
-            {
-                tmpI = mModel.getInterceptor(interceptors.get(i));
+        if (bFgvAssignmentDone) {
 
-                if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT && 
-                   tmpI.isDetonateOverriden() == false)
-                {
-                    tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+            if (fgvCurrentInterceptor == null) {
+                for (int i = 0; i < interceptors.size(); i++) {
+                    tmpI = mModel.getInterceptor(interceptors.get(i));
 
-                    int[] pos = tmpI.getPositionVector();
-                    int[] tPos = tmpT.getPositionVector();
-                    double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+                    if (tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT
+                            && tmpI.isDetonateOverriden() == false) {
+                        tmpT = mModel.getThreat(tmpI.getAssignedThreat());
 
-                    if(distance <= (tmpI.getDetonationRange() - 8))
-                    {
-                        curForgivingInt = tmpI;
-                        forgivingDetRejected = false;
-                        forgivingDetApproved = false;
-                        forgivingDetTime = new Timestamp(System.currentTimeMillis());
+                        int[] pos = tmpI.getPositionVector();
+                        int[] tPos = tmpT.getPositionVector();
+                        double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+
+                        if (distance <= (tmpI.getDetonationRange() - 8)) {
+                            fgvCurrentInterceptor = tmpI;
+                            bFgvDetonateRejected = false;
+                            bFgvDetonateApproved = false;
+                            bFgvDetonateTime = new Timestamp(System.currentTimeMillis());
+                        }
                     }
+                }
+            } else {
+                tmpT = mModel.getThreat(fgvCurrentInterceptor.getAssignedThreat());
+
+                int[] pos = fgvCurrentInterceptor.getPositionVector();
+                int[] tPos = tmpT.getPositionVector();
+                double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+
+                if (distance > fgvCurrentInterceptor.getDetonationRange()) {
+                    fgvCurrentInterceptor = null;
+                    bFgvDetonateRejected = false;
+                    bFgvDetonateApproved = false;
+                } else if (bFgvDetonateRejected) {
+                    mView.handleDetModeChange(fgvCurrentInterceptor.getIdentifier());
+
+                    bFgvDetonateRejected = false;
+                    fgvCurrentInterceptor.setDetonateOverride(true);
+                    fgvCurrentInterceptor = null;
+
+                } else if (bFgvDetonateApproved || (System.currentTimeMillis() - bFgvDetonateTime.getTime()) >= 4000) {
+                    cmdSmssDetEnable(fgvCurrentInterceptor.getIdentifier());
+                    cmdMcssDetonate(fgvCurrentInterceptor.getIdentifier());
+                    bFgvDetonateRejected = false;
+                    bFgvDetonateApproved = false;
+                    fgvCurrentInterceptor = null;
                 }
             }
         }
-        else
-        {
-            tmpT = mModel.getThreat(curForgivingInt.getAssignedThreat());
-            
-            int[] pos = curForgivingInt.getPositionVector();
-            int[] tPos = tmpT.getPositionVector();
-            double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
 
-            if(distance > curForgivingInt.getDetonationRange())
-            {
-                curForgivingInt = null;
-                forgivingDetRejected = false;
-                forgivingDetApproved = false;
-            }
-            else if(forgivingDetRejected)
-            {
-                mView.handleDetModeChange(curForgivingInt.getIdentifier());
-                
-                forgivingDetRejected = false;
-                curForgivingInt.setDetonateOverride(true);
-                curForgivingInt = null;
-                
-                
-            }
-            else if(forgivingDetApproved || (System.currentTimeMillis() - forgivingDetTime.getTime()) >= 4000)
-            {
-                cmdMcssDetonate(curForgivingInt.getIdentifier());
-                forgivingDetRejected = false;
-                forgivingDetApproved = false;
-                curForgivingInt = null;
-            }
-        }
-        }
-        
-        
-        
-    }
-    
-    public String getForgivingDetState()
-    {
-        if(curForgivingInt != null && forgivingDetApproved == false && forgivingDetRejected == false)
-            return curForgivingInt.getIdentifier();
-        else
-            return null;
-    }
-    
-    public String getForgivingAssignmentState()
-    {
-        if(curForgivingThreat != null && forgivingApproved == false && forgivingRejected == false)
-            return ("Threat [" + curForgivingThreat.getIdentifier() + "] has been assigned to Interceptor ["+mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier())+"]");
-        else
-            return null;
-    }
-    
-    public void approveForgivingAssignment()
-    {
-        forgivingApproved = true;
-    }
-    
-    public void rejectForgivingAssignment()
-    {
-        forgivingRejected = true;
-    }
-    
-    public void approveForgivingDet()
-    {
-        forgivingDetApproved = true;
-    }
-    
-    public void rejectForgivingDet()
-    {
-        forgivingDetRejected = true;
     }
 
-    private void forceManualAssignment()
-    {
+    /***************************************************************************
+     * handleAutomaticControl
+     *
+     * Handles logic to perform automatic assignment and detonation
+     **************************************************************************/
+    private void handleAutomaticControl() {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        ArrayList<String> threats = mModel.getUnassignedThreats();
+        Interceptor tmpI;
+        Missile tmpT;
+
+        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
+
+        for (int i = 0; i < interceptors.size(); i++) {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+
+            // detonate interce ptors in range to their threat
+            if (tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT
+                    && tmpI.isDetonateOverriden() == false
+                    && tmpT != null) {
+                int[] pos = tmpI.getPositionVector();
+                int[] tPos = tmpT.getPositionVector();
+                double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+
+                if (distance <= (tmpI.getDetonationRange() - 8)) {
+                    cmdSmssDetEnable(interceptors.get(i));
+                    cmdMcssDetonate(interceptors.get(i));
+                }
+            } else if (tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT
+                    && tmpI.isAssignmentOverriden() == false
+                    && tmpI.isDisabled() == false
+                    && tmpT == null) {
+                switch (tmpI.getMissileClass()) {
+                    case 'A':
+                        aInts.add(interceptors.get(i));
+                        break;
+                    case 'B':
+                        bInts.add(interceptors.get(i));
+                        break;
+                    case 'C':
+                        cInts.add(interceptors.get(i));
+                        break;
+                }
+            } else if (tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT
+                    && tmpI.isAssignmentOverriden() == false
+                    && tmpT != null) {
+                cmdMcssLaunch(interceptors.get(i));
+            }
+        }
+
+        //assign threats to interceptors and launch
+        for (int i = 0; i < threats.size();) {
+            tmpT = mModel.getThreat(threats.get(i));
+
+            if (tmpT.getMissileClass() == 'Y') {
+                if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                } else if (aInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                }
+
+                threats.remove(i);
+            } else {
+                i++;
+            }
+        }
+
+        for (int i = 0; i < threats.size();) {
+            tmpT = mModel.getThreat(threats.get(i));
+
+            if (tmpT.getMissileClass() == 'Z') {
+                if (bInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                } else if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                }
+
+                threats.remove(i);
+            } else {
+                i++;
+            }
+        }
+
+        for (int i = 0; i < threats.size();) {
+            tmpT = mModel.getThreat(threats.get(i));
+
+            if (tmpT.getMissileClass() == 'X') {
+                if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                } else if (aInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                } else if (bInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                }
+
+                threats.remove(i);
+            } else {
+                i++;
+            }
+        }
+
+    }
+
+    /***************************************************************************
+     * handleForgivingAssignment
+     *
+     * Called by the handleForgivingControl function to determine the next
+     * interceptor to assign to a threat.
+     * 
+     * @return - a boolean value that indicates whether or not a suitable interceptor
+     *           is available for assignment
+     **************************************************************************/
+    private boolean handleForgivingAssignment() {
+        ArrayList<String> interceptors = mModel.getUnassignedInterceptors();
+        ArrayList<String> aInts = new ArrayList(), bInts = new ArrayList(), cInts = new ArrayList();
+        Interceptor tmpI;
+        boolean newlyAssigned = false;
+
+        for (int i = 0; i < interceptors.size(); i++) {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+
+            if (tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT
+                    && tmpI.isAssignmentOverriden() == false
+                    && tmpI.isDisabled() == false
+                    && !fgvRejectInterceptors.contains(interceptors.get(i))) {
+                switch (tmpI.getMissileClass()) {
+                    case 'A':
+                        aInts.add(interceptors.get(i));
+                        break;
+                    case 'B':
+                        bInts.add(interceptors.get(i));
+                        break;
+                    case 'C':
+                        cInts.add(interceptors.get(i));
+                        break;
+                }
+            }
+        }
+
+        if (fgvCurrentThreat.getMissileClass() == 'Y') {
+            if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (aInts.size() > 0) {
+                tmpI = mModel.getInterceptor(aInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }
+        } else if (fgvCurrentThreat.getMissileClass() == 'Z') {
+            if (bInts.size() > 0) {
+                tmpI = mModel.getInterceptor(bInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }
+
+        } else if (fgvCurrentThreat.getMissileClass() == 'X') {
+            if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (aInts.size() > 0) {
+                tmpI = mModel.getInterceptor(aInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (bInts.size() > 0) {
+                tmpI = mModel.getInterceptor(bInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }
+        }
+
+        return newlyAssigned;
+
+    }
+
+    /***************************************************************************
+     * getForgivingDetState
+     *
+     * Called by the GUI on a regular basis to determine whether or not a popup
+     * should be presented to the operator to approve or disprove a detonation in
+     * the forgiving control mode
+     * 
+     * @return - the identifier of the interceptor to be detonated, null if there
+     *           is no interceptor eligible for detonation
+     **************************************************************************/
+    public String getForgivingDetState() {
+        if (fgvCurrentInterceptor != null && bFgvDetonateApproved == false && bFgvDetonateRejected == false) {
+            return fgvCurrentInterceptor.getIdentifier();
+        } else {
+            return null;
+        }
+    }
+
+    /***************************************************************************
+     * getForgivingDetState
+     *
+     * Called by the GUI on a regular basis to determine whether or not a popup
+     * should be presented to the operator to approve or disprove an assignment in
+     * the forgiving control mode
+     * 
+     * @return - the identifier of the interceptor and threat to be assigned, null if there
+     *           is no eligable pair for assignment
+     **************************************************************************/
+    public String getForgivingAssignmentState() {
+        if (fgvCurrentThreat != null && bFgvAssignmentApproved == false && bFgvAssignmentRejected == false) {
+            return ("Threat [" + fgvCurrentThreat.getIdentifier() + "] has been assigned to Interceptor [" + mModel.getAssignedInterceptor(fgvCurrentThreat.getIdentifier()) + "]");
+        } else {
+            return null;
+        }
+    }
+
+    /***************************************************************************
+     * approveForgivingAssignment
+     *
+     * Called by the GUI if the operator has approved the current assignment in
+     * the forgiving mode of control
+     **************************************************************************/
+    public void approveForgivingAssignment() {
+        bFgvAssignmentApproved = true;
+    }
+
+    /***************************************************************************
+     * rejectForgivingAssignment
+     *
+     * Called by the GUI if the operator has rejected the current assignment in
+     * the forgiving mode of control
+     **************************************************************************/
+    public void rejectForgivingAssignment() {
+        bFgvAssignmentRejected = true;
+    }
+
+    /***************************************************************************
+     * approveForgivingDet
+     *
+     * Called by the GUI if the operator has approved the current detonation choice in
+     * the forgiving mode of control
+     **************************************************************************/
+    public void approveForgivingDet() {
+        bFgvDetonateApproved = true;
+    }
+
+    /***************************************************************************
+     * rejectForgivingDet
+     *
+     * Called by the GUI if the operator has rejected the current detonation choice in
+     * the forgiving mode of control
+     **************************************************************************/
+    public void rejectForgivingDet() {
+        bFgvDetonateRejected = true;
+    }
+
+    /***************************************************************************
+     * forceManualAssignment
+     *
+     * Called by the forgiving control logic to set the assignment override state of
+     * every interceptor to manual in the case of an alternative assignment in forgiving
+     * control to be impossible
+     **************************************************************************/
+    private void forceManualAssignment() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
         Interceptor tmpI;
-        
-        for(int i = 0; i < interceptors.size(); i++)
-        {
+
+        for (int i = 0; i < interceptors.size(); i++) {
             tmpI = mModel.getInterceptor(interceptors.get(i));
             tmpI.setAssignmentOverriden(true);
         }
-        
+
         mView.handleLaunchModeChange();
     }
-    
-    public void setControlMode(controlMode pMode)
-    {
-        
-        if(operationalState != pMode)
-        {
-        operationalState = pMode;
-        rejectedInterceptors.clear();
-        forgivingRejected = false;
-        curForgivingThreat = null;
-        forgivingAssignTime = null;
-        forgivingDetTime = null;
-        forgivingApproved = false;
-        curForgivingInt = null;
-        forgivingDetApproved = false;
-        forgivingDetRejected = false;
-        assignmentcomplete =false;
-        }
-    }
-    
-    public controlMode getControlMode()
-    {
-        return operationalState;
-    }
-    
-    public void finalize()
-    {        
-            try
-            {
-                if(tssTCP != null)
-                    tssTCP.close();
-                if(mcssTCP != null)
-                    mcssTCP.close();
-                if(smssTCP != null)
-                    smssTCP.close();
-            } 
-            catch(Exception ex)
-            {
-                System.out.println("MDSCSSController - finalize: socket failure\n" + ex.getMessage() +"\n");
-            }
-            
-            controller.interrupt();
-    }
-    
-    public boolean establishConnection()
-    {
-        boolean tssPass = false, mcssPass = false, smssPass = false;
 
-        try{
-            if(tssTCP == null)
-            {
-
-                tssTCP = new Socket("localhost", TSS_SOCKET);
-                tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
-                tssPass = true;
-            }
-            else
-            {
-                tssPass = true;
-            }
-        }
-        catch(Exception ex)
-        {
-            System.out.println("MDSCSSController - establishConnection: TSS socket failure\n" + ex.getMessage() +"\n");
-        }
-        
-        try{
-            if(mcssTCP == null)
-            {
-                
-                mcssTCP = new Socket("localhost", MCSS_SOCKET);
-                mcssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
-                mcssPass = true;
-            }
-            else
-            {
-                mcssPass = true;
-            }
-        }
-        catch(Exception ex)
-        {
-            System.out.println("MDSCSSController - establishConnection: MCSS socket failure\n" + ex.getMessage() +"\n");
-        }
-            
-        try{
-            if(smssTCP == null)
-            {
-                smssTCP = new Socket("localhost", SMSS_SOCKET);
-                smssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
-                smssPass = true;
-            }
-            else
-            {
-                smssPass = true;
-            }
-        }
-        catch(Exception ex)
-        {
-            System.out.println("MDSCSSController - establishConnection: SMSS socket failure\n" + ex.getMessage() +"\n");
-        }
-
-        if(smssPass && tssPass && mcssPass)
-        {
-            failureTimer = null;
-            return true;
-            
-        }
-        else
-        {
-            return false;
-        }
-
-    }   
-    
-    public void checkForFailure()
-    {
-        Timestamp tmp = new Timestamp(System.currentTimeMillis());
-        int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
-
-        if(failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 300000)
-        {
-            mView.handleCodeRed();
-            
-            failureTimer = null;
-            
-            purgeWatchdog = true;
-            initializeWatchdog();
-            
-        }
-    }
-    
-    public boolean establishStatus()
-    {
-        String tmp = "";
-        
-            if(tssTCP != null)
-            {
-                tmp = cmdTssGetVersion();
-                if(tmp!= null)
-                    mView.tssConnected(cmdTssGetVersion());
-                else
-                    return false;
-            }
-            
-            if(mcssTCP != null)
-            {
-                tmp = cmdMcssGetVersion();
-                if(tmp!= null)
-                    mView.mcssConnected(tmp);
-                else
-                    return false;
-            }
-            
-            if(smssTCP != null && mcssTCP != null)
-            {
-                ArrayList<String> interceptors = cmdMcssGetInterceptorList();
-                
-                if(interceptors.size() > 0)
-                {
-                    tmp = cmdSmssGetVersion(interceptors.get(0));
-                    if(tmp!= null)
-                        mView.smssConnected(tmp);
-                    else
-                    return false;
-                }
-                else
-                {
-                    mView.smssConnected("N/A");
-                }
-            }
-
-           return true;
-    }
-    
-    public void initializeModel()
-    {
-        ArrayList<String> missiles = cmdMcssGetInterceptorList();
-        
-        missiles.addAll(cmdTssGetThreatList());
-        
-        mModel.updateDatabase(missiles);
-        
-        mView.handleInitialUpdate();
-    }
-    
-    public void initializeWatchdog()
-    {
-        int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
-        
-        for(i = 0; i < interceptors.size(); i++)
-        {            
-            cmdSmssActivateSafety(interceptors.get(i));
-        }
-        
-        
-    }
-    
-    public void disableWatchdog()
-    {
-         int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
-        
-        for(i = 0; i < interceptors.size(); i++)
-        {
-            cmdSmssDeactivateSafety(interceptors.get(i));
-        }
-    }
-    
-    public void updateModel()
-    {
-        ArrayList<String> missiles = mModel.getInterceptorList();
-        Interceptor tmpInt;
-        Missile tmpThreat;
-        int pos[] = new int[3];
-        
-        
-        
-        for(int i = 0; i < missiles.size(); i++)
-        {
-            tmpInt = mModel.getInterceptor(missiles.get(i));
-            
-            tmpInt.setState(cmdMcssgetState(tmpInt.getIdentifier()));
-            
-            if(tmpInt.getState() != Interceptor.interceptorState.DETONATED)
-            {
-                
-                pos = cmdTssTrackInterceptor(tmpInt.getIdentifier());
-                //todo :: bug here if we get a non-req id (ie 3 digit ID this is null, and all of our representations are ....
-                if(pos != null)
-                tmpInt.setPosition(pos[0], pos[1], pos[2]);
-            }
-            else if(!tmpInt.getAssignedThreat().equals("[UNASSIGNED]"))
-            {               
-                tmpInt.setAssignedThreat("[UNASSIGNED]");
-            }
-        }
-        
-        missiles = mModel.getThreatList();
-        
-        for(int i = 0; i < missiles.size(); i++)
-        {
-            tmpThreat = mModel.getThreat(missiles.get(i));
-            
-            
-            pos = cmdTssTrackThreat(tmpThreat.getIdentifier());
-            
-            if(pos != null)
-            {
-                tmpThreat.setPosition(pos[0], pos[1], pos[2]);
-            }
-            else
-            {                
-                ArrayList<String> threats = cmdTssGetThreatList();
-                
-                if(!threats.contains(tmpThreat.getIdentifier()))
-                {
-                    System.out.println(tmpThreat.getIdentifier() + " is no longer in the list TSS");
-                    
-                    //if theres an interceptor in flight after this threat, send a destruct, if theres one in preflight, unassign
-                    ArrayList<String> interceptors = mModel.getInterceptorList();
-                    for(int j = 0; j < interceptors.size(); j++)
-                    {
-                        tmpInt = mModel.getInterceptor(interceptors.get(j));
-                        if(tmpInt.getAssignedThreat().equals(tmpThreat.getIdentifier()))
-                        {
-                            if(tmpInt.getState() == Interceptor.interceptorState.IN_FLIGHT)
-                            {
-                                cmdMcssDestruct(tmpInt.getIdentifier());
-                            }
-                            else
-                            {
-                                tmpInt.setAssignedThreat("[UNASSIGNED]");
-                            }
-                        }
-                    }
-                    
-                    
-                    mView.handleThreatDestruction(tmpThreat.getIdentifier());
-                    mModel.removeThreat(tmpThreat.getIdentifier());
-                }
-                
-            }
-        }
-        
-        
-    }
-    
-    public void handleWatchdogTimer()
-    {
-        ArrayList<String> interceptors = mModel.getInterceptorList();
-        Interceptor tmpI;
-        
-        if(purgeWatchdog)
-            return;
-        
-        watchdogTime++; 
-        
-        for(int i = 0; i < interceptors.size(); i++)
-        {
-            tmpI = mModel.getInterceptor(interceptors.get(i));
-            
-            if(tmpI.getState() != Interceptor.interceptorState.DETONATED)
-            cmdSmssPingWatchdog(interceptors.get(i), watchdogTime);
-        }
-    }
-    
-    public void handleSocketFailure()
-    {
-        finalize();
-        tssTCP = null;
-        mcssTCP = null;
-        smssTCP = null;
-        
-
-        failureTimer = new Timestamp(System.currentTimeMillis());
-        mView.handleSubsystemFailure();
-                
-        controller = new Thread(new ControlThread(this));
-        purgeWatchdog = false;
-        controller.start();
-    }
-    
     /***************************************************************************
-     *  TSS Command Interface
+     * TSS Command Interface
      **************************************************************************/
     
-    public int[] cmdTssTrackThreat(String missileID)
-    {
+    /***************************************************************************
+     * cmdTssTrackThreat
+     *
+     * Queries the TSS for a threat's position
+     * 
+     * @param missileID - the id of the Threat to query
+     * 
+     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     **************************************************************************/
+    public int[] cmdTssTrackThreat(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         int result[] = new int[3];
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[12];
         int bufferSize = 0;
-        
-        if(tssTCP != null)
-        {
-            try 
-            {
+
+        if (tssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(tssTCP.getOutputStream());
                 buffIn = new DataInputStream(tssTCP.getInputStream());
 
                 header[0] = 1;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
 
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize == 12)
-                {
+                if (returnHeader[3] == 0 && bufferSize == 12) {
                     buffIn.read(returnBuffer, 0, bufferSize);
 
                     result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
                     result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
                     result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdTssTrackThreat: unexpected or failed response\n");
                     result = null;
                 }
-                
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdTssTrackThreat: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdTssTrackThreat: buffer failure\n" + ex.getMessage() +"\n");
+
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdTssTrackThreat: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdTssTrackThreat: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public int[] cmdTssTrackInterceptor(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdTssTrackInterceptor
+     *
+     * Queries the TSS for a interceptor's position
+     * 
+     * @param missileID - the id of the interceptor to query
+     * 
+     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     **************************************************************************/
+    public int[] cmdTssTrackInterceptor(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         int result[] = new int[3];
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[12];
         int bufferSize = 0;
-        
-        if(tssTCP != null)
-        {
-            try 
-            {
+
+        if (tssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(tssTCP.getOutputStream());
                 buffIn = new DataInputStream(tssTCP.getInputStream());
 
                 header[0] = 2;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
 
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize == 12)
-                {
+                if (returnHeader[3] == 0 && bufferSize == 12) {
                     buffIn.read(returnBuffer, 0, bufferSize);
 
                     result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
                     result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
                     result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdTssTrackInterceptor: unexpected or failed response\n");
                     result = null;
                 }
-                
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdTssTrackInterceptor: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
+
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdTssTrackInterceptor: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
                 result = null;
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdTssTrackInterceptor: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdTssTrackInterceptor: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public ArrayList<String> cmdTssGetThreatList()
-    {
+
+    /***************************************************************************
+     * cmdTssGetThreatList
+     *
+     * Queries the TSS for a list of known threats
+     * Note: Per requirement, all threats are assumed to have a 2-char ID
+     * 
+     * @return an arraylist containing the ids of all known threats
+     **************************************************************************/
+    public ArrayList<String> cmdTssGetThreatList() {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         ArrayList<String> result = new ArrayList();
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[2];
         int bufferSize = 0;
-        
-        if(tssTCP != null)
-        {
-            try 
-            {
+
+        if (tssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(tssTCP.getOutputStream());
                 buffIn = new DataInputStream(tssTCP.getInputStream());
 
@@ -1035,50 +1050,45 @@ public class MDSCSSController
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize > 0)
-                {
+                if (returnHeader[3] == 0 && bufferSize > 0) {
                     result = new ArrayList();
 
-                    for(int i = 0; i < bufferSize; i+=2)
-                    {
+                    for (int i = 0; i < bufferSize; i += 2) {
                         buffIn.read(returnBuffer, 0, 2);
                         result.add(new String(returnBuffer, "UTF-8"));
                     }
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdTssGetThreatList: unexpected or failed response\n");
-                }                
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdTssGetThreatList: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdTssGetThreatList: buffer failure\n" + ex.getMessage() +"\n");
+                }
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdTssGetThreatList: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdTssGetThreatList: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            }  
+            }
         }
 
-        
         return result;
     }
-    
-    public String cmdTssGetVersion()
-    {
+
+    /***************************************************************************
+     * cmdTssGetVersion
+     *
+     * Queries the TSS for its version string and parses out the version number
+     * 
+     * @return the version number of the TSS
+     **************************************************************************/
+    public String cmdTssGetVersion() {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         String result = null;
-        
+
         byte[] header = new byte[5];
         byte[] returnBuffer = new byte[256];
         int bufferSize = 0;
-        
-        if(tssTCP != null)
-        {
-            try 
-            {
+
+        if (tssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(tssTCP.getOutputStream());
                 buffIn = new DataInputStream(tssTCP.getInputStream());
 
@@ -1088,263 +1098,262 @@ public class MDSCSSController
                 buffIn.read(returnBuffer, 0, 6);
                 bufferSize = ((returnBuffer[4] & 0xff) << 8) | (returnBuffer[5] & 0xff);
 
-                if(returnBuffer[3] == 0)
-                {
+                if (returnBuffer[3] == 0) {
                     buffIn.read(returnBuffer, 0, bufferSize);
                     result = new String(returnBuffer, "UTF-8");
 
                     result = result.substring(27, 30);
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdTssGetVersion: unexpected or failed response\n");
                 }
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdTssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdTssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdTssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdTssGetVersion: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
+
     /***************************************************************************
-     *  MCSS Command Interface
+     * MCSS Command Interface
      **************************************************************************/
-    
-    public boolean cmdMcssLaunch(String missileID)
-    {
+    /***************************************************************************
+     * cmdMcssLaunch
+     *
+     * Sends the launch command to the MCSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to launch
+     * 
+     * @return the success status of the launch command
+     **************************************************************************/
+    public boolean cmdMcssLaunch(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 1;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssLaunch: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssLaunch: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssLaunch: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssLaunch: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    
-    public boolean cmdMcssThrust(String missileID, int pwrX, int pwrY, int pwrZ)
-    {
+
+    /***************************************************************************
+     * cmdMcssLaunch
+     *
+     * Sends the thrust command to the MCSS for a specified interceptor, each
+     * power level will persist for 1 second of duration.
+     * 
+     * @param missileID - the id of the interceptor to control
+     * @param pwrX - the power level in the x direction
+     * @param pwrY - the power level in the y direction
+     * @param pwrZ - the power level in the z direction
+     * 
+     * @return the success status of the thrust command
+     **************************************************************************/
+    public boolean cmdMcssThrust(String missileID, int pwrX, int pwrY, int pwrZ) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
         int tmp;
-        
+
         byte[] header = new byte[53];
         byte[] returnHeader = new byte[6];
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 2;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
-                
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
+
                 // header will be 48 bytes long
-                header[4] = (byte)48;    
-                
+                header[4] = (byte) 48;
+
                 // set the thrust time values all to 1 second
                 header[8] = header[12] = header[16] = header[20] = header[24] = header[28] = 0x6;
-                
-                if(pwrX > 0)
-                {
+
+                if (pwrX > 0) {
                     tmp = Math.abs(pwrX);
-                    header[29] = (byte)((tmp >> 24) & 0xff);
-                    header[30] = (byte)((tmp >> 16) & 0xff);
-                    header[31] = (byte)((tmp >> 8) & 0xff);
-                    header[32] = (byte)(tmp & 0xff);
-                }
-                else
-                {
+                    header[29] = (byte) ((tmp >> 24) & 0xff);
+                    header[30] = (byte) ((tmp >> 16) & 0xff);
+                    header[31] = (byte) ((tmp >> 8) & 0xff);
+                    header[32] = (byte) (tmp & 0xff);
+                } else {
                     tmp = Math.abs(pwrX);
-                    header[33] = (byte)((tmp >> 24) & 0xff);
-                    header[34] = (byte)((tmp >> 16) & 0xff);
-                    header[35] = (byte)((tmp >> 8) & 0xff);
-                    header[36] = (byte)(tmp & 0xff);
+                    header[33] = (byte) ((tmp >> 24) & 0xff);
+                    header[34] = (byte) ((tmp >> 16) & 0xff);
+                    header[35] = (byte) ((tmp >> 8) & 0xff);
+                    header[36] = (byte) (tmp & 0xff);
                 }
-                
-                if(pwrY > 0)
-                {
+
+                if (pwrY > 0) {
                     tmp = Math.abs(pwrY);
-                    header[37] = (byte)((tmp >> 24) & 0xff);
-                    header[38] = (byte)((tmp >> 16) & 0xff);
-                    header[39] = (byte)((tmp >> 8) & 0xff);
-                    header[40] = (byte)(tmp & 0xff);
-                }
-                else
-                {
+                    header[37] = (byte) ((tmp >> 24) & 0xff);
+                    header[38] = (byte) ((tmp >> 16) & 0xff);
+                    header[39] = (byte) ((tmp >> 8) & 0xff);
+                    header[40] = (byte) (tmp & 0xff);
+                } else {
                     tmp = Math.abs(pwrY);
-                    header[41] = (byte)((tmp >> 24) & 0xff);
-                    header[42] = (byte)((tmp >> 16) & 0xff);
-                    header[43] = (byte)((tmp >> 8) & 0xff);
-                    header[44] = (byte)(tmp & 0xff);
+                    header[41] = (byte) ((tmp >> 24) & 0xff);
+                    header[42] = (byte) ((tmp >> 16) & 0xff);
+                    header[43] = (byte) ((tmp >> 8) & 0xff);
+                    header[44] = (byte) (tmp & 0xff);
                 }
-                
-                if(pwrZ > 0)
-                {
+
+                if (pwrZ > 0) {
                     tmp = Math.abs(pwrZ);
-                    header[45] = (byte)((tmp >> 24) & 0xff);
-                    header[46] = (byte)((tmp >> 16) & 0xff);
-                    header[47] = (byte)((tmp >> 8) & 0xff);
-                    header[48] = (byte)(tmp & 0xff);
-                }
-                else
-                {
+                    header[45] = (byte) ((tmp >> 24) & 0xff);
+                    header[46] = (byte) ((tmp >> 16) & 0xff);
+                    header[47] = (byte) ((tmp >> 8) & 0xff);
+                    header[48] = (byte) (tmp & 0xff);
+                } else {
                     tmp = Math.abs(pwrZ);
-                    header[49] = (byte)((tmp >> 24) & 0xff);
-                    header[50] = (byte)((tmp >> 16) & 0xff);
-                    header[51] = (byte)((tmp >> 8) & 0xff);
-                    header[52] = (byte)(tmp & 0xff);
+                    header[49] = (byte) ((tmp >> 24) & 0xff);
+                    header[50] = (byte) ((tmp >> 16) & 0xff);
+                    header[51] = (byte) ((tmp >> 8) & 0xff);
+                    header[52] = (byte) (tmp & 0xff);
                 }
-                
+
                 buffOut.write(header, 0, 53);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssThrust: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssThrust: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssThrust: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssThrust: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public boolean cmdMcssDetonate(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdMcssDetonate
+     *
+     * Sends the detonate command to the MCSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to detonate
+     * 
+     * @return the success status of the detonate command
+     **************************************************************************/
+    public boolean cmdMcssDetonate(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 3;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssDetonate: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssDetonate: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssDetonate: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssDetonate: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            }  
+            }
         }
-        
+
         return result;
     }
-    
-    public boolean cmdMcssDestruct(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdMcssDestruct
+     *
+     * Sends the destruct command to the MCSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to destroy
+     * 
+     * @return the success status of the destruct command
+     **************************************************************************/
+    public boolean cmdMcssDestruct(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 4;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssDestruct: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssDestruct: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssDestruct: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssDestruct: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public ArrayList<String> cmdMcssGetInterceptorList()
-    {
+
+    /***************************************************************************
+     * cmdMcssGetInterceptorList
+     *
+     * Queries the MCSS for a list of known interceptors
+     * Note: Per requirement, all interceptors are assumed to have a 2-char ID
+     * 
+     * @return an arraylist containing the ids of all known interceptors
+     **************************************************************************/
+    public ArrayList<String> cmdMcssGetInterceptorList() {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         ArrayList<String> result = new ArrayList();
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[2];
         int bufferSize = 0;
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
@@ -1354,61 +1363,58 @@ public class MDSCSSController
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize > 0)
-                {
-                    for(int i = 0; i < bufferSize; i+=2)
-                    {
+                if (returnHeader[3] == 0 && bufferSize > 0) {
+                    for (int i = 0; i < bufferSize; i += 2) {
                         buffIn.read(returnBuffer, 0, 2);
                         result.add(new String(returnBuffer, "UTF-8"));
                     }
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdMcssGetInterceptorList: unexpected or failed response\n");
                 }
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssGetInterceptorList: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssGetInterceptorList: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetInterceptorList: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetInterceptorList: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public Interceptor.interceptorState cmdMcssgetState(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdMcssgetState
+     *
+     * Queries the MCSS for a specified interceptor's state
+     * 
+     * @param missileID - the id of the interceptor to query
+     * 
+     * @return an enumeration value representing the state of the specified interceptor
+     **************************************************************************/
+    public Interceptor.interceptorState cmdMcssgetState(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         Interceptor.interceptorState result = Interceptor.interceptorState.UNDEFINED;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[25];
         int bufferSize = 0;
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 6;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize == 25)
-                {
+                if (returnHeader[3] == 0 && bufferSize == 25) {
                     buffIn.read(returnBuffer, 0, 25);
 
                     switch (returnBuffer[0]) {
@@ -1424,96 +1430,93 @@ public class MDSCSSController
                         default:
                             break;
                     }
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdMcssgetState: unexpected or failed response\n");
                 }
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssgetState: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssgetState: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssgetState: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssgetState: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public int[] cmdMcssGetLaunchSite(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdMcssGetLaunchSite
+     *
+     * Queries the MCSS for a interceptor's launch position
+     * 
+     * @param missileID - the id of the interceptor to query
+     * 
+     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     **************************************************************************/
+    public int[] cmdMcssGetLaunchSite(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         int result[] = new int[3];
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
         byte[] returnBuffer = new byte[12];
         int bufferSize = 0;
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 7;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
 
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 bufferSize = ((returnHeader[4] & 0xff) << 8) | (returnHeader[5] & 0xff);
 
-                if(returnHeader[3] == 0 && bufferSize == 12)
-                {
+                if (returnHeader[3] == 0 && bufferSize == 12) {
                     buffIn.read(returnBuffer, 0, bufferSize);
 
                     result[0] = ((returnBuffer[0] & 0xff) << 24) | ((returnBuffer[1] & 0xff) << 16) | ((returnBuffer[2] & 0xff) << 8) | (returnBuffer[3] & 0xff);
                     result[1] = ((returnBuffer[4] & 0xff) << 24) | ((returnBuffer[5] & 0xff) << 16) | ((returnBuffer[6] & 0xff) << 8) | (returnBuffer[7] & 0xff);
                     result[2] = ((returnBuffer[8] & 0xff) << 24) | ((returnBuffer[9] & 0xff) << 16) | ((returnBuffer[10] & 0xff) << 8) | (returnBuffer[11] & 0xff);
                     System.out.println(result[0]);
-                }
-                else
-                {
+                } else {
                     System.out.println("MDSCSSController - cmdMcssGetLaunchSite: unexpected or failed response\n");
                     result = null;
-                }   
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssGetLaunchSite: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssGetLaunchSite: buffer failure\n" + ex.getMessage() +"\n");
+                }
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetLaunchSite: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetLaunchSite: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public String cmdMcssGetVersion()
-    {
+
+    /***************************************************************************
+     * cmdMcssGetVersion
+     *
+     * Queries the MCSS for its version string and parses out the version number
+     * 
+     * @return the version number of the MCSS
+     **************************************************************************/
+    public String cmdMcssGetVersion() {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         String result = null;
-        
+
         byte[] header = new byte[5];
         byte[] returnBuffer = new byte[256];
         int bufferSize = 0;
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
@@ -1526,42 +1529,44 @@ public class MDSCSSController
                 buffIn.read(returnBuffer, 0, bufferSize);
                 result = new String(returnBuffer, "UTF-8");
 
-                result = result.substring(26, 29);    
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+                result = result.substring(26, 29);
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetVersion: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
 
         return result;
     }
-    
-    public String cmdMcssGetCtrlVersion(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdMcssGetCtrlVersion
+     *
+     * Queries the MCSS for the version string of a specific interceptor controller
+     * 
+     * @param missileID - the id of the interceptor to query
+     * 
+     * @return the version string of the specific interceptor controller
+     **************************************************************************/
+    public String cmdMcssGetCtrlVersion(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         String result = null;
-        
+
         byte[] header = new byte[5];
         byte[] returnBuffer = new byte[256];
         int bufferSize = 0;
-        
-        if(mcssTCP != null)
-        {
-            try 
-            {
+
+        if (mcssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(mcssTCP.getOutputStream());
                 buffIn = new DataInputStream(mcssTCP.getInputStream());
 
                 header[0] = 9;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnBuffer, 0, 6);
@@ -1569,242 +1574,252 @@ public class MDSCSSController
 
                 buffIn.read(returnBuffer, 0, bufferSize);
                 result = new String(returnBuffer, "UTF-8");
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdMcssGetCtrlVersion: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
+
     /***************************************************************************
-     *  SMSS Command Interface
+     * SMSS Command Interface
      **************************************************************************/
-    
-    public boolean cmdSmssActivateSafety(String missileID)
-    {
+    /***************************************************************************
+     * cmdSmssActivateSafety
+     *
+     * Sends the activate command to the SMSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to activate the safety for
+     * 
+     * @return the success status of the activate command
+     **************************************************************************/
+    public boolean cmdSmssActivateSafety(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(smssTCP != null)
-        {
-            try 
-            {
+
+        if (smssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
                 header[0] = 1;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
-                buffOut.write(header, 0, 5);
-
-                buffIn.read(returnHeader, 0, 6);
-                result = (returnHeader[3] == 0);             
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssActivateSafety: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssActivateSafety: buffer failure\n" + ex.getMessage() +"\n");
-                handleSocketFailure();
-            } 
-        }
-        
-        return result;
-    }
-    
-    public boolean cmdSmssDeactivateSafety(String missileID)
-    {
-        DataOutputStream buffOut;
-        DataInputStream buffIn;
-        boolean result = false;
-        
-        byte[] header = new byte[5];
-        byte[] returnHeader = new byte[6];
-        
-        if(smssTCP != null)
-        {
-            try 
-            {
-                buffOut = new DataOutputStream(smssTCP.getOutputStream());
-                buffIn = new DataInputStream(smssTCP.getInputStream());
-
-                header[0] = 2;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssDeactivateSafety: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssDeactivateSafety: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssActivateSafety: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssActivateSafety: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            }  
-            
+            }
         }
-        
+
         return result;
     }
-    
-    public boolean cmdSmssPingWatchdog(String missileID, int pTimer)
-    {
+
+    /***************************************************************************
+     * cmdSmssDeactivateSafety
+     *
+     * Sends the deactivate command to the SMSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to deactivate the safety for
+     * 
+     * @return the success status of the deactivate command
+     **************************************************************************/
+    public boolean cmdSmssDeactivateSafety(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
+        byte[] header = new byte[5];
+        byte[] returnHeader = new byte[6];
+
+        if (smssTCP != null) {
+            try {
+                buffOut = new DataOutputStream(smssTCP.getOutputStream());
+                buffIn = new DataInputStream(smssTCP.getInputStream());
+
+                header[0] = 2;
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
+                buffOut.write(header, 0, 5);
+
+                buffIn.read(returnHeader, 0, 6);
+                result = (returnHeader[3] == 0);
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssDeactivateSafety: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssDeactivateSafety: buffer failure\n" + ex.getMessage() + "\n");
+                handleSocketFailure();
+            }
+
+        }
+
+        return result;
+    }
+
+    /***************************************************************************
+     * cmdSmssPingWatchdog
+     *
+     * Sends the safety watchdog command to the SMSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to update
+     * @param pTimer - the watchdog count value to set
+     * 
+     * @return the success status of the ping command
+     **************************************************************************/
+    public boolean cmdSmssPingWatchdog(String missileID, int pTimer) {
+        DataOutputStream buffOut;
+        DataInputStream buffIn;
+        boolean result = false;
+
         byte[] header = new byte[9];
         byte[] returnHeader = new byte[6];
 
-        if(smssTCP != null)
-        {
-            try 
-            {
+        if (smssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
                 // requires an MID? wtf?
                 header[0] = 3;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 header[4] = 4;
-                header[5] = (byte)((pTimer >> 24) & 0xff);
-                header[6] = (byte)((pTimer >> 16) & 0xff);
-                header[7] = (byte)((pTimer >> 8) & 0xff);
-                header[8] = (byte)(pTimer & 0xff);
+                header[5] = (byte) ((pTimer >> 24) & 0xff);
+                header[6] = (byte) ((pTimer >> 16) & 0xff);
+                header[7] = (byte) ((pTimer >> 8) & 0xff);
+                header[8] = (byte) (pTimer & 0xff);
                 buffOut.write(header, 0, 9);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssPingWatchdog: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssPingWatchdog: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssPingWatchdog: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssPingWatchdog: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public boolean cmdSmssDetEnable(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdSmssDetEnable
+     *
+     * Sends the detonate enable command to the SMSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to enable detonation
+     * 
+     * @return the success status of the deactivate command
+     **************************************************************************/
+    public boolean cmdSmssDetEnable(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(smssTCP != null)
-        {
-            try 
-            {
+
+        if (smssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
                 header[0] = 4;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssDetEnable: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssDetEnable: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssDetEnable: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssDetEnable: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
-    
-    public boolean cmdSmssDestruct(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdSmssDestruct
+     *
+     * Sends the destruct command to the SMSS for a specified interceptor
+     * 
+     * @param missileID - the id of the interceptor to destroy
+     * 
+     * @return the success status of the destruct command
+     **************************************************************************/
+    public boolean cmdSmssDestruct(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         boolean result = false;
-        
+
         byte[] header = new byte[5];
         byte[] returnHeader = new byte[6];
-        
-        if(smssTCP != null)
-        {
-            try 
-            {
+
+        if (smssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
                 header[0] = 5;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
                 buffOut.write(header, 0, 5);
 
                 buffIn.read(returnHeader, 0, 6);
                 result = (returnHeader[3] == 0);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssDestruct: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssDestruct: buffer failure\n" + ex.getMessage() +"\n");
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssDestruct: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssDestruct: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            }  
+            }
         }
-        
+
         return result;
     }
-    
-    public String cmdSmssGetVersion(String missileID)
-    {
+
+    /***************************************************************************
+     * cmdSmssGetVersion
+     *
+     * Queries the SMSS for its version string and parses out the version number
+     * 
+     * @return the version number of the SMSS
+     **************************************************************************/
+    public String cmdSmssGetVersion(String missileID) {
         DataOutputStream buffOut;
         DataInputStream buffIn;
         String result = null;
-        
+
         byte[] header = new byte[5];
         byte[] returnBuffer = new byte[256];
         int bufferSize = 0;
-        
-        if(smssTCP != null)
-        {
-            try 
-            {
+
+        if (smssTCP != null) {
+            try {
                 buffOut = new DataOutputStream(smssTCP.getOutputStream());
                 buffIn = new DataInputStream(smssTCP.getInputStream());
 
                 header[0] = 6;
-                header[1] = (byte)(missileID.charAt(0));
-                header[2] = (byte)(missileID.charAt(1));
+                header[1] = (byte) (missileID.charAt(0));
+                header[2] = (byte) (missileID.charAt(1));
 
                 buffOut.write(header, 0, 5);
 
@@ -1813,19 +1828,15 @@ public class MDSCSSController
 
                 buffIn.read(returnBuffer, 0, bufferSize);
                 result = new String(returnBuffer, "UTF-8");
-                result = result.substring(14,18);
-            } 
-            catch(SocketTimeoutException ex)
-            {
-                System.out.println("MDSCSSController - cmdSmssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() +"\n");
-            }
-            catch (IOException ex) 
-            {
-                System.out.println("MDSCSSController - cmdSmssGetVersion: buffer failure\n" + ex.getMessage() +"\n");
+                result = result.substring(14, 18);
+            } catch (SocketTimeoutException ex) {
+                System.out.println("MDSCSSController - cmdSmssGetVersion: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
+            } catch (IOException ex) {
+                System.out.println("MDSCSSController - cmdSmssGetVersion: buffer failure\n" + ex.getMessage() + "\n");
                 handleSocketFailure();
-            } 
+            }
         }
-        
+
         return result;
     }
 }

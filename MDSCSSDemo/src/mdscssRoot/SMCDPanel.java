@@ -166,7 +166,7 @@ public class SMCDPanel extends javax.swing.JPanel
         cmbSelInterceptor.setEnabled(true);
         cmbSelInterceptor.setSelectedItem(pID);
         
-        tmp = mModel.getInterceptor(pID).getTimestamp();
+        tmp = mModel.getInterceptor(pID).getLaunchTime();
         
         if(tmp != null)
         {
@@ -726,7 +726,7 @@ public class SMCDPanel extends javax.swing.JPanel
             lblLaunchTime.setVisible(true);
             lblLaunchTime.setText("Time of Launch:  " + tmp.toString());
 
-            tmpI.setTimestamp(tmp);
+            tmpI.setLaunchTime(tmp);
             mParent.forwardLaunchCmd(tmpI.getIdentifier());
         }
         else

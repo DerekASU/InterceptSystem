@@ -1,7 +1,7 @@
 /*******************************************************************************
  * File: InterceptorController.java
- * Description:
- *
+ * Description: Object that handles the PID controller logic to compensate the 
+ * thrust levels of a given interceptor as it tracks a threat
  ******************************************************************************/
 package mdscssControl;
 
@@ -10,23 +10,20 @@ import mdscssModel.Missile;
 
 public class InterceptorController 
 {
-    private static final int D_SYS = 10000;
-    private static final int D_INT = 300;
-    private static final double[][] TUNING_TABLE_X = {{1, 1, 0.5},
-                                                      {0.45, 1, 0.5},
-                                                      {1, 1, 0.5}};
-    private static final double[][] TUNING_TABLE_Y = {{1, 1, 1},
-                                                      {0.5, 1, 0.5},
-                                                      {0.45, 0.45, 0.5}};
-    private static final double[][] TUNING_TABLE_Z = {{0.5, 0.5, 0.45},
-                                                      {1, 0.5, 1},
-                                                      {1, 0.5, 0.5}};
-    
+    private static final double[][] TUNING_TABLE_X = {{1,       1,      0.5},
+                                                      {0.45,    1,      0.5},
+                                                      {1,       1,      0.5}};
+    private static final double[][] TUNING_TABLE_Y = {{1,       1,      1},
+                                                      {0.5,     1,      0.5},
+                                                      {0.45,    0.45,   0.5}};
+    private static final double[][] TUNING_TABLE_Z = {{0.5,     0.5,    0.45},
+                                                      {1,       0.5,    1},
+                                                      {1,       0.5,    0.5}};
     private static final int ATTRIB_KP = 1;
     private static final int ATTRIB_KC = 1;
-    private static final int ATTRIB_FS = 1;   ///should this be 1 or .5?
-    
-    private enum direction{dirX, dirY, dirZ};
+    private static final int ATTRIB_FS = 1;   
+    private static final int D_SYS = 10000;
+    private static final int D_INT = 300;
     
     /***************************************************************************
      * InterceptorController
@@ -35,17 +32,25 @@ public class InterceptorController
      **************************************************************************/
     public InterceptorController()
     {
-        
+        //empty constructor
     }
     
+    /***************************************************************************
+     * trackMissilePair
+     * 
+     * Updates the provided Interceptor with new thrust values to better track
+     * its assigned threat
+     * 
+     * @param pInterceptor - The interceptor to update
+     * @param pThreat - pInterceptor's assigned threat
+     **************************************************************************/
     public void trackMissilePair(Interceptor pInterceptor, Missile pThreat)
     {        
         int tmpI, tmpT, final_thrust;
-        double error2, thrust_p, thrust_d, error1, tune, attrib_a, attrib_b, error3, thrust_i;
-        double attrib_ki, attrib_kf;
+        double error2, thrust_p, thrust_d, error1, tune, error3, thrust_i;
+        double attrib_ki, attrib_kf, attrib_a, attrib_b;
         
         
-        error1 = ((pThreat.getPosX() - pInterceptor.getPosX()) *0.5);
         if(pInterceptor.getMissileClass() == 'A')
             tmpI = 0;
         else if(pInterceptor.getMissileClass() == 'B')
@@ -59,7 +64,9 @@ public class InterceptorController
             tmpT = 1;
         else
             tmpT = 2;
-
+        
+        // X direction ------------------------------------------------------------------------------------->
+        error1 = ((pThreat.getPosX() - pInterceptor.getPosX()) *0.5);
         tune = TUNING_TABLE_X[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
@@ -82,7 +89,6 @@ public class InterceptorController
         {
             error3 = error2;
         }
-        
 
         thrust_p = error2 * ATTRIB_KP;
         thrust_d = (attrib_kf * (1 - Math.exp((attrib_a * -1)/ATTRIB_FS)) * error2) + (Math.exp((attrib_a * -1)/ATTRIB_FS)) * pInterceptor.getCtrlThrustDX();
@@ -93,9 +99,6 @@ public class InterceptorController
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustX);
         pInterceptor.setCtrlThrustDX(thrust_d);
 
-        //position and final thrust
-       // System.out.println(pInterceptor.getPosX() + " " +pThreat.getPosX() + " " + (pThreat.getPosX() - pInterceptor.getPosX()));
-     
         if(Math.abs(error1) > D_SYS)
         {
             pInterceptor.setThrustX(pInterceptor.maxThrustX);
@@ -105,12 +108,8 @@ public class InterceptorController
             pInterceptor.setThrustX(final_thrust);
         }
         
-        // y direction ------------------------------------------------------------------------------------->
-        
-        
-        
+        // Y direction ------------------------------------------------------------------------------------->
         error1 = ((pThreat.getPosY() - pInterceptor.getPosY()) *0.5);
-
         tune = TUNING_TABLE_Y[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
@@ -134,7 +133,6 @@ public class InterceptorController
             error3 = error2;
         }
         
-
         thrust_p = error2 * ATTRIB_KP;
         thrust_d = (attrib_kf * (1 - Math.exp((attrib_a * -1)/ATTRIB_FS)) * error2) + (Math.exp((attrib_a * -1)/ATTRIB_FS)) * pInterceptor.getCtrlThrustDY();
         
@@ -143,9 +141,6 @@ public class InterceptorController
         
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustY);
         pInterceptor.setCtrlThrustDY(thrust_d);
-
-        //position and final thrust
-        //System.out.println(pInterceptor.getPosX() + " " +pThreat.getPosX() + " " + (pThreat.getPosX() - pInterceptor.getPosX()));
      
         if(Math.abs(error1) > D_SYS)
         {
@@ -156,12 +151,8 @@ public class InterceptorController
             pInterceptor.setThrustY(final_thrust);
         }
         
-        // z direction ------------------------------------------------------------------------------------->
-        
-        
-        
+        // Z direction ------------------------------------------------------------------------------------->
         error1 = ((pThreat.getPosZ() - pInterceptor.getPosZ()) *0.5);
-
         tune = TUNING_TABLE_Z[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
@@ -184,7 +175,6 @@ public class InterceptorController
         {
             error3 = error2;
         }
-        
 
         thrust_p = error2 * ATTRIB_KP;
         thrust_d = (attrib_kf * (1 - Math.exp((attrib_a * -1)/ATTRIB_FS)) * error2) + (Math.exp((attrib_a * -1)/ATTRIB_FS)) * pInterceptor.getCtrlThrustDZ();
@@ -195,141 +185,26 @@ public class InterceptorController
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustZ);
         pInterceptor.setCtrlThrustDZ(thrust_d);
 
-        //position and final thrust
-        //System.out.println((pThreat.getPosX() - pInterceptor.getPosX()) + " " + (pThreat.getPosY() - pInterceptor.getPosY()) + " " + (pThreat.getPosZ() - pInterceptor.getPosZ()));
-     
         if(Math.abs(error1) > D_SYS)
         {
             pInterceptor.setThrustZ(pInterceptor.maxThrustZ);
         }
         else
         {
-
             pInterceptor.setThrustZ(final_thrust);
         }
     }
     
-    
-    /*    
-    private int trackUniDirectional(Interceptor pInterceptor, Missile pThreat, direction pDir)
-    {
-        int final_thrust = 0, tPos = 0, intPos = 0, tmpI, tmpT, maxT = 0;
-        double error2, thrust_p, thrust_d, error1, attrib_a, attrib_b, error3, thrust_i, tune = 0.0, ctD = 0.0, ctI=0.0;
-        double attrib_ki, attrib_kf;
-        
-        
-        if(pInterceptor.getMissileClass() == 'A')
-            tmpI = 0;
-        else if(pInterceptor.getMissileClass() == 'B')
-            tmpI = 1;
-        else
-            tmpI = 2;
-        
-        if(pThreat.getMissileClass() == 'X')
-            tmpT = 0;
-        else if(pThreat.getMissileClass() == 'Y')
-            tmpT = 1;
-        else
-            tmpT = 2;
-        
-        switch(pDir)
-        {
-            case dirX:
-                intPos = pInterceptor.getPosX();
-                tPos = pThreat.getPosX();
-                tune = TUNING_TABLE_X[tmpT][tmpI];
-                ctD = pInterceptor.getCtrlThrustDX();
-                ctI = pInterceptor.getCtrlThrustIX();
-                maxT = pInterceptor.maxThrustX;
-                break;
-            case dirY:
-                intPos = pInterceptor.getPosY();
-                tPos = pThreat.getPosY();
-                tune = TUNING_TABLE_Y[tmpT][tmpI];
-                ctD = pInterceptor.getCtrlThrustDY();
-                ctI = pInterceptor.getCtrlThrustIY();
-                maxT = pInterceptor.maxThrustY;
-                break;
-            case dirZ:
-                intPos = pInterceptor.getPosZ();
-                tPos = pThreat.getPosZ();
-                tune = TUNING_TABLE_Z[tmpT][tmpI];
-                ctD = pInterceptor.getCtrlThrustDZ();
-                ctI = pInterceptor.getCtrlThrustIZ();
-                maxT = pInterceptor.maxThrustZ;
-                break;
-        }
-        
-        
-        
-        
-        error1 = ((tPos - intPos) *0.5);
-        
-        attrib_a = 1.3 * tune;
-        attrib_b = 0.03 * tune;
-        attrib_ki = (ATTRIB_KC * Math.pow(attrib_b, 2))/attrib_a;
-        attrib_kf =((2 * ATTRIB_KC * attrib_b) - attrib_ki - (ATTRIB_KP * attrib_a))/attrib_a;
-        
-
-        if(Math.abs(error1) > D_SYS)
-        {
-            error2 = 0;
-        }
-        else
-        {
-            error2 = error1;
-        }
-        if(Math.abs(error1) > D_INT)
-        {
-            error3 = 0;
-        }
-        else
-        {
-            error3 = error2;
-        }
-        
-        
-        
-        thrust_p = error2 * ATTRIB_KP;
-        
-        thrust_d = (attrib_kf * (1 - Math.exp((attrib_a * -1)/ATTRIB_FS)) * error2) + (Math.exp((attrib_a * -1)/ATTRIB_FS)) * ctD;
-
-        
-        thrust_i = (1/ATTRIB_FS) * attrib_ki * error3  + ctI;
-  
-        
-        final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, maxT);
-        
-        System.out.println(pInterceptor.getPosX() + " " +pThreat.getPosX() + " " + (pThreat.getPosX() - pInterceptor.getPosX()));
-        
-        
-        switch(pDir)
-        {
-            case dirX:
-                pInterceptor.setCtrlThrustDX(ctD);
-                pInterceptor.setCtrlThrustIX(ctI);
-                break;
-            case dirY:
-                pInterceptor.setCtrlThrustDY(ctD);
-                pInterceptor.setCtrlThrustIY(ctI);
-                break;
-            case dirZ:
-                pInterceptor.setCtrlThrustDZ(ctD);
-                pInterceptor.setCtrlThrustIZ(ctI);
-                break;
-        }
-                
-        if(Math.abs(error1) > D_SYS)
-        {
-            return maxT;
-        }
-        else
-        {
-            return final_thrust;
-        }
-
-    }*/
-    
+    /***************************************************************************
+     * quantAndSat
+     * 
+     * Given a calculated thrust value and a max bound, this function quantizes 
+     * and saturates the thrust value into a power level that can be accepted by
+     * the MCS thrust command
+     * 
+     * @param pThrust - the PID calculated thrust value
+     * @param pMax - the maximum thrust value
+     **************************************************************************/
     private int quantAndSat(double pThrust, int pMax)
     {        
         if(pThrust < (-0.875 * pMax))

@@ -29,7 +29,7 @@ public class Interceptor extends Missile
     protected boolean bDetonateOverride;
     protected boolean bAssignmentOverride;
     
-    protected Timestamp timestamp;
+    protected Timestamp launchTime;
     
     protected double thrust_dx, thrust_ix, thrust_dy, thrust_iy, thrust_dz, thrust_iz;
     
@@ -58,7 +58,7 @@ public class Interceptor extends Missile
         assignedThreat = pAssigned;
         detonationRange = pDetRng;
         
-        timestamp = null;
+        launchTime = null;
         
         thrust_dx= thrust_ix= thrust_dy= thrust_iy= thrust_dz= thrust_iz = 0;
     }
@@ -151,9 +151,16 @@ public class Interceptor extends Missile
         return bAssignmentOverride;
     }
     
-    public Timestamp getTimestamp()
+    /***************************************************************************
+     * getLaunchTime
+     * 
+     * retrieves the timestamp representing the launch time of the interceptor
+     * 
+     * @return the timestamp representing the launch time of the interceptor
+     **************************************************************************/
+    public Timestamp getLaunchTime()
     {
-        return timestamp;
+        return launchTime;
     }
     
     /***************************************************************************
@@ -231,61 +238,163 @@ public class Interceptor extends Missile
         bAssignmentOverride = pOverride;
     }
     
-    public void setTimestamp(Timestamp pTime)
+    /***************************************************************************
+     * setLaunchTime
+     * 
+     * sets the timestamp representing the time of launch of the interceptor
+     * 
+     * @param pTime - the new launch time
+     **************************************************************************/
+    public void setLaunchTime(Timestamp pTime)
     {
-        timestamp = pTime;
+        launchTime = pTime;
     }
     
-    
+    /***************************************************************************
+     * getCtrlThrustDX
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the X direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustDX()
     {
         return thrust_dx;
     }
+     /***************************************************************************
+     * getCtrlThrustIX
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the X direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustIX()
     {
         return thrust_ix;
     }
     
+    /***************************************************************************
+     * setCtrlThrustDX
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the X direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustDX(double pThrust)
     {
         thrust_dx = pThrust;
     }
+    /***************************************************************************
+     * setCtrlThrustIX
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the X direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustIX(double pThrust)
     {
         thrust_ix = pThrust;
     }
     
+    /***************************************************************************
+     * getCtrlThrustDY
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Y direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustDY()
     {
         return thrust_dy;
     }
+    /***************************************************************************
+     * getCtrlThrustIY
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Y direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustIY()
     {
         return thrust_iy;
     }
     
+    /***************************************************************************
+     * setCtrlThrustDY
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Y direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustDY(double pThrust)
     {
         thrust_dy = pThrust;
     }
+    
+    /***************************************************************************
+     * setCtrlThrustIY
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Y direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustIY(double pThrust)
     {
         thrust_iy = pThrust;
     }
     
+    /***************************************************************************
+     * getCtrlThrustDZ
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Z direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustDZ()
     {
         return thrust_dz;
     }
+    /***************************************************************************
+     * getCtrlThrustIZ
+     * 
+     * retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Z direction
+     * 
+     * @return the critical thrust value
+     **************************************************************************/
     public double getCtrlThrustIZ()
     {
         return thrust_iz;
     }
-    
+    /***************************************************************************
+     * setCtrlThrustDZ
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Z direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustDZ(double pThrust)
     {
         thrust_dz = pThrust;
     }
+    /***************************************************************************
+     * setCtrlThrustIZ
+     * 
+     * sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Z direction
+     * 
+     * @param pThrust - the critical thrust value
+     **************************************************************************/
     public void setCtrlThrustIZ(double pThrust)
     {
         thrust_iz = pThrust;

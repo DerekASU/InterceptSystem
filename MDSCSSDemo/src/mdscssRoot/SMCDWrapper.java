@@ -1,13 +1,12 @@
 /*******************************************************************************
  * File: SMCDWrapper.java
- * Description:
- *
+ * Description: JFrame that wraps an instance of a SMCD panel so that it can
+ * be displayed as its own window.
  ******************************************************************************/
 package mdscssRoot;
 
 import java.awt.EventQueue;
 import java.awt.event.WindowEvent;
-import javax.swing.SwingUtilities;
 import mdscssModel.MissileDBManager;
 
 
@@ -17,9 +16,14 @@ public class SMCDWrapper extends javax.swing.JFrame
     SMCDWrapper mSelf; 
     
     /***************************************************************************
-     * SMCDPanel
+     * SMCDWrapper
      * 
      * Constructor
+     * 
+     * @param pID - the ID of the current active interceptor selection
+     * @param pParent - reference to the SMCD panel spawning the window
+     * @param pModel - reference to the missile db manager
+     * @param pMMOD - reference to the multi missile display
      **************************************************************************/
     public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel, MMODFrame pMMOD) 
     {
@@ -39,15 +43,26 @@ public class SMCDWrapper extends javax.swing.JFrame
         
     }
     
+    /***************************************************************************
+     * update
+     * 
+     * Forwards the update call from the poller to the underlying SMCD panel
+     **************************************************************************/
     public void update()
     {
         sMCDPanel1.updatePanelContents();
     }
     
+     /***************************************************************************
+     * forceClose
+     * 
+     * Dispatches a close event for this JFrame.  this is invoked from the 
+     * control thread if access to the subsystems has been compromised.  
+     **************************************************************************/
     public void forceClose()
     {
         setVisible(false);
-        //TODO:: Make sure this doesn't cause a memory leak
+
         EventQueue.invokeLater(new Runnable(){
             public void run(){
                 mSelf.dispatchEvent(new WindowEvent(mSelf, WindowEvent.WINDOW_CLOSING));

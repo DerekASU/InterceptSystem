@@ -1,11 +1,11 @@
 /*******************************************************************************
  * File: ThreatOverviewPanel.java
- * Description:
+ * Description: GUI Class that populates and controls the list of threats
+ * presented to the operator
  *
  ******************************************************************************/
 package mdscssRoot;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import javax.swing.JLabel;
 import javax.swing.RowSorter;
@@ -14,7 +14,6 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
-import mdscssModel.Interceptor;
 
 public class ThreatOverviewPanel extends javax.swing.JPanel 
 {
@@ -32,8 +31,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         tableScrollPane.getViewport().setBackground(new java.awt.Color(27,166,226));
         tblThreats.getTableHeader().setBackground(new java.awt.Color(27,166,226));
         
-        ((DefaultTableCellRenderer)tblThreats.getTableHeader().getDefaultRenderer())
-    .setHorizontalAlignment(JLabel.CENTER);
+        ((DefaultTableCellRenderer)tblThreats.getTableHeader().getDefaultRenderer()).setHorizontalAlignment(JLabel.CENTER);
         
         DefaultTableCellRenderer cellRend = new DefaultTableCellRenderer();
         cellRend.setHorizontalAlignment(JLabel.CENTER);
@@ -49,7 +47,6 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         tblThreats.getColumnModel().getColumn(1).setMinWidth(120);
         tblThreats.getColumnModel().getColumn(1).setPreferredWidth(120);
         
-        
         sorter = new TableRowSorter<TableModel>(tblThreats.getModel());
         sorter.setSortable(0, false);
         sorter.setSortable(1, false);
@@ -57,6 +54,12 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         tblThreats.setRowSorter(sorter);
     }
     
+    /***************************************************************************
+     * resetView
+     * 
+     * Called when the MDSCSS looses connection to the subsystems. This function
+     * clears the table.
+     **************************************************************************/
     public void resetView()
     {
         DefaultTableModel model = (DefaultTableModel)tblThreats.getModel();
@@ -68,12 +71,27 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         }
     }
     
+    /***************************************************************************
+     * handleInitialUpdate
+     * 
+     * Called when the MDSCSS achieves connection to the subsystems. This function
+     * ensures that the table is visable and ready to be populated
+     **************************************************************************/
     public void handleInitialUpdate()
     {
         tblThreats.setVisible(true);
         
     }
-    
+
+    /***************************************************************************
+     * addEntry
+     * 
+     * Called by the MMODFrame's initial update function to populate the table
+     * with threats.
+     * 
+     * @param pID - the id of the threat
+     * @param pPos - an array of 3 integers representing the threats position
+     **************************************************************************/
     public void addEntry(String pID, int[] pPos)
     {
         String[] rowData = new String[4];
@@ -86,7 +104,14 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         model.addRow(rowData);
     }
     
-
+    /***************************************************************************
+     * removeEntry
+     * 
+     * Called by the MMODFrame when a threat has been marked as destroyed.  This
+     * function removes the threat from the list
+     * 
+     * @param pID - the ID of the destroyed threat to remove
+     **************************************************************************/
     public void removeEntry(String pID)
     {
         String entryID = "";
@@ -102,6 +127,16 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         }
     }
     
+    /***************************************************************************
+     * updateEntry
+     * 
+     * Called periodically to update the table with each threats position and 
+     * assignment state.  unassigned entries are bubbled to the top.
+     * 
+     * @param pID - the ID of the threat to update
+     * @param assignedI - the interceptor assigned to this threat
+     * @param pPos - an array of 3 integers representing the threats position
+     **************************************************************************/
     public void updateEntry(String pID, String assignedI, int[] pPos)
     {
         String entryID = "";
@@ -127,11 +162,8 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
             }
         }
         
-
         if(resort)
         sortThreats();
-        
-        
         
         for(index = 0; index < model.getRowCount(); index++)
         {
@@ -149,7 +181,12 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         }
     }
     
-    public void sortThreats()
+    /***************************************************************************
+     * sortThreats
+     * 
+     * sorts the table so that unassigned threats appear at the top of the list
+     **************************************************************************/
+    private void sortThreats()
     {
         
         sorter.setModel(tblThreats.getModel());
