@@ -32,8 +32,9 @@ public class MDSCSSController
     
     ArrayList<String> rejectedInterceptors;
     Missile curForgivingThreat;
-    boolean forgivingRejected, forgivingApproved;
-    Timestamp forgivingAssignTime;
+    Interceptor curForgivingInt;
+    boolean forgivingRejected, forgivingApproved, forgivingDetRejected, forgivingDetApproved, assignmentcomplete;
+    Timestamp forgivingAssignTime, forgivingDetTime;
     
     private boolean purgeWatchdog, manualLaunchMode;
     
@@ -64,8 +65,12 @@ public class MDSCSSController
         purgeWatchdog = false;
         forgivingRejected = false;
         forgivingApproved = false;
+        forgivingDetApproved = false;
+        forgivingDetRejected = false;
         curForgivingThreat = null;
+        curForgivingInt = null;
         watchdogTime = 0;
+        assignmentcomplete = false;
     }
     
     /***************************************************************************
@@ -88,6 +93,7 @@ public class MDSCSSController
         controller = new Thread(new ControlThread(this));
         failureTimer = null;
         forgivingAssignTime = null;
+        forgivingDetTime = null;
         controller.start();
         manualLaunchMode = false;
     }
@@ -170,6 +176,7 @@ public class MDSCSSController
             }
             else if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
                     tmpI.isAssignmentOverriden() == false &&
+                    tmpI.isDisabled() == false &&
                     tmpT == null)
             {
                 switch(tmpI.getMissileClass())
@@ -298,6 +305,7 @@ public class MDSCSSController
             
             if(tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT &&
                tmpI.isAssignmentOverriden() == false && 
+               tmpI.isDisabled() == false &&
                !rejectedInterceptors.contains(interceptors.get(i)))
             {
                 switch(tmpI.getMissileClass())
@@ -377,11 +385,14 @@ public class MDSCSSController
     private void handleForgivingControl()
     {
         ArrayList<String>  threats = mModel.getUnassignedThreats();
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+        Missile tmpT;
         Timestamp tmp = new Timestamp(System.currentTimeMillis());
         boolean bAssigned = false;
         
 
-        if(threats.size() > 0)
+        if(threats.size() > 0 && assignmentcomplete == false)
         {
 
             if(curForgivingThreat == null)
@@ -430,9 +441,11 @@ public class MDSCSSController
                 }
             }
         }
+        else if(assignmentcomplete ==false)
+            assignmentcomplete = true;
         
         if(curForgivingThreat != null &&
-          ((tmp.getTime() - forgivingAssignTime.getTime()) >40000 || forgivingApproved))
+          ((tmp.getTime() - forgivingAssignTime.getTime()) >= 4000 || forgivingApproved))
         {
       
             cmdMcssLaunch(mModel.getAssignedInterceptor(curForgivingThreat.getIdentifier()));
@@ -441,7 +454,79 @@ public class MDSCSSController
             curForgivingThreat = null;
         }
         
-        // todo:: handle detonation coverage
+        
+
+        if(assignmentcomplete){
+        
+        if(curForgivingInt == null)
+        {
+            for(int i = 0; i < interceptors.size(); i++)
+            {
+                tmpI = mModel.getInterceptor(interceptors.get(i));
+
+                if(tmpI.getState() == Interceptor.interceptorState.IN_FLIGHT && 
+                   tmpI.isDetonateOverriden() == false)
+                {
+                    tmpT = mModel.getThreat(tmpI.getAssignedThreat());
+
+                    int[] pos = tmpI.getPositionVector();
+                    int[] tPos = tmpT.getPositionVector();
+                    double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+
+                    if(distance <= (tmpI.getDetonationRange() - 8))
+                    {
+                        curForgivingInt = tmpI;
+                        forgivingDetRejected = false;
+                        forgivingDetApproved = false;
+                        forgivingDetTime = new Timestamp(System.currentTimeMillis());
+                    }
+                }
+            }
+        }
+        else
+        {
+            tmpT = mModel.getThreat(curForgivingInt.getAssignedThreat());
+            
+            int[] pos = curForgivingInt.getPositionVector();
+            int[] tPos = tmpT.getPositionVector();
+            double distance = Math.sqrt(Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2));
+
+            if(distance > curForgivingInt.getDetonationRange())
+            {
+                curForgivingInt = null;
+                forgivingDetRejected = false;
+                forgivingDetApproved = false;
+            }
+            else if(forgivingDetRejected)
+            {
+                mView.handleDetModeChange(curForgivingInt.getIdentifier());
+                
+                forgivingDetRejected = false;
+                curForgivingInt.setDetonateOverride(true);
+                curForgivingInt = null;
+                
+                
+            }
+            else if(forgivingDetApproved || (System.currentTimeMillis() - forgivingDetTime.getTime()) >= 4000)
+            {
+                cmdMcssDetonate(curForgivingInt.getIdentifier());
+                forgivingDetRejected = false;
+                forgivingDetApproved = false;
+                curForgivingInt = null;
+            }
+        }
+        }
+        
+        
+        
+    }
+    
+    public String getForgivingDetState()
+    {
+        if(curForgivingInt != null && forgivingDetApproved == false && forgivingDetRejected == false)
+            return curForgivingInt.getIdentifier();
+        else
+            return null;
     }
     
     public String getForgivingAssignmentState()
@@ -460,6 +545,16 @@ public class MDSCSSController
     public void rejectForgivingAssignment()
     {
         forgivingRejected = true;
+    }
+    
+    public void approveForgivingDet()
+    {
+        forgivingDetApproved = true;
+    }
+    
+    public void rejectForgivingDet()
+    {
+        forgivingDetRejected = true;
     }
 
     private void forceManualAssignment()
@@ -486,7 +581,12 @@ public class MDSCSSController
         forgivingRejected = false;
         curForgivingThreat = null;
         forgivingAssignTime = null;
+        forgivingDetTime = null;
         forgivingApproved = false;
+        curForgivingInt = null;
+        forgivingDetApproved = false;
+        forgivingDetRejected = false;
+        assignmentcomplete =false;
         }
     }
     

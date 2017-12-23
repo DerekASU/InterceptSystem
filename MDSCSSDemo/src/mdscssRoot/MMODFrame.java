@@ -160,6 +160,20 @@ public class MMODFrame extends javax.swing.JFrame
   t.start();
     }
     
+    public void handleDetModeChange(String id)
+    {
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+           JOptionPane.showMessageDialog(null,  "\nForgiving detonation has been rejected for interceptor [" + id +"].\n" +
+                                            "The detonation override setting for this interceptor has been \n" +
+                                            "set to manual.\n", 
+                                            "Automatic Launch Mode Change", 
+                                            JOptionPane.ERROR_MESSAGE);
+        }
+    });
+  t.start();
+    }
+    
     public void handleClosing()
     {
         int reply = JOptionPane.showConfirmDialog(null, "Are you sure you wish to exit?", "Exit MDSCSS", JOptionPane.YES_NO_OPTION);
@@ -248,7 +262,7 @@ public class MMODFrame extends javax.swing.JFrame
             dlg.addComponentListener(new ComponentAdapter() {
                 public void componentShown(ComponentEvent e) {
                     super.componentShown(e);
-                    Timer t = new Timer(40000,new ActionListener() {
+                    Timer t = new Timer(4000,new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             dlg.setVisible(false);
@@ -267,6 +281,43 @@ public class MMODFrame extends javax.swing.JFrame
         else if(msg.getValue().equals(1))
         {
             mController.rejectForgivingAssignment();
+        }
+           
+            
+        }
+        
+        
+        
+        tmp = mController.getForgivingDetState();
+        
+        if(tmp != null)
+        {
+            JOptionPane msg = new JOptionPane("Interceptor ["+ tmp + "] is in range for detonation.\nDo you wish to approve this detonation?", JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
+            JDialog dlg = msg.createDialog("Approve or Reject Forgiving Detonation");
+            dlg.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            
+            dlg.addComponentListener(new ComponentAdapter() {
+                public void componentShown(ComponentEvent e) {
+                    super.componentShown(e);
+                    Timer t = new Timer(4000,new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            dlg.setVisible(false);
+                        }
+                    });
+                    t.start();
+                }
+            });
+        
+            dlg.setVisible(true);
+        
+        if(msg.getValue().equals(0))
+        {
+            mController.approveForgivingDet();
+        }
+        else if(msg.getValue().equals(1))
+        {
+            mController.rejectForgivingDet();
         }
            
             
