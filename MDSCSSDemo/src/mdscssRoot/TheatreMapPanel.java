@@ -22,6 +22,22 @@ import gov.nasa.worldwind.layers.*;
 import gov.nasa.worldwind.layers.placename.PlaceNameLayer;
 import gov.nasa.worldwind.util.*;
 import gov.nasa.worldwindx.examples.util.*;
+import gov.nasa.worldwind.render.SurfaceSector;
+import gov.nasa.worldwind.render.BasicShapeAttributes;
+import gov.nasa.worldwind.render.ShapeAttributes;
+import gov.nasa.worldwind.render.Material;
+import gov.nasa.worldwind.render.GlobeAnnotation;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.markers.*;
+
+import java.awt.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+
+import mdscssModel.Interceptor;
+import mdscssModel.Missile;
+import mdscssRoot.InterceptorOverviewPanel;
+import mdscssModel.MissileDBManager;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -31,8 +47,11 @@ import mdscssModel.MissileDBManager;
 
 public class TheatreMapPanel extends javax.swing.JPanel 
 {
+    final MarkerLayer layer = new MarkerLayer();
+    ArrayList<Marker> markers;
     MissileDBManager mModel;
     MMODFrame mParent;
+    Model canvasModel;
     
     /***************************************************************************
      * TheatreMapPanel
@@ -42,6 +61,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
     public TheatreMapPanel() 
     {
         initComponents();
+        markers = new ArrayList();
         this.worldWindowGLCanvas1.setModel(new BasicModel());
     }
     
@@ -63,6 +83,25 @@ public class TheatreMapPanel extends javax.swing.JPanel
         // this is called only once, on initial startup, or when connection has been re-established after being lost
         // this may or may not be necessary for this panel, when this is called, it means all entries in the database
         // are valid and populated
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        Interceptor tmpI;
+        
+        canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+        this.worldWindowGLCanvas1.setModel(canvasModel);
+        
+        for(int i = 0; i < interceptors.size();  i++)
+        {
+            tmpI = mModel.getInterceptor(interceptors.get(i));
+            markers.add(new BasicMarker(Position.fromDegrees(tmpI.getPosX(),i,0d),  new BasicMarkerAttributes(Material.RED, BasicMarkerShape.SPHERE, 1d, 10, 5)));
+        }
+        
+        
+        
+        layer.setOverrideMarkerElevation(true);
+        layer.setMarkers(markers);
+        this.worldWindowGLCanvas1.getModel().getLayers().add(layer);
+        
+        this.worldWindowGLCanvas1.redraw();
     }
     
     public void updatePanelContents()
