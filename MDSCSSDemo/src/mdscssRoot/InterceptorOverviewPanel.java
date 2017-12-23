@@ -32,7 +32,8 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         
         mParent = null;
         
-        tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
+        tableScrollPane.getViewport().setBackground(new java.awt.Color(27,166,226));
+        tblInterceptors.getTableHeader().setBackground(new java.awt.Color(27,166,226));
         
         ((DefaultTableCellRenderer)tblInterceptors.getTableHeader().getDefaultRenderer())
     .setHorizontalAlignment(JLabel.CENTER);
@@ -211,22 +212,21 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
         tblInterceptors = new javax.swing.JTable();
         btnDestruct = new javax.swing.JButton();
 
-        setBackground(new java.awt.Color(27, 161, 226));
+        setBackground(new java.awt.Color(27, 166, 226));
         setMaximumSize(new java.awt.Dimension(622, 299));
         setMinimumSize(new java.awt.Dimension(622, 299));
         setPreferredSize(new java.awt.Dimension(622, 299));
 
-        lblTable.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        lblTable.setForeground(new java.awt.Color(255, 255, 255));
+        lblTable.setFont(new java.awt.Font("Segoe UI Semibold", 0, 20)); // NOI18N
         lblTable.setText("Interceptor Overview:");
 
         tableScrollPane.setBackground(new java.awt.Color(255, 204, 204));
-        tableScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
+        tableScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 166, 226)));
         tableScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         tableScrollPane.setOpaque(false);
 
         tblInterceptors.setBackground(java.awt.SystemColor.controlHighlight);
-        tblInterceptors.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
+        tblInterceptors.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 166, 226)));
         tblInterceptors.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         tblInterceptors.setForeground(new java.awt.Color(65, 65, 65));
         tblInterceptors.setModel(new javax.swing.table.DefaultTableModel(
@@ -246,16 +246,18 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
             }
         });
         tblInterceptors.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
-        tblInterceptors.setGridColor(new java.awt.Color(27, 161, 226));
+        tblInterceptors.setGridColor(new java.awt.Color(27, 166, 226));
         tblInterceptors.setIntercellSpacing(new java.awt.Dimension(5, 15));
         tblInterceptors.setOpaque(false);
         tblInterceptors.setRowHeight(45);
-        tblInterceptors.setSelectionBackground(new java.awt.Color(27, 161, 226));
+        tblInterceptors.setSelectionBackground(new java.awt.Color(27, 166, 226));
+        tblInterceptors.setSelectionForeground(new java.awt.Color(0, 0, 0));
         tblInterceptors.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         tblInterceptors.getTableHeader().setResizingAllowed(false);
         tblInterceptors.getTableHeader().setReorderingAllowed(false);
         tableScrollPane.setViewportView(tblInterceptors);
 
+        btnDestruct.setBackground(new java.awt.Color(27, 166, 226));
         btnDestruct.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         btnDestruct.setText("Emergency Destruct");
         btnDestruct.setEnabled(false);
@@ -273,10 +275,10 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 602, Short.MAX_VALUE)
+                    .addComponent(tableScrollPane)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(lblTable)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 247, Short.MAX_VALUE)
                         .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, 155, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
@@ -288,7 +290,7 @@ public class InterceptorOverviewPanel extends javax.swing.JPanel
                     .addComponent(lblTable)
                     .addComponent(btnDestruct, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 235, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents

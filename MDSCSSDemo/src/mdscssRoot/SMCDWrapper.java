@@ -23,7 +23,7 @@ public class SMCDWrapper extends javax.swing.JFrame
      **************************************************************************/
     public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel, MMODFrame pMMOD) 
     {
-        this.setTitle("SMCD -- " + pID);
+        this.setTitle("Single Missile Control");
         javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
         setIconImage(icon.getImage());
         
@@ -71,8 +71,8 @@ public class SMCDWrapper extends javax.swing.JFrame
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setIconImages(null);
-        setMaximumSize(new java.awt.Dimension(347, 599));
-        setMinimumSize(new java.awt.Dimension(347, 599));
+        setMaximumSize(new java.awt.Dimension(357, 533));
+        setMinimumSize(new java.awt.Dimension(357, 533));
         setResizable(false);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -88,7 +88,7 @@ public class SMCDWrapper extends javax.swing.JFrame
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 511, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 

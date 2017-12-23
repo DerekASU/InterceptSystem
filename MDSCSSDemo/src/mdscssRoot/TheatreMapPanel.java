@@ -6,8 +6,48 @@
 package mdscssRoot;
 
 
+import gov.nasa.worldwind.Configuration;
+import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.geom.*;
+import gov.nasa.worldwind.globes.EarthFlat;
+import gov.nasa.worldwind.layers.RenderableLayer;
+import gov.nasa.worldwind.render.*;
+import gov.nasa.worldwind.util.WWUtil;
+import gov.nasa.worldwind.*;
+import gov.nasa.worldwind.avlist.AVKey;
+import gov.nasa.worldwind.awt.WorldWindowGLCanvas;
+import gov.nasa.worldwind.event.*;
+import gov.nasa.worldwind.exception.WWAbsentRequirementException;
+import gov.nasa.worldwind.layers.*;
+import gov.nasa.worldwind.layers.placename.PlaceNameLayer;
+import gov.nasa.worldwind.util.*;
+import gov.nasa.worldwindx.examples.util.*;
+import gov.nasa.worldwind.render.SurfaceSector;
+import gov.nasa.worldwind.render.BasicShapeAttributes;
+import gov.nasa.worldwind.render.ShapeAttributes;
+import gov.nasa.worldwind.render.Material;
+import gov.nasa.worldwind.render.GlobeAnnotation;
+import gov.nasa.worldwind.geom.Position;
+import gov.nasa.worldwind.render.markers.*;
+
+import java.awt.*;
+import java.util.Arrays;
+import java.util.ArrayList;
+
+import mdscssModel.Interceptor;
+import mdscssModel.Missile;
+import mdscssRoot.InterceptorOverviewPanel;
+import mdscssModel.MissileDBManager;
+
 public class TheatreMapPanel extends javax.swing.JPanel 
 {
+    final MarkerLayer layer = new MarkerLayer();
+    MissileDBManager mModel;
+    MMODFrame mParent;
+    ArrayList<Marker> markers = new ArrayList<Marker>();
+
+
+    
 
     /***************************************************************************
      * TheatreMapPanel
@@ -17,16 +57,60 @@ public class TheatreMapPanel extends javax.swing.JPanel
     public TheatreMapPanel() 
     {
         initComponents();
+
+        
+        
+        
     }
+    
+    public void initialize(MissileDBManager pModel, MMODFrame pParent)
+    {
+        mModel = pModel;
+        mParent = pParent;
+    }
+
     
     public void resetView()
     {
     
     }
     
+    public void updateMap()
+    {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        System.out.println(mModel.getInterceptorList().size());
+        this.worldWindowGLCanvas1.redraw();
+        
+        
+    }
+    
+    
     public void handleInitialUpdate()
     {
+        ArrayList<String> interceptors = mModel.getInterceptorList();
+        ArrayList<String> threats = mModel.getThreatList();
+
         
+        Interceptor tmpI;
+        Missile tmpT;
+        
+        Model m = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+        this.worldWindowGLCanvas1.setModel(m);
+        
+        for(int i = 0; i <= 6;  i++){
+         System.out.println(mModel.getInterceptorList().size());
+            
+        tmpI = mModel.getInterceptor(interceptors.get(i));
+        Marker marker1 = new BasicMarker(Position.fromDegrees(tmpI.getPosX(),i,0d),  new BasicMarkerAttributes(Material.RED, BasicMarkerShape.SPHERE, 1d, 10, 5));
+        markers.add(marker1);
+        System.out.println(tmpI);
+        }
+        
+        
+        
+        layer.setOverrideMarkerElevation(true);
+        layer.setMarkers(markers);
+        this.worldWindowGLCanvas1.getModel().getLayers().add(layer);
     }
 
     /***************************************************************************
@@ -39,6 +123,8 @@ public class TheatreMapPanel extends javax.swing.JPanel
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        worldWindowGLCanvas1 = new gov.nasa.worldwind.awt.WorldWindowGLCanvas();
+
         setBackground(new java.awt.Color(27, 161, 226));
         setMaximumSize(new java.awt.Dimension(876, 573));
         setMinimumSize(new java.awt.Dimension(876, 573));
@@ -48,15 +134,16 @@ public class TheatreMapPanel extends javax.swing.JPanel
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 876, Short.MAX_VALUE)
+            .addComponent(worldWindowGLCanvas1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 573, Short.MAX_VALUE)
+            .addComponent(worldWindowGLCanvas1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private gov.nasa.worldwind.awt.WorldWindowGLCanvas worldWindowGLCanvas1;
     // End of variables declaration//GEN-END:variables
 }

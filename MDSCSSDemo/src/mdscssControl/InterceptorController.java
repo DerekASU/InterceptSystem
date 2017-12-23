@@ -102,7 +102,6 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
             pInterceptor.setThrustX(final_thrust);
         }
         
@@ -154,7 +153,6 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
             pInterceptor.setThrustY(final_thrust);
         }
         
@@ -198,7 +196,7 @@ public class InterceptorController
         pInterceptor.setCtrlThrustDZ(thrust_d);
 
         //position and final thrust
-        System.out.println((pThreat.getPosX() - pInterceptor.getPosX()) + " " + (pThreat.getPosY() - pInterceptor.getPosY()) + " " + (pThreat.getPosZ() - pInterceptor.getPosZ()));
+        //System.out.println((pThreat.getPosX() - pInterceptor.getPosX()) + " " + (pThreat.getPosY() - pInterceptor.getPosY()) + " " + (pThreat.getPosZ() - pInterceptor.getPosZ()));
      
         if(Math.abs(error1) > D_SYS)
         {
@@ -206,7 +204,7 @@ public class InterceptorController
         }
         else
         {
-            //todo:: individual sets
+
             pInterceptor.setThrustZ(final_thrust);
         }
     }

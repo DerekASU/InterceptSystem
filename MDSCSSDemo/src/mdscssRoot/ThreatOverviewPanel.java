@@ -29,7 +29,8 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     {
         initComponents();
         
-        tableScrollPane.getViewport().setBackground(new java.awt.Color(27,161,226));
+        tableScrollPane.getViewport().setBackground(new java.awt.Color(27,166,226));
+        tblThreats.getTableHeader().setBackground(new java.awt.Color(27,166,226));
         
         ((DefaultTableCellRenderer)tblThreats.getTableHeader().getDefaultRenderer())
     .setHorizontalAlignment(JLabel.CENTER);
@@ -176,22 +177,21 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
         tableScrollPane = new javax.swing.JScrollPane();
         tblThreats = new javax.swing.JTable();
 
-        setBackground(new java.awt.Color(27, 161, 226));
+        setBackground(new java.awt.Color(27, 166, 226));
         setMaximumSize(new java.awt.Dimension(577, 299));
         setMinimumSize(new java.awt.Dimension(577, 299));
         setPreferredSize(new java.awt.Dimension(577, 299));
 
-        lblTitle.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        lblTitle.setForeground(new java.awt.Color(255, 255, 255));
+        lblTitle.setFont(new java.awt.Font("Segoe UI Semibold", 0, 20)); // NOI18N
         lblTitle.setText("Threat Overview:");
 
         tableScrollPane.setBackground(new java.awt.Color(255, 204, 204));
-        tableScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
+        tableScrollPane.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 166, 226)));
         tableScrollPane.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         tableScrollPane.setOpaque(false);
 
         tblThreats.setBackground(java.awt.SystemColor.controlHighlight);
-        tblThreats.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 161, 226)));
+        tblThreats.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(27, 166, 226)));
         tblThreats.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         tblThreats.setForeground(new java.awt.Color(65, 65, 65));
         tblThreats.setModel(new javax.swing.table.DefaultTableModel(
@@ -211,11 +211,13 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
             }
         });
         tblThreats.setEnabled(false);
-        tblThreats.setGridColor(new java.awt.Color(27, 161, 226));
+        tblThreats.setFocusable(false);
+        tblThreats.setGridColor(new java.awt.Color(27, 166, 226));
         tblThreats.setIntercellSpacing(new java.awt.Dimension(5, 15));
         tblThreats.setOpaque(false);
         tblThreats.setRowHeight(45);
-        tblThreats.setSelectionBackground(new java.awt.Color(255, 51, 0));
+        tblThreats.setSelectionBackground(new java.awt.Color(255, 153, 153));
+        tblThreats.setSelectionForeground(new java.awt.Color(0, 0, 0));
         tblThreats.setSelectionMode(javax.swing.ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tblThreats.getTableHeader().setResizingAllowed(false);
         tblThreats.getTableHeader().setReorderingAllowed(false);
@@ -240,7 +242,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
                 .addContainerGap()
                 .addComponent(lblTitle)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tableScrollPane, javax.swing.GroupLayout.PREFERRED_SIZE, 241, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(tableScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 334, Short.MAX_VALUE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents

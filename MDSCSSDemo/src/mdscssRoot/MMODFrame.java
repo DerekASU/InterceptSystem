@@ -8,9 +8,14 @@ package mdscssRoot;
 import java.awt.Color;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 import mdscssControl.MDSCSSController.controlMode;
@@ -20,6 +25,7 @@ public class MMODFrame extends javax.swing.JFrame
     MissileDBManager mModel;
     MDSCSSController mController;
     private Thread poller = null;
+    
     
     /***************************************************************************
      * MMODFrame
@@ -42,6 +48,13 @@ public class MMODFrame extends javax.swing.JFrame
             }
         });
         
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                handleClosing();
+            }
+        });
+
+        
         resetView();
     }
     
@@ -61,6 +74,8 @@ public class MMODFrame extends javax.swing.JFrame
         
         interceptorOverviewPanel1.setParent(this);
         sMCDPanel1.initialize(mModel, this);
+        theatreMapPanel1.initialize(mModel, this);
+        
     }
     
     public void tssConnected(String version)
@@ -87,7 +102,56 @@ public class MMODFrame extends javax.swing.JFrame
         MCSSStatusIndicator.setBackground(Color.ORANGE);
         SMSSStatusIndicator.setBackground(Color.ORANGE);
         
+        
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+            JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has detected a connection failure with\n" +
+                                                    "one or more MDS subsystems.  If the connection\n" +
+                                                    "cannot be re-established in 5 minutes, all interceptors\n" +
+                                                    "will be destructed.\n", 
+                                                    "Subsystem Connection Failure", 
+                                                    JOptionPane.WARNING_MESSAGE);
+        }
+    });
+  t.start();
+        
+        
+        
         resetView();
+    }
+    
+    public void handleCodeRed()
+    {
+        TSSStatusIndicator.setBackground(Color.RED);
+        MCSSStatusIndicator.setBackground(Color.RED);
+        SMSSStatusIndicator.setBackground(Color.RED);
+        
+        Thread t = new Thread(new Runnable(){
+        public void run(){
+           JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has been unable to establis a connection\n" +
+                                            "with an MDS subsystem.  All interceptors have been \n" +
+                                            "destructed. A restart of the MDSCSS is required.\n", 
+                                            "Subsystem Failure", 
+                                            JOptionPane.ERROR_MESSAGE);
+        }
+    });
+  t.start();
+        
+        
+        
+    }
+    
+    public void handleClosing()
+    {
+        int reply = JOptionPane.showConfirmDialog(null, "Are you sure you wish to exit?", "Exit MDSCSS", JOptionPane.YES_NO_OPTION);
+
+  if (reply == JOptionPane.YES_OPTION) {
+
+      mController.finalize();
+    System.exit(0);
+
+  }
+        
     }
     
     public void handleInitialUpdate()
@@ -102,6 +166,7 @@ public class MMODFrame extends javax.swing.JFrame
         sMCDPanel1.handleInitialUpdate();
         threatOverviewPanel1.handleInitialUpdate();
         interceptorOverviewPanel1.handleInitialUpdate();
+        theatreMapPanel1.handleInitialUpdate();
         updateInterceptors();
         
         
@@ -153,6 +218,7 @@ public class MMODFrame extends javax.swing.JFrame
         updateInterceptors();
         
         sMCDPanel1.updatePanelContents();
+        theatreMapPanel1.updateMap();
     }
     
     private void updateThreats()
@@ -334,7 +400,7 @@ public class MMODFrame extends javax.swing.JFrame
 
         lblMDSCSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblMDSCSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblMDSCSSVersion.setText("0.4B");
+        lblMDSCSSVersion.setText("0.5B");
 
         cmbSysMode.setBackground(new java.awt.Color(65, 65, 65));
         cmbSysMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
@@ -348,9 +414,9 @@ public class MMODFrame extends javax.swing.JFrame
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(35, 35, 35)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(TSSStatusIndicator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -374,18 +440,18 @@ public class MMODFrame extends javax.swing.JFrame
                         .addComponent(lblMCSS)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(lblMCSSVersion)
-                        .addGap(315, 315, 315)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(lblMDSCSSVersion))
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                            .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
-                        .addGroup(layout.createSequentialGroup()
-                            .addComponent(interceptorOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 661, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(threatOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 538, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addContainerGap(21, Short.MAX_VALUE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
+                        .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(theatreMapPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(interceptorOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 684, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(threatOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 566, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -405,29 +471,27 @@ public class MMODFrame extends javax.swing.JFrame
                         .addComponent(lblMDSCSSVersion))
                     .addComponent(MCSSStatusIndicator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(TSSStatusIndicator, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(lblSysControl)
                     .addComponent(cmbSysMode, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 17, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 514, Short.MAX_VALUE)
+                    .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(sMCDPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(interceptorOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(threatOverviewPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addComponent(theatreMapPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(35, 35, 35))
+                    .addComponent(threatOverviewPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, 412, Short.MAX_VALUE)
+                    .addComponent(interceptorOverviewPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        // TODO add your handling code here:
-        System.out.println("closing");
-        mController.finalize();
+
+        
     }//GEN-LAST:event_formWindowClosing
 
     private void handleSysModeSelection(ItemEvent evt)

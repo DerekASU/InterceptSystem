@@ -30,13 +30,17 @@
   <Layout>
     <DimensionLayout dim="0">
       <Group type="103" groupAlignment="0" attributes="0">
-          <EmptySpace min="0" pref="876" max="32767" attributes="0"/>
+          <Component id="worldWindowGLCanvas1" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
     <DimensionLayout dim="1">
       <Group type="103" groupAlignment="0" attributes="0">
-          <EmptySpace min="0" pref="573" max="32767" attributes="0"/>
+          <Component id="worldWindowGLCanvas1" alignment="0" max="32767" attributes="0"/>
       </Group>
     </DimensionLayout>
   </Layout>
+  <SubComponents>
+    <Component class="gov.nasa.worldwind.awt.WorldWindowGLCanvas" name="worldWindowGLCanvas1">
+    </Component>
+  </SubComponents>
 </Form>
