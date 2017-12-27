@@ -1,0 +1,772 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<ClassDiagram name="MDSCSSDemo">
+  <ClassDiagramComponents>
+    <Class name="ControlThread" package="mdscssControl" visibility="public" xPosition="20.0" yPosition="20.0">
+      <Fields>
+        <Field name="controlUtility" type="MDSCSSController" visibility="private"/>
+        <Field name="bRunning" type="boolean" visibility="private"/>
+        <Field name="threadState" type="controlState" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="MDSCSSController" name="pController"/>
+        </Constructor>
+      </Constructors>
+      <Methods>
+        <Method name="run" returnType="void" visibility="public"/>
+      </Methods>
+    </Class>
+    <Class name="InterceptorController" package="mdscssControl" visibility="public" xPosition="320.0" yPosition="20.0">
+      <Fields>
+        <Field name="TUNING_TABLE_X" type="double[][]" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="TUNING_TABLE_Y" type="double[][]" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="TUNING_TABLE_Z" type="double[][]" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="ATTRIB_KP" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="ATTRIB_KC" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="ATTRIB_FS" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="D_SYS" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="D_INT" type="int" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="trackMissilePair" returnType="void" visibility="public">
+          <Argument type="Interceptor" name="pInterceptor"/>
+          <Argument type="Missile" name="pThreat"/>
+        </Method>
+        <Method name="quantAndSat" returnType="int" visibility="private">
+          <Argument type="double" name="pThrust"/>
+          <Argument type="int" name="pMax"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="MDSCSSController" package="mdscssControl" visibility="public" xPosition="620.0" yPosition="20.0">
+      <Fields>
+        <Field name="SMSS_SOCKET" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MCSS_SOCKET" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="TSS_SOCKET" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="SOCKET_TIMEOUT_MS" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="inCtrl" type="InterceptorController" visibility="private"/>
+        <Field name="mModel" type="MissileDBManager" visibility="private"/>
+        <Field name="mView" type="MMODFrame" visibility="private"/>
+        <Field name="controller" type="Thread" visibility="private"/>
+        <Field name="fgvRejectInterceptors" type="ArrayList&lt;String&gt;" visibility="private"/>
+        <Field name="fgvCurrentThreat" type="Missile" visibility="private"/>
+        <Field name="bFgvAssignmentRejected" type="boolean" visibility="private"/>
+        <Field name="fgvAssignmentTime" type="Timestamp" visibility="private"/>
+        <Field name="fgvCurrentInterceptor" type="Interceptor" visibility="private"/>
+        <Field name="bFgvDetonateRejected" type="boolean" visibility="private"/>
+        <Field name="bFgvDetonateTime" type="Timestamp" visibility="private"/>
+        <Field name="bPurgeWatchdog" type="boolean" visibility="private"/>
+        <Field name="watchdogTime" type="int" visibility="private"/>
+        <Field name="tssTCP" type="Socket" visibility="private"/>
+        <Field name="failureTimer" type="Timestamp" visibility="package"/>
+        <Field name="operationalState" type="controlMode" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="initialize" returnType="void" visibility="public">
+          <Argument type="MissileDBManager" name="pModel"/>
+          <Argument type="MMODFrame" name="pView"/>
+        </Method>
+        <Method name="finalize" returnType="void" visibility="public"/>
+        <Method name="establishConnection" returnType="boolean" visibility="public"/>
+        <Method name="establishStatus" returnType="boolean" visibility="public"/>
+        <Method name="handleSocketFailure" returnType="void" visibility="private"/>
+        <Method name="checkForFailure" returnType="void" visibility="public"/>
+        <Method name="initializeModel" returnType="void" visibility="public"/>
+        <Method name="initializeWatchdog" returnType="void" visibility="public"/>
+        <Method name="disableWatchdog" returnType="void" visibility="public"/>
+        <Method name="handleWatchdogTimer" returnType="void" visibility="public"/>
+        <Method name="updateModel" returnType="void" visibility="public"/>
+        <Method name="handleThrustControl" returnType="void" visibility="public"/>
+        <Method name="getControlMode" returnType="controlMode" visibility="public"/>
+        <Method name="setControlMode" returnType="void" visibility="public">
+          <Argument type="controlMode" name="pMode"/>
+        </Method>
+        <Method name="handleControlLogic" returnType="void" visibility="public"/>
+        <Method name="handleForgivingControl" returnType="void" visibility="private"/>
+        <Method name="handleAutomaticControl" returnType="void" visibility="private"/>
+        <Method name="handleForgivingAssignment" returnType="boolean" visibility="private"/>
+        <Method name="getForgivingDetState" returnType="String" visibility="public"/>
+        <Method name="getForgivingAssignmentState" returnType="String" visibility="public"/>
+        <Method name="approveForgivingAssignment" returnType="void" visibility="public"/>
+        <Method name="rejectForgivingAssignment" returnType="void" visibility="public"/>
+        <Method name="approveForgivingDet" returnType="void" visibility="public"/>
+        <Method name="rejectForgivingDet" returnType="void" visibility="public"/>
+        <Method name="forceManualAssignment" returnType="void" visibility="private"/>
+        <Method name="cmdTssTrackThreat" returnType="int[]" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdTssTrackInterceptor" returnType="int[]" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdTssGetThreatList" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="cmdTssGetVersion" returnType="String" visibility="public"/>
+        <Method name="cmdMcssLaunch" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdMcssThrust" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+          <Argument type="int" name="pwrX"/>
+          <Argument type="int" name="pwrY"/>
+          <Argument type="int" name="pwrZ"/>
+        </Method>
+        <Method name="cmdMcssDetonate" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdMcssDestruct" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdMcssGetInterceptorList" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="cmdMcssgetState" returnType="Interceptor.interceptorState" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdMcssGetLaunchSite" returnType="int[]" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdMcssGetVersion" returnType="String" visibility="public"/>
+        <Method name="cmdMcssGetCtrlVersion" returnType="String" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdSmssActivateSafety" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdSmssDeactivateSafety" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdSmssPingWatchdog" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+          <Argument type="int" name="pTimer"/>
+        </Method>
+        <Method name="cmdSmssDetEnable" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdSmssDestruct" returnType="boolean" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+        <Method name="cmdSmssGetVersion" returnType="String" visibility="public">
+          <Argument type="String" name="missileID"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="Interceptor" package="mdscssModel" visibility="public" xPosition="920.0" yPosition="20.0">
+      <Fields>
+        <Field name="state" type="interceptorState" visibility="protected"/>
+        <Field name="assignedThreat" type="String" visibility="protected"/>
+        <Field name="detonationRange" type="int" visibility="protected"/>
+        <Field name="bDisabled" type="boolean" visibility="protected"/>
+        <Field name="bDetonationEnabled" type="boolean" visibility="protected"/>
+        <Field name="bDetonateOverride" type="boolean" visibility="protected"/>
+        <Field name="bAssignmentOverride" type="boolean" visibility="protected"/>
+        <Field name="launchTime" type="Timestamp" visibility="protected"/>
+        <Field name="thrust_dx" type="double" visibility="protected"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+          <Argument type="double" name="pFricX"/>
+          <Argument type="double" name="pFricY"/>
+          <Argument type="double" name="pFricZ"/>
+          <Argument type="int" name="pMThrustX"/>
+          <Argument type="int" name="pMThrustY"/>
+          <Argument type="int" name="pMThrustZ"/>
+          <Argument type="String" name="pAssigned"/>
+          <Argument type="int" name="pDetRng"/>
+        </Constructor>
+      </Constructors>
+      <Methods>
+        <Method name="getState" returnType="interceptorState" visibility="public"/>
+        <Method name="getAssignedThreat" returnType="String" visibility="public"/>
+        <Method name="getDetonationRange" returnType="int" visibility="public"/>
+        <Method name="isDisabled" returnType="boolean" visibility="public"/>
+        <Method name="isDetonationEnabled" returnType="boolean" visibility="public"/>
+        <Method name="isDetonateOverriden" returnType="boolean" visibility="public"/>
+        <Method name="isAssignmentOverriden" returnType="boolean" visibility="public"/>
+        <Method name="getLaunchTime" returnType="Timestamp" visibility="public"/>
+        <Method name="setState" returnType="void" visibility="public">
+          <Argument type="interceptorState" name="pState"/>
+        </Method>
+        <Method name="setAssignedThreat" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="setDisabled" returnType="void" visibility="public">
+          <Argument type="boolean" name="pDisable"/>
+        </Method>
+        <Method name="setDetonationEnabled" returnType="void" visibility="public">
+          <Argument type="boolean" name="pEnabled"/>
+        </Method>
+        <Method name="setDetonateOverride" returnType="void" visibility="public">
+          <Argument type="boolean" name="pOverride"/>
+        </Method>
+        <Method name="setAssignmentOverriden" returnType="void" visibility="public">
+          <Argument type="boolean" name="pOverride"/>
+        </Method>
+        <Method name="setLaunchTime" returnType="void" visibility="public">
+          <Argument type="Timestamp" name="pTime"/>
+        </Method>
+        <Method name="getCtrlThrustDX" returnType="double" visibility="public"/>
+        <Method name="getCtrlThrustIX" returnType="double" visibility="public"/>
+        <Method name="setCtrlThrustDX" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+        <Method name="setCtrlThrustIX" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+        <Method name="getCtrlThrustDY" returnType="double" visibility="public"/>
+        <Method name="getCtrlThrustIY" returnType="double" visibility="public"/>
+        <Method name="setCtrlThrustDY" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+        <Method name="setCtrlThrustIY" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+        <Method name="getCtrlThrustDZ" returnType="double" visibility="public"/>
+        <Method name="getCtrlThrustIZ" returnType="double" visibility="public"/>
+        <Method name="setCtrlThrustDZ" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+        <Method name="setCtrlThrustIZ" returnType="void" visibility="public">
+          <Argument type="double" name="pThrust"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="InterceptorClassA" package="mdscssModel" visibility="public" xPosition="1220.0" yPosition="20.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="DET_RANGE" type="int" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="InterceptorClassB" package="mdscssModel" visibility="public" xPosition="1520.0" yPosition="20.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="DET_RANGE" type="int" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="InterceptorClassC" package="mdscssModel" visibility="public" xPosition="1820.0" yPosition="20.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="DET_RANGE" type="int" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="Missile" package="mdscssModel" visibility="public" xPosition="2120.0" yPosition="20.0">
+      <Fields>
+        <Field name="id" type="String" visibility="protected"/>
+        <Field name="type" type="MissileType" visibility="protected"/>
+        <Field name="posX" type="int" visibility="protected"/>
+        <Field name="thrustX" type="int" visibility="protected"/>
+        <Field name="fricX" type="double" visibility="protected"/>
+        <Field name="maxThrustX" type="int" visibility="public"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+          <Argument type="MissileType" name="pType"/>
+          <Argument type="double" name="pFricX"/>
+          <Argument type="double" name="pFricY"/>
+          <Argument type="double" name="pFricZ"/>
+          <Argument type="int" name="pMThrustX"/>
+          <Argument type="int" name="pMThrustY"/>
+          <Argument type="int" name="pMThrustZ"/>
+        </Constructor>
+      </Constructors>
+      <Methods>
+        <Method name="getIdentifier" returnType="String" visibility="public"/>
+        <Method name="getType" returnType="MissileType" visibility="public"/>
+        <Method name="getPositionVector" returnType="int[]" visibility="public"/>
+        <Method name="getThrustVector" returnType="int[]" visibility="public"/>
+        <Method name="getFricVector" returnType="double[]" visibility="public"/>
+        <Method name="getPosX" returnType="int" visibility="public"/>
+        <Method name="getPosY" returnType="int" visibility="public"/>
+        <Method name="getPosZ" returnType="int" visibility="public"/>
+        <Method name="getThrustX" returnType="int" visibility="public"/>
+        <Method name="getThrustY" returnType="int" visibility="public"/>
+        <Method name="getThrustZ" returnType="int" visibility="public"/>
+        <Method name="getFricX" returnType="double" visibility="public"/>
+        <Method name="getFricY" returnType="double" visibility="public"/>
+        <Method name="getFricZ" returnType="double" visibility="public"/>
+        <Method name="setPosition" returnType="void" visibility="public">
+          <Argument type="int" name="paramX"/>
+          <Argument type="int" name="paramY"/>
+          <Argument type="int" name="paramZ"/>
+        </Method>
+        <Method name="setThrustValue" returnType="void" visibility="public">
+          <Argument type="int" name="paramX"/>
+          <Argument type="int" name="paramY"/>
+          <Argument type="int" name="paramZ"/>
+        </Method>
+        <Method name="setThrustX" returnType="void" visibility="public">
+          <Argument type="int" name="pThrustX"/>
+        </Method>
+        <Method name="setThrustY" returnType="void" visibility="public">
+          <Argument type="int" name="pThrustY"/>
+        </Method>
+        <Method name="setThrustZ" returnType="void" visibility="public">
+          <Argument type="int" name="pThrustZ"/>
+        </Method>
+        <Method name="getMissileClass" returnType="char" visibility="public"/>
+      </Methods>
+    </Class>
+    <Class name="MissileDBManager" package="mdscssModel" visibility="public" xPosition="20.0" yPosition="420.0">
+      <Fields>
+        <Field name="activeMissiles" type="HashMap&lt;String, Missile&gt;" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="getMissile" returnType="Missile" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="getInterceptor" returnType="Interceptor" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="getAssignedInterceptor" returnType="String" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="getThreat" returnType="Missile" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="contains" returnType="boolean" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="getMissileList" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="getThreatList" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="getAssignedThreats" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="getUnassignedThreats" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="getUnassignedInterceptors" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="getInterceptorList" returnType="ArrayList&lt;String&gt;" visibility="public"/>
+        <Method name="removeThreat" returnType="void" visibility="public">
+          <Argument type="String" name="pId"/>
+        </Method>
+        <Method name="updateDatabase" returnType="void" visibility="public">
+          <Argument type="ArrayList&lt;String&gt;" name="idList"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="ThreatClassX" package="mdscssModel" visibility="public" xPosition="320.0" yPosition="420.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="ThreatClassY" package="mdscssModel" visibility="public" xPosition="620.0" yPosition="420.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="ThreatClassZ" package="mdscssModel" visibility="public" xPosition="920.0" yPosition="420.0">
+      <Fields>
+        <Field name="MAX_THRUST_X" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Y" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="MAX_THRUST_Z" type="int" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_X" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Y" type="double" visibility="private" isStatic="true" isFinal="true"/>
+        <Field name="FRIC_COEFF_Z" type="double" visibility="private" isStatic="true" isFinal="true"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pId"/>
+        </Constructor>
+      </Constructors>
+      <Methods/>
+    </Class>
+    <Class name="AppLauncher" package="mdscssRoot" visibility="public" xPosition="1220.0" yPosition="420.0">
+      <Fields/>
+      <Constructors/>
+      <Methods>
+        <Method name="main" returnType="void" visibility="public" isStatic="true">
+          <Argument type="String[]" name="args"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="InterceptorOverviewPanel" package="mdscssRoot" visibility="public" xPosition="1520.0" yPosition="420.0">
+      <Fields>
+        <Field name="mParent" type="MMODFrame" visibility="package"/>
+        <Field name="btnDestruct" type="javax.swing.JButton" visibility="private"/>
+        <Field name="lblTable" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="tableScrollPane" type="javax.swing.JScrollPane" visibility="private"/>
+        <Field name="tblInterceptors" type="javax.swing.JTable" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="resetView" returnType="void" visibility="public"/>
+        <Method name="handleInitialUpdate" returnType="void" visibility="public"/>
+        <Method name="addEntry" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+          <Argument type="Interceptor.interceptorState" name="pState"/>
+          <Argument type="String" name="pThreat"/>
+          <Argument type="int[]" name="pPos"/>
+          <Argument type="boolean" name="isDisabled"/>
+        </Method>
+        <Method name="updateEntry" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+          <Argument type="Interceptor.interceptorState" name="pState"/>
+          <Argument type="String" name="assignment"/>
+          <Argument type="int[]" name="pPos"/>
+          <Argument type="boolean" name="isDisabled"/>
+        </Method>
+        <Method name="handleSelChange" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="tblInterceptorsRowSelected" returnType="void" visibility="private">
+          <Argument type="ListSelectionEvent" name="evt"/>
+        </Method>
+        <Method name="setParent" returnType="void" visibility="public">
+          <Argument type="MMODFrame" name="pParent"/>
+        </Method>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+        <Method name="btnDestructActionPerformed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.ActionEvent" name="evt"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="MMODFrame" package="mdscssRoot" visibility="public" xPosition="1820.0" yPosition="420.0">
+      <Fields>
+        <Field name="mModel" type="MissileDBManager" visibility="package"/>
+        <Field name="mController" type="MDSCSSController" visibility="package"/>
+        <Field name="poller" type="Thread" visibility="private"/>
+        <Field name="MCSSStatusIndicator" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="SMSSStatusIndicator" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="TSSStatusIndicator" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="cmbSysMode" type="javax.swing.JComboBox&lt;String&gt;" visibility="private"/>
+        <Field name="interceptorOverviewPanel1" type="mdscssRoot.InterceptorOverviewPanel" visibility="private"/>
+        <Field name="lblMCSS" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblMCSSVersion" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblMDSCSSVersion" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblSMSS" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblSMSSVersion" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblSysControl" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblTSS" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblTSSVersion" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="sMCDPanel1" type="mdscssRoot.SMCDPanel" visibility="private"/>
+        <Field name="theatreMapPanel1" type="mdscssRoot.TheatreMapPanel" visibility="private"/>
+        <Field name="threatOverviewPanel1" type="mdscssRoot.ThreatOverviewPanel" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="initialize" returnType="void" visibility="public">
+          <Argument type="MissileDBManager" name="pModel"/>
+          <Argument type="MDSCSSController" name="pController"/>
+        </Method>
+        <Method name="tssConnected" returnType="void" visibility="public">
+          <Argument type="String" name="version"/>
+        </Method>
+        <Method name="mcssConnected" returnType="void" visibility="public">
+          <Argument type="String" name="version"/>
+        </Method>
+        <Method name="smssConnected" returnType="void" visibility="public">
+          <Argument type="String" name="version"/>
+        </Method>
+        <Method name="handleSubsystemFailure" returnType="void" visibility="public"/>
+        <Method name="handleCodeRed" returnType="void" visibility="public"/>
+        <Method name="handleLaunchModeChange" returnType="void" visibility="public"/>
+        <Method name="handleDetModeChange" returnType="void" visibility="public">
+          <Argument type="String" name="id"/>
+        </Method>
+        <Method name="handleClosing" returnType="void" visibility="public"/>
+        <Method name="handleInitialUpdate" returnType="void" visibility="public"/>
+        <Method name="handleThreatDestruction" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="periodicUpdate" returnType="void" visibility="public"/>
+        <Method name="updateThreats" returnType="void" visibility="private"/>
+        <Method name="updateInterceptors" returnType="void" visibility="private"/>
+        <Method name="ChangeSMCDSel" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="ChangeIOverviewSel" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="resetView" returnType="void" visibility="private"/>
+        <Method name="forwardLaunchCmd" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="forwardDetonate" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="forwardDestruct" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+        <Method name="formWindowClosing" returnType="void" visibility="private">
+          <Argument type="java.awt.event.WindowEvent" name="evt"/>
+        </Method>
+        <Method name="handleSysModeSelection" returnType="void" visibility="private">
+          <Argument type="ItemEvent" name="evt"/>
+        </Method>
+      </Methods>
+    </Class>
+    <Class name="MMODPoller" package="mdscssRoot" visibility="public" xPosition="2120.0" yPosition="420.0">
+      <Fields>
+        <Field name="mView" type="MMODFrame" visibility="private"/>
+        <Field name="bRunning" type="boolean" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="MMODFrame" name="pMMOD"/>
+        </Constructor>
+      </Constructors>
+      <Methods>
+        <Method name="run" returnType="void" visibility="public"/>
+      </Methods>
+    </Class>
+    <Class name="SMCDPanel" package="mdscssRoot" visibility="public" xPosition="20.0" yPosition="820.0">
+      <Fields>
+        <Field name="windowList" type="ArrayList&lt;SMCDWrapper&gt;" visibility="package"/>
+        <Field name="mModel" type="MissileDBManager" visibility="package"/>
+        <Field name="mParent" type="MMODFrame" visibility="package"/>
+        <Field name="bSeparateWindow" type="boolean" visibility="package"/>
+        <Field name="btnDestruct" type="javax.swing.JButton" visibility="private"/>
+        <Field name="btnDetonate" type="javax.swing.JButton" visibility="private"/>
+        <Field name="btnLaunch" type="javax.swing.JButton" visibility="private"/>
+        <Field name="btnNewWindow" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="cmbAssignedThreat" type="javax.swing.JComboBox&lt;String&gt;" visibility="private"/>
+        <Field name="cmbAssignmentMode" type="javax.swing.JComboBox&lt;String&gt;" visibility="private"/>
+        <Field name="cmbDetonateMode" type="javax.swing.JComboBox&lt;String&gt;" visibility="private"/>
+        <Field name="cmbSelInterceptor" type="javax.swing.JComboBox&lt;String&gt;" visibility="private"/>
+        <Field name="jSeparator1" type="javax.swing.JSeparator" visibility="private"/>
+        <Field name="lblAssignOvrrd" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblDetOvrrd" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblIPos" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblIState" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblInterceptor" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblLaunchTime" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblTDist" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblTPos" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblThreat" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="lblTitle" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="tglDisable" type="javax.swing.JToggleButton" visibility="private"/>
+        <Field name="txtInterceptorPosition" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="txtInterceptorState" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="txtThreatDistance" type="javax.swing.JTextField" visibility="private"/>
+        <Field name="txtThreatPosition" type="javax.swing.JTextField" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="resetView" returnType="void" visibility="public"/>
+        <Method name="handleInitialUpdate" returnType="void" visibility="public"/>
+        <Method name="handleSelChange" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="updatePanelContents" returnType="void" visibility="public"/>
+        <Method name="initialize" returnType="void" visibility="public">
+          <Argument type="MissileDBManager" name="pModel"/>
+          <Argument type="MMODFrame" name="pParent"/>
+        </Method>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+        <Method name="btnNewWindowMousePressed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.MouseEvent" name="evt"/>
+        </Method>
+        <Method name="btnDetonateMousePressed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.MouseEvent" name="evt"/>
+        </Method>
+        <Method name="tglDisableActionPerformed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.ActionEvent" name="evt"/>
+        </Method>
+        <Method name="btnLaunchActionPerformed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.ActionEvent" name="evt"/>
+        </Method>
+        <Method name="btnDestructActionPerformed" returnType="void" visibility="private">
+          <Argument type="java.awt.event.ActionEvent" name="evt"/>
+        </Method>
+        <Method name="handleInterceptorSelection" returnType="void" visibility="private">
+          <Argument type="ItemEvent" name="evt"/>
+        </Method>
+        <Method name="handleAssignModeSelection" returnType="void" visibility="private">
+          <Argument type="ItemEvent" name="evt"/>
+        </Method>
+        <Method name="handleDetModeSelection" returnType="void" visibility="private">
+          <Argument type="ItemEvent" name="evt"/>
+        </Method>
+        <Method name="handleAssignedThreatSelection" returnType="void" visibility="private">
+          <Argument type="ItemEvent" name="evt"/>
+        </Method>
+        <Method name="hideExpandControls" returnType="void" visibility="public"/>
+      </Methods>
+    </Class>
+    <Class name="SMCDWrapper" package="mdscssRoot" visibility="public" xPosition="320.0" yPosition="820.0">
+      <Fields>
+        <Field name="mParent" type="SMCDPanel" visibility="package"/>
+        <Field name="mSelf" type="SMCDWrapper" visibility="package"/>
+        <Field name="sMCDPanel1" type="mdscssRoot.SMCDPanel" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public">
+          <Argument type="String" name="pID"/>
+          <Argument type="SMCDPanel" name="pParent"/>
+          <Argument type="MissileDBManager" name="pModel"/>
+          <Argument type="MMODFrame" name="pMMOD"/>
+        </Constructor>
+      </Constructors>
+      <Methods>
+        <Method name="update" returnType="void" visibility="public"/>
+        <Method name="forceClose" returnType="void" visibility="public"/>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+      </Methods>
+    </Class>
+    <Class name="TheatreMapPanel" package="mdscssRoot" visibility="public" xPosition="620.0" yPosition="820.0">
+      <Fields>
+        <Field name="layer" type="MarkerLayer" visibility="package" isFinal="true"/>
+        <Field name="markers" type="ArrayList&lt;Marker&gt;" visibility="package"/>
+        <Field name="mModel" type="MissileDBManager" visibility="package"/>
+        <Field name="mParent" type="MMODFrame" visibility="package"/>
+        <Field name="canvasModel" type="Model" visibility="package"/>
+        <Field name="worldWindowGLCanvas1" type="gov.nasa.worldwind.awt.WorldWindowGLCanvas" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="initialize" returnType="void" visibility="public">
+          <Argument type="MissileDBManager" name="pModel"/>
+          <Argument type="MMODFrame" name="pParent"/>
+        </Method>
+        <Method name="resetView" returnType="void" visibility="public"/>
+        <Method name="handleInitialUpdate" returnType="void" visibility="public"/>
+        <Method name="updatePanelContents" returnType="void" visibility="public"/>
+        <Method name="markThreatDestroyed" returnType="void" visibility="public">
+          <Argument type="String" name="threatID"/>
+        </Method>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+      </Methods>
+    </Class>
+    <Class name="ThreatOverviewPanel" package="mdscssRoot" visibility="public" xPosition="920.0" yPosition="820.0">
+      <Fields>
+        <Field name="sorter" type="TableRowSorter&lt;TableModel&gt;" visibility="package"/>
+        <Field name="lblTitle" type="javax.swing.JLabel" visibility="private"/>
+        <Field name="tableScrollPane" type="javax.swing.JScrollPane" visibility="private"/>
+        <Field name="tblThreats" type="javax.swing.JTable" visibility="private"/>
+      </Fields>
+      <Constructors>
+        <Constructor visibility="public"/>
+      </Constructors>
+      <Methods>
+        <Method name="resetView" returnType="void" visibility="public"/>
+        <Method name="handleInitialUpdate" returnType="void" visibility="public"/>
+        <Method name="addEntry" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+          <Argument type="int[]" name="pPos"/>
+        </Method>
+        <Method name="removeEntry" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+        </Method>
+        <Method name="updateEntry" returnType="void" visibility="public">
+          <Argument type="String" name="pID"/>
+          <Argument type="String" name="assignedI"/>
+          <Argument type="int[]" name="pPos"/>
+        </Method>
+        <Method name="sortThreats" returnType="void" visibility="private"/>
+        <Method name="initComponents" returnType="// &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+void" visibility="private"/>
+      </Methods>
+    </Class>
+  </ClassDiagramComponents>
+  <ClassDiagramRelations>
+    <UseRelation source="mdscssRoot.TheatreMapPanel" target="mdscssRoot.MMODFrame" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mParent" source="mdscssRoot.TheatreMapPanel" target="mdscssRoot.MMODFrame" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssRoot.SMCDPanel" target="mdscssRoot.MMODFrame" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.InterceptorClassB" target="mdscssModel.Interceptor"/>
+    <UseRelation source="mdscssControl.MDSCSSController" target="mdscssRoot.MMODFrame" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.InterceptorClassA" target="mdscssModel.Interceptor"/>
+    <HasRelation name="mModel" source="mdscssRoot.TheatreMapPanel" target="mdscssModel.MissileDBManager" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.Interceptor" target="mdscssModel.Missile"/>
+    <HasRelation name="mView" source="mdscssControl.MDSCSSController" target="mdscssRoot.MMODFrame" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="fgvCurrentInterceptor" source="mdscssControl.MDSCSSController" target="mdscssModel.Interceptor" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mModel" source="mdscssControl.MDSCSSController" target="mdscssModel.MissileDBManager" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.ThreatClassZ" target="mdscssModel.Missile"/>
+    <UseRelation source="mdscssModel.MissileDBManager" target="mdscssModel.Interceptor" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mParent" source="mdscssRoot.SMCDWrapper" target="mdscssRoot.SMCDPanel" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="fgvCurrentThreat" source="mdscssControl.MDSCSSController" target="mdscssModel.Missile" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mParent" source="mdscssRoot.SMCDPanel" target="mdscssRoot.MMODFrame" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mSelf" source="mdscssRoot.SMCDWrapper" target="mdscssRoot.SMCDWrapper" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.ThreatClassY" target="mdscssModel.Missile"/>
+    <HasRelation name="controlUtility" source="mdscssControl.ControlThread" target="mdscssControl.MDSCSSController" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mController" source="mdscssRoot.MMODFrame" target="mdscssControl.MDSCSSController" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="inCtrl" source="mdscssControl.MDSCSSController" target="mdscssControl.InterceptorController" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.InterceptorClassC" target="mdscssModel.Interceptor"/>
+    <UseRelation source="mdscssRoot.InterceptorOverviewPanel" target="mdscssRoot.MMODFrame" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mView" source="mdscssRoot.MMODPoller" target="mdscssRoot.MMODFrame" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssControl.InterceptorController" target="mdscssModel.Missile" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssRoot.MMODFrame" target="mdscssModel.MissileDBManager" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="windowList" source="mdscssRoot.SMCDPanel" target="mdscssRoot.SMCDWrapper" type="Aggregation" sourceCardinality="1..1" targetCardinality="0..*" collectionType="ArrayList&lt;SMCDWrapper&gt;"/>
+    <HasRelation name="mParent" source="mdscssRoot.InterceptorOverviewPanel" target="mdscssRoot.MMODFrame" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="mModel" source="mdscssRoot.MMODFrame" target="mdscssModel.MissileDBManager" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssModel.MissileDBManager" target="mdscssModel.Missile" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssRoot.InterceptorOverviewPanel" target="mdscssModel.Interceptor" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <HasRelation name="activeMissiles" source="mdscssModel.MissileDBManager" target="mdscssModel.Missile" type="Aggregation" sourceCardinality="1..1" targetCardinality="0..*" collectionType="HashMap&lt;String, Missile&gt;"/>
+    <HasRelation name="mModel" source="mdscssRoot.SMCDPanel" target="mdscssModel.MissileDBManager" type="Aggregation" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssControl.MDSCSSController" target="mdscssModel.Interceptor" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <UseRelation source="mdscssModel.Missile" target="mdscssModel.Missile" sourceCardinality="1..1" targetCardinality="1..1"/>
+    <IsRelation name="is" source="mdscssModel.ThreatClassX" target="mdscssModel.Missile"/>
+  </ClassDiagramRelations>
+</ClassDiagram>
