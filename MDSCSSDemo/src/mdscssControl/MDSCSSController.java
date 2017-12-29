@@ -357,9 +357,9 @@ public class MDSCSSController {
                 if (pos != null) {
                     tmpInt.setPosition(pos[0], pos[1], pos[2]);
                 }
-            } else if (!tmpInt.getAssignedThreat().equals("[UNASSIGNED]")) {
+            } /*else if (!tmpInt.getAssignedThreat().equals("[UNASSIGNED]")) {
                 tmpInt.setAssignedThreat("[UNASSIGNED]");
-            }
+            }TODO123*/
         }
 
         missiles = mModel.getThreatList();
@@ -375,7 +375,6 @@ public class MDSCSSController {
                 ArrayList<String> threats = cmdTssGetThreatList();
 
                 if (!threats.contains(tmpThreat.getIdentifier())) {
-                    System.out.println(tmpThreat.getIdentifier() + " is no longer in the list TSS");
 
                     //if theres an interceptor in flight after this threat, send a destruct, if theres one in preflight, unassign
                     ArrayList<String> interceptors = mModel.getInterceptorList();
@@ -384,6 +383,7 @@ public class MDSCSSController {
                         if (tmpInt.getAssignedThreat().equals(tmpThreat.getIdentifier())) {
                             if (tmpInt.getState() == Interceptor.interceptorState.IN_FLIGHT) {
                                 cmdMcssDestruct(tmpInt.getIdentifier());
+                                tmpInt.setAssignedThreat("[UNASSIGNED]");
                             } else {
                                 tmpInt.setAssignedThreat("[UNASSIGNED]");
                             }
