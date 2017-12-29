@@ -1,9 +1,3 @@
-/*******************************************************************************
- * File: ThreatOverviewPanel.java
- * Description: GUI Class that populates and controls the list of threats
- * presented to the operator
- *
- ******************************************************************************/
 package mdscssRoot;
 
 import java.util.ArrayList;
@@ -15,13 +9,15 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 import javax.swing.table.TableRowSorter;
 
+/*******************************************************************************
+ * The ThreatOverviewPanel Class populates and controls the list of threats
+ * presented to the operator.
+ ******************************************************************************/
 public class ThreatOverviewPanel extends javax.swing.JPanel 
 {
     TableRowSorter<TableModel> sorter;
     
     /***************************************************************************
-     * ThreatOverviewPanel
-     * 
      * Constructor
      **************************************************************************/
     public ThreatOverviewPanel() 
@@ -55,9 +51,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
     
     /***************************************************************************
-     * resetView
-     * 
-     * Called when the MDSCSS looses connection to the subsystems. This function
+     * The resetView function is called when the MDSCSS looses connection to the subsystems. This function
      * clears the table.
      **************************************************************************/
     public void resetView()
@@ -72,10 +66,8 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
     
     /***************************************************************************
-     * handleInitialUpdate
-     * 
-     * Called when the MDSCSS achieves connection to the subsystems. This function
-     * ensures that the table is visable and ready to be populated
+     * The handleInitialUpdate function is called when the MDSCSS achieves connection to the subsystems. This function
+     * ensures that the table is visible and ready to be populated.
      **************************************************************************/
     public void handleInitialUpdate()
     {
@@ -84,13 +76,11 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
 
     /***************************************************************************
-     * addEntry
-     * 
-     * Called by the MMODFrame's initial update function to populate the table
+     * The addEntry function is called by the MMODFrame's initial update function to populate the table
      * with threats.
      * 
-     * @param pID - the id of the threat
-     * @param pPos - an array of 3 integers representing the threats position
+     * @param pID The id of the threat
+     * @param pPos An array of 3 integers representing the threats position
      **************************************************************************/
     public void addEntry(String pID, int[] pPos)
     {
@@ -105,12 +95,10 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
     
     /***************************************************************************
-     * removeEntry
+     * The removeEntry function is called by the MMODFrame when a threat has been marked as destroyed.  This
+     * function removes the threat from the list.
      * 
-     * Called by the MMODFrame when a threat has been marked as destroyed.  This
-     * function removes the threat from the list
-     * 
-     * @param pID - the ID of the destroyed threat to remove
+     * @param pID The ID of the destroyed threat to remove
      **************************************************************************/
     public void removeEntry(String pID)
     {
@@ -128,14 +116,12 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
     
     /***************************************************************************
-     * updateEntry
+     * The updateEntry function is called periodically to update the table with each threats position and 
+     * assignment state.  Unassigned entries are sorted to the top of the list.
      * 
-     * Called periodically to update the table with each threats position and 
-     * assignment state.  unassigned entries are bubbled to the top.
-     * 
-     * @param pID - the ID of the threat to update
-     * @param assignedI - the interceptor assigned to this threat
-     * @param pPos - an array of 3 integers representing the threats position
+     * @param pID The ID of the threat to update
+     * @param assignedI The interceptor assigned to this threat
+     * @param pPos An array of 3 integers representing the threats position
      **************************************************************************/
     public void updateEntry(String pID, String assignedI, int[] pPos)
     {
@@ -182,9 +168,7 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
     
     /***************************************************************************
-     * sortThreats
-     * 
-     * sorts the table so that unassigned threats appear at the top of the list
+     * The sortThreats function sorts the table so that unassigned threats appear at the top of the list.
      **************************************************************************/
     private void sortThreats()
     {
@@ -201,10 +185,8 @@ public class ThreatOverviewPanel extends javax.swing.JPanel
     }
 
     /***************************************************************************
-     * initComponents
-     * 
-     * Creates and draws the container's swing components.  Autogenerated by
-     * Netbeans IDE GUI Editor
+     * The initComponents function creates and draws the container's swing components.  Autogenerated by
+     * Netbeans IDE GUI Editor.
      **************************************************************************/
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents

@@ -1,10 +1,4 @@
-/*******************************************************************************
- * File: MMODFrame.java
- * Description:
- *
- ******************************************************************************/
 package mdscssRoot;
-//todo:: add a destructall
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -27,22 +21,26 @@ import mdscssModel.*;
 import mdscssControl.MDSCSSController;
 import mdscssControl.MDSCSSController.controlMode;
 
+/*******************************************************************************
+ * The MMODFrame object is the main GUI class for the Multi Missile Overview Display.  This class 
+ * creates the other GUI classes to be displayed as JPanels and facilitates 
+ * internal communication between the GUI classes and the controller.  This class
+ * is also responsible for starting the polling thread that dictates when GUI
+ * components are to query the model and update their displayed state.
+ ******************************************************************************/
 public class MMODFrame extends javax.swing.JFrame 
 {
     MissileDBManager mModel;
     MDSCSSController mController;
     private Thread poller = null;
     
-    
     /***************************************************************************
-     * MMODFrame
-     * 
      * Constructor
      **************************************************************************/
     public MMODFrame() 
     {
-        javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/AppIcon.png"));
-         //todo:: add a polling thread to the database? might not be necessary, only if latency becomes an issue
+        javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/appIcon.png"));
+        
         setIconImage(icon.getImage());
         initComponents();
         
@@ -66,13 +64,11 @@ public class MMODFrame extends javax.swing.JFrame
     }
     
     /***************************************************************************
-     * initialize
+     * The initialize function initializes the MMOD GUI on startup.  References to the controller and 
+     * model are established; initial population of controls is performed.
      * 
-     * initializes the MMOD GUI on startup.  References to the controller and 
-     * model are established; initial population of controls is performed
-     * 
-     * @param pModel - Reference to the Missile DB
-     * @param pController - Reference to the MDSCSS Controller object
+     * @param pModel Reference to the Missile DB
+     * @param pController Reference to the MDSCSS Controller object
      **************************************************************************/
     public void initialize(MissileDBManager pModel, MDSCSSController pController) 
     {
@@ -84,24 +80,52 @@ public class MMODFrame extends javax.swing.JFrame
         theatreMapPanel1.initialize(mModel, this);
     }
     
+    /***************************************************************************
+     * The tssConnected function is sent by the MDSCSSController when connection has been established with
+     * the TSS Subsystem.  This function changes the color of the connection
+     * indicator to green and updates the displayed software version.
+     * 
+     * @param version The current TSS software version
+     **************************************************************************/
     public void tssConnected(String version)
     {
         TSSStatusIndicator.setBackground(Color.GREEN);
         lblTSSVersion.setText(version);
     }
     
+    /***************************************************************************
+     * The mcssConnected function is sent by the MDSCSSController when connection has been established with
+     * the MCSS Subsystem.  This function changes the color of the connection
+     * indicator to green and updates the displayed software version.
+     * 
+     * @param version The current MCSS software version
+     **************************************************************************/
     public void mcssConnected(String version)
     {
         MCSSStatusIndicator.setBackground(Color.GREEN);
         lblMCSSVersion.setText(version);
     }
     
+    /***************************************************************************
+     * The smssConnected function is sent by the MDSCSSController when connection has been established with
+     * the SMSS Subsystem.  This function changes the color of the connection
+     * indicator to green and updates the displayed software version.
+     * 
+     * @param version The current SMSS software version
+     **************************************************************************/
     public void smssConnected(String version)
     {
         SMSSStatusIndicator.setBackground(Color.GREEN);
         lblSMSSVersion.setText(version);
     }
     
+    /***************************************************************************
+     * The handleSubsystemFailure function is sent by the MDSCSSController when connection to one or more of the 
+     * subsystems has been lost.  This function sets the color of the connection 
+     * indicators of all subsystems to yellow-orange and displays a warning to
+     * the user.  This function also calls the resetView function on all GUI 
+     * Classes, so that all user control is disabled until connection is re-established.
+     **************************************************************************/
     public void handleSubsystemFailure()
     {
         TSSStatusIndicator.setBackground(Color.ORANGE);
@@ -117,15 +141,18 @@ public class MMODFrame extends javax.swing.JFrame
                                                     "will be destructed.\n", 
                                                     "Subsystem Connection Failure", 
                                                     JOptionPane.WARNING_MESSAGE);
-        }
-    });
-  t.start();
-        
-        
-        
+            }
+        });
+        t.start();
         resetView();
     }
     
+    /***************************************************************************
+     * The handleCodeRed function is sent by the MDSCSSController when connection to one or more of the 
+     * subsystems has been lost and has not been re-established for over 5 minutes.
+     * This function sets the color of the connection indicators of all subsystems
+     * to red and displays an error to the user.
+     **************************************************************************/
     public void handleCodeRed()
     {
         TSSStatusIndicator.setBackground(Color.RED);
@@ -139,14 +166,18 @@ public class MMODFrame extends javax.swing.JFrame
                                             "destructed. A restart of the MDSCSS is required.\n", 
                                             "Subsystem Failure", 
                                             JOptionPane.ERROR_MESSAGE);
-        }
-    });
-  t.start();
-        
-        
+            }
+        });
+        t.start();
         
     }
     
+    /***************************************************************************
+     * The handleLaunchModeChange function is sent by the MDSCSSController when no alternative interceptor for assignment
+     * has been found while in forgiving control.  This function sends an alert to
+     * the user to notify the operator that the system has been reverted to 
+     * manual assignment mode automatically.
+     **************************************************************************/
     public void handleLaunchModeChange()
     {
         Thread t = new Thread(new Runnable(){
@@ -156,11 +187,17 @@ public class MMODFrame extends javax.swing.JFrame
                                             "and launch mode.\n", 
                                             "Automatic Launch Mode Change", 
                                             JOptionPane.ERROR_MESSAGE);
-        }
-    });
-  t.start();
+            }
+        });
+        t.start();
     }
     
+    /***************************************************************************
+     * The handleDetModeChange function is sent by the MDSCSSController when the detonation override mode for an
+     * interceptor has been changed automatically.  This function sends an alert to
+     * notify the operator that the interceptor has been reverted to manual
+     * manual detonation mode automatically.
+     **************************************************************************/
     public void handleDetModeChange(String id)
     {
         Thread t = new Thread(new Runnable(){
@@ -170,24 +207,31 @@ public class MMODFrame extends javax.swing.JFrame
                                             "set to manual.\n", 
                                             "Automatic Launch Mode Change", 
                                             JOptionPane.ERROR_MESSAGE);
-        }
-    });
-  t.start();
+            }
+        });
+        t.start();
     }
     
+    /***************************************************************************
+     * The handleClosing function is called when the operator attempts to close the application.
+     * This function prompts the user if they are certain that they wish to exit 
+     * the MDSCSS and kicks off close operations if the yes option is selected.
+     **************************************************************************/
     public void handleClosing()
     {
         int reply = JOptionPane.showConfirmDialog(null, "Are you sure you wish to exit?", "Exit MDSCSS", JOptionPane.YES_NO_OPTION);
 
-  if (reply == JOptionPane.YES_OPTION) {
-
-      mController.finalize();
-    System.exit(0);
-
-  }
-        
+        if (reply == JOptionPane.YES_OPTION) {
+            mController.finalize();
+            System.exit(0);
+        }
     }
     
+    /***************************************************************************
+     * The handleInitialUpdate function is called when the MDSCSS achieves connection to the subsystems. This function
+     * calls the initial update function of all GUI classes and coordinates the
+     * population of the interceptor and threat overview tables.
+     **************************************************************************/
     public void handleInitialUpdate()
     {
         ArrayList<String> Missiles;
@@ -202,9 +246,7 @@ public class MMODFrame extends javax.swing.JFrame
         interceptorOverviewPanel1.handleInitialUpdate();
         updateInterceptors();
         
-        
-        
-        
+
         Missiles = mModel.getInterceptorList();
         Collections.sort(Missiles);
         for(int i = 0; i < Missiles.size(); i++)
@@ -226,8 +268,7 @@ public class MMODFrame extends javax.swing.JFrame
             threatOverviewPanel1.addEntry(tmpT.getIdentifier(), tmpT.getPositionVector());
             
         }
-        
-        //todo:: find a better way to do this
+       
         if(tmpI != null)
         {
             interceptorOverviewPanel1.handleSelChange(tmpI.getIdentifier());
@@ -239,12 +280,26 @@ public class MMODFrame extends javax.swing.JFrame
         
     }
     
+    /***************************************************************************
+     * The handleThreatDestruction function is called by the MDSCSS when the TSS indicates that a threat has been destroyed.
+     * This function removes the threat from the threat overview table and notifies
+     * the theater map so that it may update the corresponding indicator. 
+     * 
+     * @param pID The id of the destroyed threat
+     **************************************************************************/
     public void handleThreatDestruction(String pID)
     {
         threatOverviewPanel1.removeEntry(pID);
         theatreMapPanel1.markThreatDestroyed(pID);
     }
     
+    /***************************************************************************
+     * The periodicUpdate function is called by the MMODPoller every second.  This function calls the update
+     * function for every GUI class so that they reflect the current model.  This
+     * function also checks the MDSCSSController's forgiving control state and
+     * issues prompts to the user, when necessary, to approve/reject forgiving
+     * assignment and detonate operations.
+     **************************************************************************/
     public void periodicUpdate()
     {
         updateThreats();
@@ -326,6 +381,11 @@ public class MMODFrame extends javax.swing.JFrame
         
     }
     
+    /***************************************************************************
+     * updateThreats is a private helper function utilized by the periodic update function.  This
+     * function ensures that the threat overview panel is updated to match 
+     * the current model.
+     **************************************************************************/
     private void updateThreats()
     {
         ArrayList<String> Interceptors;
@@ -364,6 +424,12 @@ public class MMODFrame extends javax.swing.JFrame
         
     }
     
+    
+    /***************************************************************************
+     * updateInterceptors is a private helper function utilized by the periodic update function.  This
+     * function ensures that the interceptor overview panel is updated to match 
+     * the current model
+     **************************************************************************/
     private void updateInterceptors()
     {
         ArrayList<String> Interceptors;
@@ -381,16 +447,35 @@ public class MMODFrame extends javax.swing.JFrame
         
     }
     
+    /***************************************************************************
+     * The ChangeSMCDSel function is called by the interceptor overview panel when a new interceptor has 
+     * been selected in the table.  This function forwards the selection to
+     * the SMCD so that it may update its selection.
+     * 
+     * @param pID The new selected interceptor to be displayed
+     **************************************************************************/
     public void ChangeSMCDSel(String pID)
     {
         sMCDPanel1.handleSelChange(pID);
     }
     
+    /***************************************************************************
+     * The ChangeIOverviewSel function is called by the SMCD when a new interceptor has been selected. 
+     * This function forwards the selection to the interceptor overview panel
+     * so that it may update its selected row.
+     * 
+     * @param pID The new selected interceptor to be selected
+     **************************************************************************/
     public void ChangeIOverviewSel(String pID)
     {
         interceptorOverviewPanel1.handleSelChange(pID);
     }
     
+    /***************************************************************************
+     * resetView is a helper function called when the MDSCSS looses connection to the subsystems. 
+     * This function forwards the resetView call to all other GUI Classes and 
+     * disables the system control mode dropdown.
+     **************************************************************************/
     private void resetView()
     {
         if(poller!= null)
@@ -404,11 +489,23 @@ public class MMODFrame extends javax.swing.JFrame
         interceptorOverviewPanel1.resetView();
     }
 
+    /***************************************************************************
+     * The forwardLaunchCmd function is called by the SMCD to forward the launch command for a specified interceptor
+     * to the MDSCSS.
+     * 
+     * @param pID The id of the interceptor to be launched
+     **************************************************************************/
     public void forwardLaunchCmd(String pID)
     {
         mController.cmdMcssLaunch(pID);
     }
     
+    /***************************************************************************
+     * The forwardDetonate function is called by the SMCD to forward the detonate command for a specified interceptor
+     * to the MDSCSS.
+     * 
+     * @param pID The id of the interceptor to be detonated
+     **************************************************************************/
     public void forwardDetonate(String pID)
     {
         mController.cmdSmssDetEnable(pID);
@@ -423,10 +520,8 @@ public class MMODFrame extends javax.swing.JFrame
     
     
     /***************************************************************************
-     * initComponents
-     * 
-     * Creates and draws the container's swing components.  Autogenerated by
-     * Netbeans IDE GUI Editor
+     * The initComponents function creates and draws the container's swing components.  Autogenerated by
+     * Netbeans IDE GUI Editor.
      **************************************************************************/
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -599,6 +694,13 @@ public class MMODFrame extends javax.swing.JFrame
         
     }//GEN-LAST:event_formWindowClosing
 
+    /***************************************************************************
+     * The handleSysModeSelection function is an action handler for when the system control mode dropdown has its selection
+     * changed.  This function updates the MDSCSSController with its new control
+     * mode, which will take effect the next time the control thread elapses.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void handleSysModeSelection(ItemEvent evt)
     {
         JComboBox dropdown = (JComboBox) evt.getSource();

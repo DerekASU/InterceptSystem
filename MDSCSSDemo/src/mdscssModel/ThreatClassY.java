@@ -1,11 +1,8 @@
-/*******************************************************************************
- * File: ThreatClassY.java
- * Description: model class for Y class threats
- *
- ******************************************************************************/
 package mdscssModel;
 
-
+/*******************************************************************************
+ * The ThreatClassY object is a Model class for class Y threats
+ ******************************************************************************/
 public class ThreatClassY extends Missile
 {
     // defining constants
@@ -18,11 +15,9 @@ public class ThreatClassY extends Missile
     private static final double FRIC_COEFF_Z = 0.04;
     
     /***************************************************************************
-     * ThreatClassY
-     * 
      * Constructor
      * 
-     * @param pId - the 2-char identification string of the threat
+     * @param pId The 2-char identification string of the threat
      **************************************************************************/
     public ThreatClassY(String pId)
     {

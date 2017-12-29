@@ -1,12 +1,10 @@
-/*******************************************************************************
- * File: Interceptor.java
- * Description: Model class that defines an interceptor, a type of missile
- *
- ******************************************************************************/
 package mdscssModel;
 
 import java.sql.Timestamp;
 
+/*******************************************************************************
+ * The Interceptor object is a Model class that defines an interceptor, a type of missile
+ ******************************************************************************/
 public class Interceptor extends Missile
 {
 
@@ -34,19 +32,17 @@ public class Interceptor extends Missile
     protected double thrust_dx, thrust_ix, thrust_dy, thrust_iy, thrust_dz, thrust_iz;
     
     /***************************************************************************
-     * Interceptor
+     * Constructor
      * 
-     * Constructor; initializes member variables
-     * 
-     * @param pId - the 2-char missile identification string
-     * @param pFricX - the friction coefficient in the x direction
-     * @param pFricY - the friction coefficient in the Y direction
-     * @param pFricZ - the friction coefficient in the Z direction
-     * @param pMThrustX - the max acceleration in the x direction
-     * @param pMThrusty - the max acceleration in the y direction
-     * @param pMThrustZ - the max acceleration in the z direction
-     * @param pAssigned - the identifier of the threat this interceptor has been assigned
-     * @param pDetRng - the detonation radius of the interceptor
+     * @param pId The 2-char missile identification string
+     * @param pFricX The friction coefficient in the x direction
+     * @param pFricY The friction coefficient in the Y direction
+     * @param pFricZ The friction coefficient in the Z direction
+     * @param pMThrustX The max acceleration in the x direction
+     * @param pMThrustY The max acceleration in the y direction
+     * @param pMThrustZ The max acceleration in the z direction
+     * @param pAssigned The identifier of the threat this interceptor has been assigned
+     * @param pDetRng The detonation radius of the interceptor
      **************************************************************************/
     public Interceptor(String pId, double pFricX, double pFricY, double pFricZ,
                     int pMThrustX, int pMThrustY, int pMThrustZ,
@@ -64,12 +60,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getState
+     * The getState function retrieves the state of the interceptor, which can either be pre-flight,
+     * in-flight, detonated, or destructed.
      * 
-     * retrieves the state of the interceptor, which can either be pre-flight,
-     * in-flight, detonated, or destructed
-     * 
-     * @return the state of the interceptor
+     * @return The state of the interceptor
      **************************************************************************/
     public interceptorState getState()
     {
@@ -77,12 +71,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getAssignedThreat
+     * The getAssignedThreatfunction retrieves the id of the threat in which this interceptor is assigned to.
      * 
-     * retrieves the id of the threat in which this interceptor is assigned to
-     * 
-     * @return the 2-char missile identification string of the threat, "N/A" 
-     * if unassigned;
+     * @return The 2-char missile identification string of the threat, "[UNASSIGNED]" 
+     * if unassigned.
      **************************************************************************/
     public String getAssignedThreat()
     {
@@ -90,11 +82,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getDetonationRange
+     * The getDetonationRange function retrieves the detonation radius of the interceptor in meters.
      * 
-     * retrieves the detonation radius of the interceptor in meters
-     * 
-     * @return the detonation radius of the interceptor
+     * @return The detonation radius of the interceptor.
      **************************************************************************/
     public int getDetonationRange()
     {
@@ -102,11 +92,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * isDisabled
+     * The isDisabled function retrieves the disabled state of the interceptor.
      * 
-     * retrieves the disabled state of the interceptor
-     * 
-     * @return whether or not the interceptor is disabled
+     * @return A boolean value indicating whether or not the interceptor is disabled
      **************************************************************************/
     public boolean isDisabled()
     {
@@ -114,11 +102,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * isDetonationEnabled
+     * The isDetonationEnabled function retrieves the detonation safety state of the interceptor.
      * 
-     * retrieves the detonation safety state of the interceptor
-     * 
-     * @return whether or not the interceptor is enabled for detonation
+     * @return A boolean value indicating whether or not the interceptor is enabled for detonation
      **************************************************************************/
     public boolean isDetonationEnabled()
     {
@@ -126,12 +112,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * isDetonateOverriden
+     * The isDetonateOverriden function retrieves the flag that indicates if the detonation control of the 
+     * interceptor has been overriden.
      * 
-     * retrieves the flag that determines if the detonation control of the 
-     * interceptor has been overriden
-     * 
-     * @return whether or not the control mode has been overriden
+     * @return A boolean value indicating whether or not the control mode has been overriden
      **************************************************************************/
     public boolean isDetonateOverriden()
     {
@@ -139,12 +123,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * isAssignmentOverriden
+     * The isAssignmentOverriden function retrieves the flag that determines if the assignment control of the 
+     * interceptor has been overriden.
      * 
-     * retrieves the flag that determines if the assignment control of the 
-     * interceptor has been overriden
-     * 
-     * @return whether or not the control mode has been overriden
+     * @return A boolean value indicating whether or not the control mode has been overriden
      **************************************************************************/
     public boolean isAssignmentOverriden()
     {
@@ -152,11 +134,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getLaunchTime
+     * The getLaunchTime function retrieves the timestamp representing the launch time of the interceptor.
      * 
-     * retrieves the timestamp representing the launch time of the interceptor
-     * 
-     * @return the timestamp representing the launch time of the interceptor
+     * @return The timestamp representing the launch time of the interceptor
      **************************************************************************/
     public Timestamp getLaunchTime()
     {
@@ -164,12 +144,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setState
+     * The setState function assigns the state of the interceptor, which can either be pre-flight,
+     * in-flight, detonated, or destructed.
      * 
-     * assigns the state of the interceptor, which can either be pre-flight,
-     * in-flight, detonated, or destructed
-     * 
-     * @param pState - the state of the interceptor
+     * @param pState The state of the interceptor
      **************************************************************************/
     public void setState(interceptorState pState)
     {
@@ -177,11 +155,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setAssignedThreat
+     * The setAssignedThreat function assigns the id of the threat in which this interceptor is assigned to.
      * 
-     * assigns the id of the threat in which this interceptor is assigned to
-     * 
-     * @param pID - the 2-char missile identification string of the threat
+     * @param pID The 2-char missile identification string of the threat
      **************************************************************************/
     public void setAssignedThreat(String pID)
     {
@@ -189,11 +165,9 @@ public class Interceptor extends Missile
     }
         
     /***************************************************************************
-     * setDisabled
+     * The setDisabled function sets the disabled state of the interceptor.
      * 
-     * sets the disabled state of the interceptor
-     * 
-     * @param pDisable - whether or not the interceptor is disabled
+     * @param pDisable Whether or not the interceptor is disabled
      **************************************************************************/
     public void setDisabled(boolean pDisable)
     {
@@ -201,11 +175,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setDetonationEnabled
+     * The setDetonationEnabled function sets the detonation safety state of the interceptor.
      * 
-     * sets the detonation safety state of the interceptor
-     * 
-     * @param pEnabled - whether or not the interceptor is enabled for detonation
+     * @param pEnabled Whether or not the interceptor is enabled for detonation
      **************************************************************************/
     public void setDetonationEnabled(boolean pEnabled)
     {
@@ -213,12 +185,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setDetonateOverride
+     * The setDetonateOverride function sets the flag that determines if the detonate control of the 
+     * interceptor has been overriden.
      * 
-     * sets the flag that determines if the detonate control of the 
-     * interceptor has been overriden
-     * 
-     * @param pOverride - whether or not the control mode has been overriden
+     * @param pOverride Whether or not the control mode has been overriden
      **************************************************************************/
     public void setDetonateOverride(boolean pOverride)
     {
@@ -226,12 +196,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setAssignmentOverriden
+     * The setAssignmentOverriden function sets the flag that determines if the assignment control of the 
+     * interceptor has been overriden.
      * 
-     * sets the flag that determines if the assignment control of the 
-     * interceptor has been overriden
-     * 
-     * @param pOverride - whether or not the control mode has been overriden
+     * @param pOverride Whether or not the control mode has been overriden
      **************************************************************************/
     public void setAssignmentOverriden(boolean pOverride)
     {
@@ -239,11 +207,9 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setLaunchTime
+     * The setLaunchTime function sets the timestamp representing the time of launch of the interceptor.
      * 
-     * sets the timestamp representing the time of launch of the interceptor
-     * 
-     * @param pTime - the new launch time
+     * @param pTime The new launch time
      **************************************************************************/
     public void setLaunchTime(Timestamp pTime)
     {
@@ -251,24 +217,20 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getCtrlThrustDX
+     * The getCtrlThrustDX function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the X direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the X direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustDX()
     {
         return thrust_dx;
     }
      /***************************************************************************
-     * getCtrlThrustIX
+     * The getCtrlThrustIX function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the X direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the X direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustIX()
     {
@@ -276,24 +238,20 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setCtrlThrustDX
+     * The setCtrlThrustDX function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the X direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the X direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustDX(double pThrust)
     {
         thrust_dx = pThrust;
     }
     /***************************************************************************
-     * setCtrlThrustIX
+     * The setCtrlThrustIX function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the X direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the X direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustIX(double pThrust)
     {
@@ -301,24 +259,20 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getCtrlThrustDY
+     * The getCtrlThrustDY function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Y direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the Y direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustDY()
     {
         return thrust_dy;
     }
     /***************************************************************************
-     * getCtrlThrustIY
+     * The getCtrlThrustIY function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Y direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the Y direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustIY()
     {
@@ -326,12 +280,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setCtrlThrustDY
+     * The setCtrlThrustDY function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Y direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the Y direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustDY(double pThrust)
     {
@@ -339,12 +291,10 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * setCtrlThrustIY
+     * The setCtrlThrustIY function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Y direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the Y direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustIY(double pThrust)
     {
@@ -352,48 +302,40 @@ public class Interceptor extends Missile
     }
     
     /***************************************************************************
-     * getCtrlThrustDZ
+     * The getCtrlThrustDZ function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Z direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the Z direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustDZ()
     {
         return thrust_dz;
     }
     /***************************************************************************
-     * getCtrlThrustIZ
+     * The getCtrlThrustIZ function retrieves the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Z direction.
      * 
-     * retrieves the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the Z direction
-     * 
-     * @return the critical thrust value
+     * @return The critical thrust value
      **************************************************************************/
     public double getCtrlThrustIZ()
     {
         return thrust_iz;
     }
     /***************************************************************************
-     * setCtrlThrustDZ
+     * The setCtrlThrustDZ function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the derivative portion in the Z direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the derivative portion in the Z direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustDZ(double pThrust)
     {
         thrust_dz = pThrust;
     }
     /***************************************************************************
-     * setCtrlThrustIZ
+     * The setCtrlThrustIZ function sets the ctrlThrust value used by the interceptor controller calculations
+     * for the Integrator portion in the Z direction.
      * 
-     * sets the ctrlThrust value used by the interceptor controller calculations
-     * for the Integrator portion in the Z direction
-     * 
-     * @param pThrust - the critical thrust value
+     * @param pThrust The critical thrust value
      **************************************************************************/
     public void setCtrlThrustIZ(double pThrust)
     {

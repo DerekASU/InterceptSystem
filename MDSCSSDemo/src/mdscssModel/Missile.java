@@ -1,10 +1,8 @@
-/*******************************************************************************
- * File: Missile.java
- * Description: Model class that defines a missile and its attributes
- *
- ******************************************************************************/
 package mdscssModel;
 
+/*******************************************************************************
+ * The Missile object is a Model class that defines a missile and its attributes.
+ ******************************************************************************/
 public class Missile 
 {
     // Enumerations
@@ -24,18 +22,16 @@ public class Missile
     public int maxThrustX, maxThrustY, maxThrustZ;
     
     /***************************************************************************
-     * Missile
+     * Constructor
      * 
-     * Constructor; initializes member variables
-     * 
-     * @param pId - the 2-char missile identification string
-     * @param pType - the type of the missile (interceptor or Threat)
-     * @param pFricX - the friction coefficient in the x direction
-     * @param pFricY - the friction coefficient in the Y direction
-     * @param pFricZ - the friction coefficient in the Z direction
-     * @param pMThrustX - the max acceleration in the x direction
-     * @param pMThrusty - the max acceleration in the y direction
-     * @param pMThrustZ - the max acceleration in the z direction
+     * @param pId The 2-char missile identification string
+     * @param pType The type of the missile (interceptor or Threat)
+     * @param pFricX The friction coefficient in the x direction
+     * @param pFricY The friction coefficient in the Y direction
+     * @param pFricZ The friction coefficient in the Z direction
+     * @param pMThrustX The max acceleration in the x direction
+     * @param pMThrustY The max acceleration in the y direction
+     * @param pMThrustZ The max acceleration in the z direction
      **************************************************************************/
     public Missile(String pId, MissileType pType, double pFricX, double pFricY, double pFricZ,
                     int pMThrustX, int pMThrustY, int pMThrustZ)
@@ -53,11 +49,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getIdentifier
+     * The getIdentifier function retrieves the id of the missile.
      * 
-     * retrieves the id of the missile
-     * 
-     * @return the 2-char missile identification string
+     * @return The 2-char missile identification string
      **************************************************************************/
     public String getIdentifier()
     {
@@ -65,11 +59,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getIdentifier
+     * The getIdentifier function retrieves the type of the missile.
      * 
-     * retrieves the type of the missile
-     * 
-     * @return the type of missile
+     * @return The type of missile
      **************************************************************************/
     public MissileType getType()
     {
@@ -77,11 +69,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getPositionVector
+     * The getPositionVector function retrieves the position vector of the missile.
      * 
-     * retrieves the position vector of the missile
-     * 
-     * @return an integer array of size 3 representing the position of the missile
+     * @return An integer array of size 3 representing the position of the missile
      * in the format of [posX, posY, posZ]
      **************************************************************************/
     public int[] getPositionVector()
@@ -91,11 +81,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getThrustVector
+     * The getThrustVector function retrieves the thrust vector of the missile.
      * 
-     * retrieves the thrust vector of the missile
-     * 
-     * @return an integer array of size 3 representing the acceleration of the missile
+     * @return An integer array of size 3 representing the acceleration of the missile
      * in the format of [thrustX, thrustY, thrustZ]
      **************************************************************************/
     public int[] getThrustVector()
@@ -105,11 +93,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getFricVector
+     * The getFricVector function retrieves the friction coefficient vector of the missile.
      * 
-     * retrieves the friction coefficient vector of the missile
-     * 
-     * @return an integer array of size 3 representing the friction coefficients
+     * @return An integer array of size 3 representing the friction coefficients
      * of the missile, in each direction, in the format of [fricX, fricY, fricZ]
      **************************************************************************/
     public double[] getFricVector()
@@ -119,11 +105,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getPosX
+     * The getPosX function retrieves the position of the missile in the X direction.
      * 
-     * retrieves the position of the missile in the X direction
-     * 
-     * @return the X position of the missile in a 3d space
+     * @return The X position of the missile in a 3d space
      **************************************************************************/
     public int getPosX()
     {
@@ -131,11 +115,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getPosY
+     * The getPosY function retrieves the position of the missile in the Y direction.
      * 
-     * retrieves the position of the missile in the Y direction
-     * 
-     * @return the Y position of the missile in a 3d space
+     * @return The Y position of the missile in a 3d space
      **************************************************************************/
     public int getPosY()
     {
@@ -155,11 +137,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getThrustX
+     * The getThrustX function retrieves the power level of the missile thruster in the X direction.
      * 
-     * retrieves the acceleration of the missile in the X direction
-     * 
-     * @return the X thrust value of the missile in a 3d space
+     * @return The X thrust value of the missile in a 3d space
      **************************************************************************/
     public int getThrustX()
     {
@@ -167,11 +147,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getThrustY
+     * The getThrustY function retrieves the power level of the missile thruster in the Y direction.
      * 
-     * retrieves the acceleration of the missile in the Y direction
-     * 
-     * @return the Y thrust value of the missile in a 3d space
+     * @return The X thrust value of the missile in a 3d space
      **************************************************************************/
     public int getThrustY()
     {
@@ -179,11 +157,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getThrustZ
+     * The getThrustZ function retrieves the power level of the missile thruster in the Z direction.
      * 
-     * retrieves the acceleration of the missile in the Z direction
-     * 
-     * @return the Z thrust value of the missile in a 3d space
+     * @return The Z thrust value of the missile in a 3d space
      **************************************************************************/
     public int getThrustZ()
     {
@@ -191,11 +167,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getFricX
+     * The getFricX function retrieves the friction coefficient of the missile in the X direction.
      * 
-     * retrieves the friction coefficient of the missile in the X direction
-     * 
-     * @return the friction coefficient in the X direction
+     * @return The friction coefficient in the X direction
      **************************************************************************/
     public double getFricX()
     {
@@ -203,11 +177,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getFricY
+     * The getFricY function retrieves the friction coefficient of the missile in the Y direction.
      * 
-     * retrieves the friction coefficient of the missile in the Y direction
-     * 
-     * @return the friction coefficient in the Y direction
+     * @return The friction coefficient in the Y direction
      **************************************************************************/
     public double getFricY()
     {
@@ -215,11 +187,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getFricZ
+     * The getFricZ function retrieves the friction coefficient of the missile in the Z direction.
      * 
-     * retrieves the friction coefficient of the missile in the Z direction
-     * 
-     * @return the friction coefficient in the Z direction
+     * @return The friction coefficient in the Z direction
      **************************************************************************/
     public double getFricZ()
     {
@@ -227,13 +197,11 @@ public class Missile
     }
     
     /***************************************************************************
-     * setPosition
+     * The setPosition function updates the position of the missile in a 3d space.
      * 
-     * updates the position of the missile in a 3d space
-     * 
-     * @param paramX - position in the x direction
-     * @param paramY - position in the y direction
-     * @param paramZ - position in the z direction
+     * @param paramX Position in the x direction
+     * @param paramY Position in the y direction
+     * @param paramZ Position in the z direction
      **************************************************************************/
     public void setPosition(int paramX, int paramY, int paramZ)
     {
@@ -243,13 +211,11 @@ public class Missile
     }
     
     /***************************************************************************
-     * setThrustValue
+     * The setThrustValue function updates the acceleration of the missile in a 3d space.
      * 
-     * updates the acceleration of the missile in a 3d space
-     * 
-     * @param paramX - thrust in the x direction
-     * @param paramY - thrust in the y direction
-     * @param paramZ - thrust in the z direction
+     * @param paramX Thrust in the x direction
+     * @param paramY Thrust in the y direction
+     * @param paramZ Thrust in the z direction
      **************************************************************************/
     public void setThrustValue(int paramX, int paramY, int paramZ)
     {
@@ -259,11 +225,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * setThrustX
+     * The setThrustX function updates the acceleration of the missile in the x direction.
      * 
-     * updates the acceleration of the missile in the x direction
-     * 
-     * @param pThrustX - thrust in the x direction
+     * @param pThrustX Thrust in the x direction
      **************************************************************************/
     public void setThrustX(int pThrustX)
     {
@@ -271,11 +235,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * setThrustY
+     * The setThrustY function updates the acceleration of the missile in the Y direction.
      * 
-     * updates the acceleration of the missile in the y direction
-     * 
-     * @param pThrustY - thrust in the y direction
+     * @param pThrustY Thrust in the Y direction
      **************************************************************************/
     public void setThrustY(int pThrustY)
     {
@@ -283,11 +245,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * setThrustZ
+     * The setThrustZ function updates the acceleration of the missile in the Z direction.
      * 
-     * updates the acceleration of the missile in the z direction
-     * 
-     * @param pThrustZ - thrust in the z direction
+     * @param pThrustZ Thrust in the Z direction
      **************************************************************************/
     public void setThrustZ(int pThrustZ)
     {
@@ -295,11 +255,9 @@ public class Missile
     }
     
     /***************************************************************************
-     * getMissileClass
+     * The getMissileClass function retrieves the class of the missile.
      * 
-     * retrieves the class of the missile
-     * 
-     * @return a char representing the class of the missile
+     * @return A char representing the class of the missile
      **************************************************************************/
     public char getMissileClass()
     {

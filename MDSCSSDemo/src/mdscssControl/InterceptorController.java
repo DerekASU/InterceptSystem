@@ -1,13 +1,12 @@
-/*******************************************************************************
- * File: InterceptorController.java
- * Description: Object that handles the PID controller logic to compensate the 
- * thrust levels of a given interceptor as it tracks a threat
- ******************************************************************************/
 package mdscssControl;
 
 import mdscssModel.Interceptor;
 import mdscssModel.Missile;
 
+/*******************************************************************************
+ * The InterceptorController object handles the PID controller logic to compensate the 
+ * thrust levels of a given interceptor as it tracks a threat.
+ ******************************************************************************/
 public class InterceptorController 
 {
     private static final double[][] TUNING_TABLE_X = {{1,       1,      0.5},
@@ -26,8 +25,6 @@ public class InterceptorController
     private static final int D_INT = 300;
     
     /***************************************************************************
-     * InterceptorController
-     * 
      * Constructor
      **************************************************************************/
     public InterceptorController()
@@ -36,13 +33,11 @@ public class InterceptorController
     }
     
     /***************************************************************************
-     * trackMissilePair
+     * The trackMissilePair function updates the provided interceptor with new thrust values to better track
+     * its assigned threat.
      * 
-     * Updates the provided Interceptor with new thrust values to better track
-     * its assigned threat
-     * 
-     * @param pInterceptor - The interceptor to update
-     * @param pThreat - pInterceptor's assigned threat
+     * @param pInterceptor The interceptor to update
+     * @param pThreat pInterceptor's assigned threat
      **************************************************************************/
     public void trackMissilePair(Interceptor pInterceptor, Missile pThreat)
     {        
@@ -196,14 +191,12 @@ public class InterceptorController
     }
     
     /***************************************************************************
-     * quantAndSat
-     * 
      * Given a calculated thrust value and a max bound, this function quantizes 
      * and saturates the thrust value into a power level that can be accepted by
      * the MCS thrust command
      * 
-     * @param pThrust - the PID calculated thrust value
-     * @param pMax - the maximum thrust value
+     * @param pThrust The PID calculated thrust value
+     * @param pMax The maximum thrust value
      **************************************************************************/
     private int quantAndSat(double pThrust, int pMax)
     {        

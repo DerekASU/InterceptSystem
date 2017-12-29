@@ -1,10 +1,8 @@
-/*******************************************************************************
- * File: ThreatClassZ.java
- * Description: model class for Z class threats
- *
- ******************************************************************************/
 package mdscssModel;
 
+/*******************************************************************************
+ * The ThreatClassZ object is a Model class for class Z threats
+ ******************************************************************************/
 public class ThreatClassZ extends Missile
 {
     // defining constants
@@ -17,11 +15,9 @@ public class ThreatClassZ extends Missile
     private static final double FRIC_COEFF_Z = 0.04;
     
     /***************************************************************************
-     * ThreatClassZ
-     * 
      * Constructor
      * 
-     * @param pId - the 2-char identification string of the threat
+     * @param pId The 2-char identification string of the threat
      **************************************************************************/
     public ThreatClassZ(String pId)
     {

@@ -1,12 +1,10 @@
-/*******************************************************************************
- * File: ControlThread.java
- * Description:
- *
- ******************************************************************************/
 package mdscssControl;
 
-import java.util.ArrayList;
-
+/*******************************************************************************
+ * The ControlThread class houses the main control thread that manages the 
+ * internal state of the controller and maintains periodic communication with
+ * the subsystems every half second.  
+ ******************************************************************************/
 public class ControlThread implements Runnable
 {
     private MDSCSSController controlUtility;
@@ -23,9 +21,9 @@ public class ControlThread implements Runnable
     
     
     /***************************************************************************
-     * ControlThread
-     * 
      * Constructor
+     * 
+     * @param pController Object reference to the MDSCSSController
      **************************************************************************/
     public ControlThread(MDSCSSController pController)
     {
@@ -35,10 +33,9 @@ public class ControlThread implements Runnable
     }
     
     /***************************************************************************
-     * Run
-     * 
-     * Main control thread.  Handles control flow to initialize the controller
-     * and maintain connections and operability with the subsystems.
+     * The main control thread.  This thread handles the control flow to 
+     * initialize the controller, maintain interface connectivity, and maintain 
+     * an operational state.
      **************************************************************************/
     public void run()
     {

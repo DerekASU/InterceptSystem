@@ -1,11 +1,8 @@
-/*******************************************************************************
- * File: InterceptorClassC.java
- * Description: model class for class c interceptors
- *
- ******************************************************************************/
 package mdscssModel;
 
-
+/*******************************************************************************
+ * The InterceptorClassC object is a Model class for class C interceptors
+ ******************************************************************************/
 public class InterceptorClassC extends Interceptor
 {
     // defining constants
@@ -20,11 +17,9 @@ public class InterceptorClassC extends Interceptor
     private static final int DET_RANGE = 200;
     
     /***************************************************************************
-     * InterceptorClassC
-     * 
      * Constructor
      * 
-     * @param pId - the 2-char identification string of the interceptor
+     * @param pId The 2-char identification string of the interceptor
      **************************************************************************/
     public InterceptorClassC(String pId)
     {

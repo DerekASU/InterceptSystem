@@ -1,24 +1,19 @@
-/*******************************************************************************
- * File: MMODPoller.java
- * Description: Polling thread for the main GUI components.  This thread awakes 
- * every second to command the GUI components to query the model and update
- * their states.  this is done independently from the control thread to maintain
- * latency requirements, and independent of the main event thread to minimize
- * visible lag
- ******************************************************************************/
 package mdscssRoot;
 
+/*******************************************************************************
+ * The MMODPoller thread awakes 
+ * every second to command the GUI components to query the model and update
+ * their states.
+ ******************************************************************************/
 public class MMODPoller implements Runnable
 {
     private MMODFrame mView;
     private boolean bRunning;
 
     /***************************************************************************
-     * MMODPoller
-     * 
      * Constructor
      * 
-     * @param pMMOD - reference to the MMOD JFrame
+     * @param pMMOD Reference to the MMOD JFrame
      **************************************************************************/
     public MMODPoller(MMODFrame pMMOD)
     {
@@ -27,9 +22,7 @@ public class MMODPoller implements Runnable
     }
     
     /***************************************************************************
-     * Run
-     * 
-     * Handles periodic update logic
+     * The Run function tells the MMODFrame, and all of its components, to access the MissileDBManager and update their visible states.
      **************************************************************************/
     public void run()
     {

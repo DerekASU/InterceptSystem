@@ -1,8 +1,4 @@
-/*******************************************************************************
- * File: SMCDPanel.java
- * Description:
- *
- ******************************************************************************/
+
 package mdscssRoot;
 
 import java.awt.event.ItemEvent;
@@ -20,7 +16,10 @@ import mdscssModel.Interceptor;
 import mdscssModel.Missile;
 import mdscssModel.MissileDBManager;
 
-
+/*******************************************************************************
+ * The SMCDPanel object populates and handles user driven events for
+ * the Single Missile Control Display
+ ******************************************************************************/
 public class SMCDPanel extends javax.swing.JPanel 
 {
     ArrayList<SMCDWrapper> windowList;
@@ -30,8 +29,6 @@ public class SMCDPanel extends javax.swing.JPanel
     
     /***************************************************************************
      * SMCDPanel
-     * 
-     * Constructor
      **************************************************************************/
     public SMCDPanel() 
     {
@@ -87,6 +84,10 @@ public class SMCDPanel extends javax.swing.JPanel
         
     }
     
+    /***************************************************************************
+     * The resetView function is called when the MDSCSS looses connection to the subsystems. This function
+     * clears the visibility of the selected interceptor and disables all controls.
+     **************************************************************************/
     public void resetView()
     {
         bIsActive = false;
@@ -121,10 +122,12 @@ public class SMCDPanel extends javax.swing.JPanel
         
     }
     
+    /***************************************************************************
+     * The handleInitialUpdate function is called when the MDSCSS achieves connection to the subsystems. This function
+     * ensures that the interceptor and assigned threat dropdowns are populated.
+     **************************************************************************/
     public void handleInitialUpdate()
-    {
-        //populate dropdowns,  only unassigned threats shown
-        
+    {        
         ArrayList<String> missiles;
 
         cmbSelInterceptor.removeAllItems();
@@ -144,13 +147,18 @@ public class SMCDPanel extends javax.swing.JPanel
         Collections.sort(missiles);
         for(int i = 0; i < missiles.size(); i++)
         {
-
             cmbAssignedThreat.addItem(missiles.get(i));
-            
         }
 
     }
         
+    /***************************************************************************
+     * The handleSelChange function is called when the a new interceptor is selected in the interceptor overview
+     * panel.  This function changes the selected interceptor of the panel and
+     * re-populates the controls based upon the new interceptor and its state.
+     * 
+     * @param pID The new interceptor to be displayed on the SMCD
+     **************************************************************************/
     public void handleSelChange(String pID)
     {
         Timestamp tmp = null;
@@ -181,6 +189,12 @@ public class SMCDPanel extends javax.swing.JPanel
         updatePanelContents();
     }
     
+    /***************************************************************************
+     * The updatePanelContents function is called on a periodic basis by the MMOD Poller via the MMODFrame.  This 
+     * function re-queries the model for the selected interceptor and repopulates
+     * the controls and sets their disabled/enabled states based upon the updated
+     * interceptor information.
+     **************************************************************************/
     public void updatePanelContents()
     {
         Interceptor tmp = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
@@ -192,202 +206,209 @@ public class SMCDPanel extends javax.swing.JPanel
         
         if(tmp != null){
             String assignedThreat = tmp.getAssignedThreat();
-        int[] pos = tmp.getPositionVector();
-        int[] tPos;
-        
-        if(!bIsActive)
-            return;
-        
-        
-        for(int i = 1; i < cmbAssignedThreat.getItemCount(); i++)
-        {
-            if(!threats.contains(cmbAssignedThreat.getItemAt(i)))
+            int[] pos = tmp.getPositionVector();
+            int[] tPos;
+
+            if(!bIsActive)
+                return;
+
+
+            for(int i = 1; i < cmbAssignedThreat.getItemCount(); i++)
             {
-                cmbAssignedThreat.removeItemAt(i);
+                if(!threats.contains(cmbAssignedThreat.getItemAt(i)))
+                {
+                    cmbAssignedThreat.removeItemAt(i);
+                }
             }
-        }
-        
-        
-        
-        if(!tmp.isDisabled())
-        {
-            tglDisable.setText("Enabled");
-            tglDisable.setSelected(true);
-        }
-        else
-        {
-            tglDisable.setText("Disabled");
-            tglDisable.setSelected(false);
-            cmbAssignmentMode.setEnabled(false);
-            cmbAssignedThreat.setEnabled(false);
-            cmbDetonateMode.setEnabled(false);
-            btnDestruct.setEnabled(false);
-            btnDetonate.setEnabled(false);
-            btnLaunch.setEnabled(false);
-        }
-        
-        //todo optimization, do nothing if we are in the detonated or disabled ... state, nothing will change ....?
-        switch (tmp.getState()) {
-            case DETONATED:
-                txtInterceptorState.setText("Destroyed");
+
+
+
+            if(!tmp.isDisabled())
+            {
+                tglDisable.setText("Enabled");
+                tglDisable.setSelected(true);
+            }
+            else
+            {
+                tglDisable.setText("Disabled");
+                tglDisable.setSelected(false);
                 cmbAssignmentMode.setEnabled(false);
                 cmbAssignedThreat.setEnabled(false);
                 cmbDetonateMode.setEnabled(false);
                 btnDestruct.setEnabled(false);
                 btnDetonate.setEnabled(false);
                 btnLaunch.setEnabled(false);
-                tglDisable.setEnabled(false);
-                
-                txtInterceptorPosition.setForeground(java.awt.Color.LIGHT_GRAY);
-                txtInterceptorState.setForeground(java.awt.Color.LIGHT_GRAY);
-                break;
-            case PRE_FLIGHT:
-                if(!tmp.isDisabled()){
-                    cmbAssignmentMode.setEnabled(true);
-                    cmbAssignedThreat.setEnabled(true);
-                    cmbDetonateMode.setEnabled(true);
-                    btnLaunch.setEnabled(true);
-                    tglDisable.setEnabled(true);
-                    txtInterceptorState.setText("Ready");
-                }
-                else
-                {
-                    txtInterceptorState.setText("Disabled");
-                    
-                }
-                btnDestruct.setEnabled(false);
-                btnDetonate.setEnabled(false);
-                
-                txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
-                txtInterceptorState.setForeground(java.awt.Color.BLACK);
-                break;
-            case IN_FLIGHT:
-                txtInterceptorState.setText("Launched");
-                if(!tmp.isDisabled()){
-                    cmbDetonateMode.setEnabled(true);
-                    btnDestruct.setEnabled(true);
-                    
-                }
-                cmbAssignmentMode.setEnabled(false);
-                cmbAssignedThreat.setEnabled(false);
-                btnLaunch.setEnabled(false);
-                tglDisable.setEnabled(false);
-                
-                txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
-                txtInterceptorState.setForeground(java.awt.Color.BLACK);
-                break;
-            default:
-                txtInterceptorState.setText("[UNKNOWN]");
-                //todo ... disable controls
-                break;
-        }
-        
-        posText = ("[" + pos[0] + "," + pos[1] + "," + pos[2] + "] m");
-        txtInterceptorPosition.setToolTipText(posText);
-        
-        if(pos[0] > 999999 || pos[0] < -99999)
-            posText = sciNote.format(pos[0]) +",";
-        else
-            posText = (pos[0] + ",");
-        
-        if(pos[1] > 999999 || pos[1] < -99999)
-            posText += sciNote.format(pos[1]) +",";
-        else
-            posText += (pos[1] + ",");
-        
-        if(pos[2] > 999999 || pos[2] < -99999)
-            posText += sciNote.format(pos[2]);
-        else
-            posText += pos[2];
-        
-        txtInterceptorPosition.setText(posText);
-        cmbAssignedThreat.setSelectedItem(assignedThreat);
-        
-        if(assignedThreat.equals("[UNASSIGNED]"))
-        {
-            txtThreatDistance.setText("[NA]");
-            txtThreatPosition.setText("[NA]");
-            txtThreatDistance.setForeground(java.awt.Color.BLACK);
-        }
-        else
-        {
-            tmpT = mModel.getThreat(assignedThreat);
-            if(tmpT != null)
-            {
-                DecimalFormat rounder = new DecimalFormat("0.000");
-                tPos = tmpT.getPositionVector();
-                
-                posText = ("[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
-        txtThreatPosition.setToolTipText(posText);
-        
-        if(tPos[0] > 999999 || tPos[0] < -99999)
-            posText = sciNote.format(tPos[0]) +",";
-        else
-            posText = (tPos[0] + ",");
-        
-        if(tPos[1] > 999999 || tPos[1] < -99999)
-            posText += sciNote.format(tPos[1]) +",";
-        else
-            posText += (tPos[1] + ",");
-        
-        if(tPos[2] > 999999 || tPos[2] < -99999)
-            posText += sciNote.format(tPos[2]);
-        else
-            posText += tPos[2];
-        
-        txtThreatPosition.setText(posText);
-                
-                double distance = Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2);
-                distance = Math.sqrt(distance);
-                txtThreatDistance.setText(rounder.format(distance) + " m");
-                
-                
-                if(distance <= tmp.getDetonationRange())
-                {
-                    txtThreatDistance.setForeground(java.awt.Color.green);
-                    
-                    if(!tmp.isDisabled() && tmp.getState() == Interceptor.interceptorState.IN_FLIGHT)
-                    btnDetonate.setEnabled(true);
-                }
-                else
-                {
-                    txtThreatDistance.setForeground(java.awt.Color.BLACK);
+            }
+
+            switch (tmp.getState()) {
+                case DETONATED:
+                    txtInterceptorState.setText("Destroyed");
+                    cmbAssignmentMode.setEnabled(false);
+                    cmbAssignedThreat.setEnabled(false);
+                    cmbDetonateMode.setEnabled(false);
+                    btnDestruct.setEnabled(false);
                     btnDetonate.setEnabled(false);
-                }
-                
+                    btnLaunch.setEnabled(false);
+                    tglDisable.setEnabled(false);
+
+                    txtInterceptorPosition.setForeground(java.awt.Color.LIGHT_GRAY);
+                    txtInterceptorState.setForeground(java.awt.Color.LIGHT_GRAY);
+                    break;
+                case PRE_FLIGHT:
+                    if(!tmp.isDisabled()){
+                        cmbAssignmentMode.setEnabled(true);
+                        cmbAssignedThreat.setEnabled(true);
+                        cmbDetonateMode.setEnabled(true);
+                        btnLaunch.setEnabled(true);
+                        tglDisable.setEnabled(true);
+                        txtInterceptorState.setText("Ready");
+                    }
+                    else
+                    {
+                        txtInterceptorState.setText("Disabled");
+
+                    }
+                    btnDestruct.setEnabled(false);
+                    btnDetonate.setEnabled(false);
+
+                    txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
+                    txtInterceptorState.setForeground(java.awt.Color.BLACK);
+                    break;
+                case IN_FLIGHT:
+                    txtInterceptorState.setText("Launched");
+                    if(!tmp.isDisabled()){
+                        cmbDetonateMode.setEnabled(true);
+                        btnDestruct.setEnabled(true);
+
+                    }
+                    cmbAssignmentMode.setEnabled(false);
+                    cmbAssignedThreat.setEnabled(false);
+                    btnLaunch.setEnabled(false);
+                    tglDisable.setEnabled(false);
+
+                    txtInterceptorPosition.setForeground(java.awt.Color.BLACK);
+                    txtInterceptorState.setForeground(java.awt.Color.BLACK);
+                    break;
+                default:
+                    txtInterceptorState.setText("[UNKNOWN]");
+                    //todo ... disable controls
+                    break;
             }
-        }
-        
-        if(tmp.isAssignmentOverriden())
-        {
-            cmbAssignmentMode.setSelectedIndex(1);
-        }
-        else
-        {
-            cmbAssignmentMode.setSelectedIndex(0);
-        }
-        
-        if(tmp.isDetonateOverriden())
-        {
-            cmbDetonateMode.setSelectedIndex(1);
-        }
-        else
-        {
-            cmbDetonateMode.setSelectedIndex(0);
-        }
-        
-        
-        
-        for(int i = 0; i < windowList.size(); i++)
-        {
-            if(windowList.get(i)!=null)
+
+            posText = ("[" + pos[0] + "," + pos[1] + "," + pos[2] + "] m");
+            txtInterceptorPosition.setToolTipText(posText);
+
+            if(pos[0] > 999999 || pos[0] < -99999)
+                posText = sciNote.format(pos[0]) +",";
+            else
+                posText = (pos[0] + ",");
+
+            if(pos[1] > 999999 || pos[1] < -99999)
+                posText += sciNote.format(pos[1]) +",";
+            else
+                posText += (pos[1] + ",");
+
+            if(pos[2] > 999999 || pos[2] < -99999)
+                posText += sciNote.format(pos[2]);
+            else
+                posText += pos[2];
+
+            txtInterceptorPosition.setText(posText);
+            cmbAssignedThreat.setSelectedItem(assignedThreat);
+
+            if(assignedThreat.equals("[UNASSIGNED]"))
             {
-                windowList.get(i).update();
+                txtThreatDistance.setText("[NA]");
+                txtThreatPosition.setText("[NA]");
+                txtThreatDistance.setForeground(java.awt.Color.BLACK);
+            }
+            else
+            {
+                tmpT = mModel.getThreat(assignedThreat);
+                if(tmpT != null)
+                {
+                    DecimalFormat rounder = new DecimalFormat("0.000");
+                    tPos = tmpT.getPositionVector();
+
+                    posText = ("[" + tPos[0] + "," + tPos[1] + "," + tPos[2] + "] m");
+            txtThreatPosition.setToolTipText(posText);
+
+            if(tPos[0] > 999999 || tPos[0] < -99999)
+                posText = sciNote.format(tPos[0]) +",";
+            else
+                posText = (tPos[0] + ",");
+
+            if(tPos[1] > 999999 || tPos[1] < -99999)
+                posText += sciNote.format(tPos[1]) +",";
+            else
+                posText += (tPos[1] + ",");
+
+            if(tPos[2] > 999999 || tPos[2] < -99999)
+                posText += sciNote.format(tPos[2]);
+            else
+                posText += tPos[2];
+
+            txtThreatPosition.setText(posText);
+
+                    double distance = Math.pow((tPos[0] - pos[0]), 2) + Math.pow((tPos[1] - pos[1]), 2) + Math.pow((tPos[2] - pos[2]), 2);
+                    distance = Math.sqrt(distance);
+                    txtThreatDistance.setText(rounder.format(distance) + " m");
+
+
+                    if(distance <= tmp.getDetonationRange())
+                    {
+                        txtThreatDistance.setForeground(java.awt.Color.green);
+
+                        if(!tmp.isDisabled() && tmp.getState() == Interceptor.interceptorState.IN_FLIGHT)
+                        btnDetonate.setEnabled(true);
+                    }
+                    else
+                    {
+                        txtThreatDistance.setForeground(java.awt.Color.BLACK);
+                        btnDetonate.setEnabled(false);
+                    }
+
+                }
+            }
+
+            if(tmp.isAssignmentOverriden())
+            {
+                cmbAssignmentMode.setSelectedIndex(1);
+            }
+            else
+            {
+                cmbAssignmentMode.setSelectedIndex(0);
+            }
+
+            if(tmp.isDetonateOverriden())
+            {
+                cmbDetonateMode.setSelectedIndex(1);
+            }
+            else
+            {
+                cmbDetonateMode.setSelectedIndex(0);
+            }
+
+
+
+            for(int i = 0; i < windowList.size(); i++)
+            {
+                if(windowList.get(i)!=null)
+                {
+                    windowList.get(i).update();
+                }
             }
         }
-    }
     }
     
+    /***************************************************************************
+     * The initialize function gives the SMCD object references to 
+     * the model and its parent MMODFrame needed to forward user event driven 
+     * control.
+     * 
+     * @param pModel Reference to the MissileDBManager Object
+     * @param pParent Reference to the MMODFrame
+     **************************************************************************/
     public void initialize(MissileDBManager pModel, MMODFrame pParent)
     {
         mModel = pModel;
@@ -395,10 +416,8 @@ public class SMCDPanel extends javax.swing.JPanel
     }
 
     /***************************************************************************
-     * initComponents
-     * 
-     * Creates and draws the container's swing components.  Autogenerated by
-     * Netbeans IDE GUI Editor
+     * The initComponents function creates and draws the container's swing components.  Autogenerated by
+     * Netbeans IDE GUI Editor.
      **************************************************************************/
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -663,38 +682,24 @@ public class SMCDPanel extends javax.swing.JPanel
         );
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
-        SMCDWrapper tmpWindow;
-
-        for(int i = 0; i < windowList.size(); i++)
-        {
-            if(windowList.get(i)==null)
-            {
-                windowList.remove(i);
-            }
-        }
-        
-        if(windowList.size() < 15)
-        {
-            windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this, mModel, mParent));
-            tmpWindow = windowList.get(windowList.size()-1);
-            tmpWindow.getContentPane().setBackground(new java.awt.Color(65,65,65));
-            tmpWindow.setVisible(true);
-        }
-        else
-        {
-            JOptionPane.showMessageDialog(null,  "\nThe maximum amount of external SMCD windows have been opened.\n" +
-                                                    "Close or re-assign unused, existing windows.\n", 
-                                                    "Max Amount of SMCD Opened", 
-                                                    JOptionPane.WARNING_MESSAGE);
-        }
-    }//GEN-LAST:event_btnNewWindowMousePressed
-
+    /***************************************************************************
+     * The btnDetonateMousePressed function is an action handler for when the detonate button is pressed.  The 
+     * detonate command is forwarded to the MMODFrame for the selected interceptor. 
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void btnDetonateMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnDetonateMousePressed
          mParent.forwardDetonate((String)cmbSelInterceptor.getSelectedItem());       
         
     }//GEN-LAST:event_btnDetonateMousePressed
 
+    /***************************************************************************
+     * The tglDisableActionPerformed function is an action handler for when the disable toggle button is pressed.  The 
+     * control's state is updated and the disabled attribute of the interceptor
+     * in the model is updated.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void tglDisableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tglDisableActionPerformed
         boolean isEnabled = tglDisable.isSelected();
         Interceptor tmpI = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
@@ -712,11 +717,15 @@ public class SMCDPanel extends javax.swing.JPanel
             tglDisable.setSelected(true);
             tmpI.setDisabled(false);
         }
-        
-        
-        
     }//GEN-LAST:event_tglDisableActionPerformed
 
+    /***************************************************************************
+     * The btnLaunchActionPerformed function is an action handler for when the launch button is pressed.  The 
+     * launch command is forwarded to the MMODFrame for the selected interceptor and
+     * a launch time is computed, stored in the interceptor's model, and displayed.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void btnLaunchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLaunchActionPerformed
         Timestamp tmp = new Timestamp(System.currentTimeMillis());
         Interceptor tmpI = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
@@ -738,12 +747,61 @@ public class SMCDPanel extends javax.swing.JPanel
         }
     }//GEN-LAST:event_btnLaunchActionPerformed
 
+    /***************************************************************************
+     * The btnDestructActionPerformed function is an action handler for when the destruct button is pressed.  The 
+     * destruct command is forwarded to the MMODFrame for the selected interceptor.
+     * 
+     * @param evt - the event object
+     **************************************************************************/
     private void btnDestructActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDestructActionPerformed
         mParent.forwardDestruct((String)cmbSelInterceptor.getSelectedItem());
-        
-        
     }//GEN-LAST:event_btnDestructActionPerformed
 
+    /***************************************************************************
+     * The btnNewWindowMousePressed function is an action handler for when the "open in new window" icon is selected.  A 
+     * SMCDWrapper object is created and passed the selected interceptor, this 
+     * creates a new, stand-alone SMCD window.  Note, to better manage memory,
+     * the number of new windows allowed to spawn is restricted to 15.  This 
+     * function keeps track of how many windows are active, and alerts the user
+     * if the maximum has been reached.
+     * 
+     * @param evt The event object
+     **************************************************************************/
+    private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
+        SMCDWrapper tmpWindow;
+
+        for(int i = 0; i < windowList.size(); i++)
+        {
+            if(windowList.get(i)==null)
+            {
+                windowList.remove(i);
+            }
+        }
+
+        if(windowList.size() < 15)
+        {
+            windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this, mModel, mParent));
+            tmpWindow = windowList.get(windowList.size()-1);
+            tmpWindow.getContentPane().setBackground(new java.awt.Color(65,65,65));
+            tmpWindow.setVisible(true);
+        }
+        else
+        {
+            JOptionPane.showMessageDialog(null,  "\nThe maximum amount of external SMCD windows have been opened.\n" +
+                "Close or re-assign unused, existing windows.\n",
+                "Max Amount of SMCD Opened",
+                JOptionPane.WARNING_MESSAGE);
+        }
+    }//GEN-LAST:event_btnNewWindowMousePressed
+
+    /***************************************************************************
+     * The handleInterceptorSelection function is an action handler for when the selected interceptor dropdown has its selection
+     * changed.  This function forwards the new selected interceptor to the MMODFrame
+     * so that it can direct the interceptor overview panel to select the new row
+     * in it's table.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void handleInterceptorSelection(ItemEvent evt)
     {
         if(!bSeparateWindow && mParent != null)
@@ -753,6 +811,14 @@ public class SMCDPanel extends javax.swing.JPanel
         }
     }
     
+    
+    /***************************************************************************
+     * The handleAssignedThreatSelection function is an action handler for when the assignment override dropdown has its selection
+     * changed.  This function updates the selected interceptor's model so that
+     * its assignment override mode matches the dropdown's selection.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void handleAssignModeSelection(ItemEvent evt)
     {
         if(mModel != null && bIsActive)
@@ -765,6 +831,13 @@ public class SMCDPanel extends javax.swing.JPanel
         }
     }
     
+    /***************************************************************************
+     * The handleDetModeSelection function is an action handler for when the detonation override dropdown has its selection
+     * changed.  This function updates the selected interceptor's model so that
+     * its detonation override mode matches the dropdown's selection.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void handleDetModeSelection(ItemEvent evt)
     {
         if(mModel != null && bIsActive)
@@ -776,7 +849,13 @@ public class SMCDPanel extends javax.swing.JPanel
         }
     }
     
-    
+    /***************************************************************************
+     * The handleAssignModeSelection function is an ction handler for when the assigned threat dropdown has its selection
+     * changed.  This function updates the selected interceptor's model so that
+     * its assigned threat matches the dropdown's selection.
+     * 
+     * @param evt The event object
+     **************************************************************************/
     private void handleAssignedThreatSelection(ItemEvent evt)
     {
        JComboBox dropdown = (JComboBox) evt.getSource(); 
@@ -807,6 +886,10 @@ public class SMCDPanel extends javax.swing.JPanel
        }
     }
     
+    /***************************************************************************
+     * The hideExpandControls function is called by the SMCD wrapper to hide the "open in new window" icon for
+     * SMCD panels that are already opened in a new window.
+     **************************************************************************/
     public void hideExpandControls()
     {
         btnNewWindow.setVisible(false);

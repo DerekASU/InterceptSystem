@@ -1,22 +1,20 @@
-/*******************************************************************************
- * File: MissileDBManager.java
- * Description: Model class that manages a hashmap of missile IDs and a model 
- * representation of their states and attributes.  This object is the primary means
- * the controller and GUI retrieves and modifies information pertaining to missiles
- ******************************************************************************/
 package mdscssModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
+
+/*******************************************************************************
+ * The MissileDBManager object manages a hashmap of missile IDs and a model 
+ * representation of their states and attributes.  This object is the primary means
+ * the controller and GUI retrieves and modifies information pertaining to missiles.
+ ******************************************************************************/
 public class MissileDBManager 
 {
     private HashMap<String, Missile> activeMissiles;
     
     /***************************************************************************
-     * MissileDBManager
-     * 
      * Constructor
      **************************************************************************/
     public MissileDBManager() 
@@ -25,13 +23,11 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getMissile
+     * The getMissile function retrieves a missile object given a specific identifier.
      * 
-     * retrieves a missile object given a specific identifier
+     * @param pId The id of the interceptor or threat to retrieve
      * 
-     * @param pId - the id of the interceptor or threat to retrieve
-     * 
-     * @return a Missile object with the given id
+     * @return A Missile object with the given id
      **************************************************************************/
     public Missile getMissile(String pId)
     {
@@ -39,13 +35,11 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getInterceptor
+     * The getInterceptor function retrieves an interceptor object given a specific identifier.
      * 
-     * retrieves an interceptor object given a specific identifier
+     * @param pId The id of the interceptor retrieve
      * 
-     * @param pId - the id of the interceptor retrieve
-     * 
-     * @return an interceptor object with the given id
+     * @return An interceptor object with the given id
      **************************************************************************/
     public Interceptor getInterceptor(String pId)
     {
@@ -63,14 +57,12 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getAssignedInterceptor
+     * The getAssignedInterceptor function retrieves an interceptor object that has an assigned threat with the id
+     * matching the given parameter.
      * 
-     * retrieves an interceptor object that has an assigned threat with the id
-     * matching the given parameter
+     * @param pId The id of the assigned threat
      * 
-     * @param pId - the id of the assigned threat
-     * 
-     * @return the id of the interceptor that is assigned the given threat, or null
+     * @return The id of the interceptor that is assigned the given threat, or null
      *        if no such interceptor exists
      **************************************************************************/
     public String getAssignedInterceptor(String pId)
@@ -95,13 +87,11 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getThreat
+     * The getThreatfunction retrieves an Missile object given a specific identifier.
      * 
-     * retrieves an Missile object given a specific identifier
+     * @param pId The id of the threat to retrieve
      * 
-     * @param pId - the id of the threat to retrieve
-     * 
-     * @return an Missile object with the given id
+     * @return A Missile object with the given id
      **************************************************************************/
     public Missile getThreat(String pId)
     {
@@ -118,13 +108,12 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getThreat
+     * The contains function returns a boolean value that indicates whether or not
+     * the database contains a missile with the specified ID.
      * 
-     * retrieves an Missile object given a specific identifier
+     * @param pId The id of the missile
      * 
-     * @param pId - the id of the threat to retrieve
-     * 
-     * @return an Missile object with the given id
+     * @return True if the database contains the missile, false otherwise
      **************************************************************************/
     public boolean contains(String pId)
     {       
@@ -142,11 +131,9 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getMissileList
+     * The getMissileList function retrieves a list of IDs for every missile in the database.
      * 
-     * retrieves a list of IDs for every missile in the database
-     * 
-     * @return an ArrayList of missile IDs
+     * @return An ArrayList of missile IDs
      **************************************************************************/
     public ArrayList<String> getMissileList()
     {
@@ -167,11 +154,9 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getThreatList
+     * The getThreatList function retrieves a list of IDs for every threat in the database.
      * 
-     * retrieves a list of IDs for every threat in the database
-     * 
-     * @return an ArrayList of threat IDs
+     * @return An ArrayList of threat IDs
      **************************************************************************/
     public ArrayList<String> getThreatList()
     {
@@ -195,12 +180,10 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getAssignedThreats
+     * The getAssignedThreats function retrieves a list of IDs for every threat in the database that has been
+     * assigned an interceptor.
      * 
-     * retrieves a list of IDs for every threat in the database that has been
-     * assigned an interceptor
-     * 
-     * @return an ArrayList of threat IDs
+     * @return An ArrayList of threat IDs
      **************************************************************************/
     public ArrayList<String> getAssignedThreats()
     {
@@ -225,12 +208,10 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getUnassignedThreats
+     * The getUnassignedThreats function retrieves a list of IDs for every threat in the database that has not been
+     * assigned an interceptor.
      * 
-     * retrieves a list of IDs for every threat in the database that has not been
-     * assigned an interceptor
-     * 
-     * @return an ArrayList of threat IDs
+     * @return An ArrayList of threat IDs
      **************************************************************************/
     public ArrayList<String> getUnassignedThreats()
     {
@@ -253,12 +234,10 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getUnassignedInterceptors
+     * The getUnassignedInterceptors function retrieves a list of IDs for every interceptor in the database that has not been
+     * assigned a threat.
      * 
-     * retrieves a list of IDs for every interceptor in the database that has not been
-     * assigned a threat
-     * 
-     * @return an ArrayList of interceptor IDs
+     * @return An ArrayList of interceptor IDs
      **************************************************************************/
     public ArrayList<String> getUnassignedInterceptors()
     {
@@ -283,11 +262,9 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * getInterceptorList
+     * The getInterceptorList function retrieves a list of IDs for every interceptor in the database.
      * 
-     * retrieves a list of IDs for every interceptor in the database
-     * 
-     * @return an interceptor of threat IDs
+     * @return An interceptor of threat IDs
      **************************************************************************/
     public ArrayList<String> getInterceptorList()
     {
@@ -311,11 +288,9 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * removeThreat
+     * The removeThreat function removes a threat from the database, given a specific identifier.
      * 
-     * removes a threat from the database, given a specific identifier
-     * 
-     * @param pId - the id of the threat to remove
+     * @param pId The id of the threat to remove
      **************************************************************************/
     public void removeThreat(String pId)
     {
@@ -328,14 +303,12 @@ public class MissileDBManager
     }
     
     /***************************************************************************
-     * updateDatabase
-     * 
-     * populates the database based upon the list of ID's given.  if the given ID
+     * The updateDatabase function populates the database based upon the list of ID's given.  If the given ID
      * list does not contain an item present in the database, it will be removed 
      * from the database.  If the list contains IDs for a missile that is not
      * present in the database, it will be created and added.
      * 
-     * @param idList - the list of ID's the database should mirror
+     * @param idList The list of ID's the database should mirror
      **************************************************************************/
     public void updateDatabase(ArrayList<String> idList)
     {

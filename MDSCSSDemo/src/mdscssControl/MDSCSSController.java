@@ -1,9 +1,3 @@
-/** *****************************************************************************
- * File: MDSCSSController.java
- * Description: Utility object utilized by the control thread.  This object contains
- * interface definitions to the major subsystems and helper functions utilized by the
- * control thread to control the system
- ***************************************************************************** */
 package mdscssControl;
 
 import java.io.*;
@@ -14,6 +8,11 @@ import java.util.ArrayList;
 import mdscssModel.*;
 import mdscssRoot.MMODFrame;
 
+/** *****************************************************************************
+ * The MDSCSSController is a utility object utilized by the control thread.  This object contains
+ * interface definitions to the major subsystems, and utility functions utilized by the
+ * control thread to control the system.
+ ***************************************************************************** */
 public class MDSCSSController {
 
     // Connection Constants
@@ -57,8 +56,6 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * MDSCSSController
-     *
      * Constructor
      **************************************************************************/
     public MDSCSSController() {
@@ -83,14 +80,13 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * initialize
+     * The initialize function initializes the controller on startup. 
+     * References to the view and model are established and initial socket 
+     * connections to the subsystems are performed the function also ensures
+     * that the control thread is started.
      *
-     * initializes the controller on startup. References to the view and model
-     * are established; initial socket connection to subsystems performed;
-     * control thread is started
-     *
-     * @param pModel - Reference to the Missile DB
-     * @param pView - Reference to the GUI
+     * @param pModel Reference to the Missile DB Manager object
+     * @param pView Reference to the MMODFrame GUI Object
      **************************************************************************/
     public void initialize(MissileDBManager pModel, MMODFrame pView) {
         mModel = pModel;
@@ -105,10 +101,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * finalize
-     *
-     * finalizes the controller on shutdown. All TCP sockets are safely closed
-     * and control thread stopped
+     * The finalize function safely closes each TCP socket to the subsystems and 
+     * stops the Control Thread.
      **************************************************************************/
     public void finalize() {
         try {
@@ -129,12 +123,11 @@ public class MDSCSSController {
     }
 
     /** *************************************************************************
-     * establishConnection
+     * The establishConnection function is called by the control thread to 
+     * establish a connection with all the subsystems.
      *
-     * Called by the control thread to establish a connection with all the
-     * subsystems.
-     *
-     * @return true if all subsystems have been connected over TCP
+     * @return true if all subsystems have been connected over TCP, false if there
+     * is at least one subsystem that has been unable to connect.
      **************************************************************************/
     public boolean establishConnection() {
         boolean tssPass = false, mcssPass = false, smssPass = false;
@@ -188,11 +181,13 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * establishStatus
-     *
-     * Called by the control thread to get the version of each subsystem, as
-     * well as their connection status. This function also pushes this data to
-     * the GUI so that the operator is notified
+     * The establishStatus function is called by the control thread to get the 
+     * version of each subsystem, as well as their connection status. 
+     * This function also pushes this data to the MMODFrame so that the operator 
+     * is notified of each subsystem's connection status and version.
+     * 
+     * @return true if all subsystems versions have been retrieved, false if there
+     * is at least one subsystem that has been unable to be contacted for its version.
      **************************************************************************/
     public boolean establishStatus() {
         String tmp = "";
@@ -234,12 +229,10 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleSocketFailure
-     *
-     * Called when connection to a subsystem has been lost, or communication has
-     * been deemed erroneous. This function closes the TCP sockets, resets the
-     * controller's internal state, and begins monitoring of the process to
-     * establish reconnection with the subsystems
+     * The handleSocketFailure function is called when connection to a subsystem 
+     * has been lost, or communication has been deemed erroneous. This function 
+     * closes the TCP sockets, resets the controller's internal state, and 
+     * begins monitoring of the process to establish reconnection with the subsystems.
      **************************************************************************/
     private void handleSocketFailure() {
         finalize();
@@ -257,12 +250,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleSocketFailure
-     *
-     * Called when the control thread is attempting to establish connection. if
-     * connection is attempting to be re-established after a failure, this
-     * function maintains track if 5 minutes have elapsed since the failure and
-     * updates the GUI and detonates all air-borne interceptors
+     * The handleSocketFailure function is called when the control thread is 
+     * attempting to establish connection. if connection is attempting to be 
+     * re-established after a failure, this function maintains track if 5 minutes 
+     * have elapsed since the failure.  If not, this function alerts the GUI 
+     * and detonates all airborne interceptors.
      **************************************************************************/
     public void checkForFailure() {
         Timestamp tmp = new Timestamp(System.currentTimeMillis());
@@ -281,10 +273,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * initializeModel
-     *
-     * Called by the control thread when connection is first established.  This
-     * function populates the internal missile database.
+     * The initializeModel function is called by the control thread when connection 
+     * is first established.  This function populates the internal missile database.
      **************************************************************************/
     public void initializeModel() {
         ArrayList<String> missiles = cmdMcssGetInterceptorList();
@@ -297,11 +287,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * initializeWatchdog
-     *
-     * Called by the control thread after connection with the subsystems and the
-     * missile database is initialized.  This function enables the safety for all 
-     * interceptors 
+     * The initializeWatchdog function is called by the control thread after 
+     * connection with the subsystems and the missile database is initialized.  
+     * This function enables the safety for all interceptors.
      **************************************************************************/
     public void initializeWatchdog() {
         int i;
@@ -314,9 +302,7 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * disableWatchdog
-     *
-     * This function disables the safety for all interceptors 
+     * The disableWatchdog function disables the safety for all interceptors. 
      **************************************************************************/
     public void disableWatchdog() {
         int i;
@@ -328,10 +314,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleWatchdogTimer
-     *
-     * This function is called by the control thread every 0.5 seconds to notify
-     * the SMSS that the MDSCSS is still operational
+     * The handleWatchdogTimer function is called by the control thread every 0.5 seconds to notify
+     * the SMSS that the MDSCSS is still operational.
      **************************************************************************/
     public void handleWatchdogTimer() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
@@ -352,10 +336,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * updateModel
-     *
-     * This function is called by the control thread every 0.5 seconds to update
-     * the internal database entries with new information from the TSS and MCSS
+     * The updateModel function is called by the control thread every 0.5 seconds to update
+     * the internal missile database entries with new information from the TSS and MCSS.
      **************************************************************************/
     public void updateModel() {
         ArrayList<String> missiles = mModel.getInterceptorList();
@@ -418,10 +400,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleThrustControl
-     *
-     * This function is called by the control thread every second to determine
-     * the power levels of each in-flight interceptor and send the thrust commands
+     * The handleThrustControl function is called by the control thread every second to determine
+     * the power levels of each in-flight interceptor and send the thrust commands.
      **************************************************************************/
     public void handleThrustControl() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
@@ -447,11 +427,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * getControlMode
-     *
-     * Retrieves the system control mode
+     * The getControlMode function retrieves the current system control mode.
      * 
-     * @return a controlMode enumeration value that corresponds with the systems
+     * @return A controlMode enumeration value that corresponds with the systems
      *         control state
      **************************************************************************/
     public controlMode getControlMode() {
@@ -459,11 +437,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * getControlMode
-     *
-     * Sets the system control mode
+     * The setControlMode function sets the system control mode.
      * 
-     * @param pMode - the new system control mode
+     * @param pMode The new system control mode
      **************************************************************************/
     public void setControlMode(controlMode pMode) {
         if (operationalState != pMode) {
@@ -482,10 +458,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleControlLogic
-     *
-     * Called periodically by the control thread to handle automatic or forgiving
-     * control logic dictated by the system control mode
+     * The handleControlLogic function is called periodically by the control thread to 
+     * handle automatic or forgiving control logic dictated by the system control mode.
      **************************************************************************/
     public void handleControlLogic() {
         switch (operationalState) {
@@ -501,9 +475,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleForgivingControl
-     *
-     * Handles logic to perform forgiving assignment and detonation
+     * The handleForgivingControl function handles the logic needed in order to 
+     * perform forgiving assignment and detonation.
      **************************************************************************/
     private void handleForgivingControl() {
         ArrayList<String> threats = mModel.getUnassignedThreats();
@@ -617,9 +590,8 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * handleAutomaticControl
-     *
-     * Handles logic to perform automatic assignment and detonation
+     * The handleAutomaticControl function handles the logic needed to perform 
+     * automatic assignment and detonation
      **************************************************************************/
     private void handleAutomaticControl() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
@@ -671,46 +643,6 @@ public class MDSCSSController {
         for (int i = 0; i < threats.size();) {
             tmpT = mModel.getThreat(threats.get(i));
 
-            if (tmpT.getMissileClass() == 'Y') {
-                if (cInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                } else if (aInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    aInts.remove(0);
-                }
-
-                threats.remove(i);
-            } else {
-                i++;
-            }
-        }
-
-        for (int i = 0; i < threats.size();) {
-            tmpT = mModel.getThreat(threats.get(i));
-
-            if (tmpT.getMissileClass() == 'Z') {
-                if (bInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(bInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    bInts.remove(0);
-                } else if (cInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                }
-
-                threats.remove(i);
-            } else {
-                i++;
-            }
-        }
-
-        for (int i = 0; i < threats.size();) {
-            tmpT = mModel.getThreat(threats.get(i));
-
             if (tmpT.getMissileClass() == 'X') {
                 if (cInts.size() > 0) {
                     tmpI = mModel.getInterceptor(cInts.get(0));
@@ -731,17 +663,65 @@ public class MDSCSSController {
                 i++;
             }
         }
+        
+        for (int i = 0; i < threats.size();) {
+            tmpT = mModel.getThreat(threats.get(i));
+
+            if (tmpT.getMissileClass() == 'Y') {
+                if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                } else if (bInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                } else if (aInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                }
+
+                threats.remove(i);
+            } else {
+                i++;
+            }
+        }
+
+        for (int i = 0; i < threats.size();) {
+            tmpT = mModel.getThreat(threats.get(i));
+
+            if (tmpT.getMissileClass() == 'Z') {
+                if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
+                } else if (bInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(bInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    bInts.remove(0);
+                } else if (aInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                }
+
+                threats.remove(i);
+            } else {
+                i++;
+            }
+        }
+
+        
 
     }
 
     /***************************************************************************
-     * handleForgivingAssignment
-     *
-     * Called by the handleForgivingControl function to determine the next
-     * interceptor to assign to a threat.
+     * The handleForgivingAssignment function is called by the handleForgivingControl 
+     * function to determine the next interceptor to assign to a threat.
      * 
-     * @return - a boolean value that indicates whether or not a suitable interceptor
-     *           is available for assignment
+     * @return A boolean value that indicates whether or not a suitable interceptor
+     *  is available for assignment.
      **************************************************************************/
     private boolean handleForgivingAssignment() {
         ArrayList<String> interceptors = mModel.getUnassignedInterceptors();
@@ -770,28 +750,7 @@ public class MDSCSSController {
             }
         }
 
-        if (fgvCurrentThreat.getMissileClass() == 'Y') {
-            if (cInts.size() > 0) {
-                tmpI = mModel.getInterceptor(cInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
-            } else if (aInts.size() > 0) {
-                tmpI = mModel.getInterceptor(aInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
-            }
-        } else if (fgvCurrentThreat.getMissileClass() == 'Z') {
-            if (bInts.size() > 0) {
-                tmpI = mModel.getInterceptor(bInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
-            } else if (cInts.size() > 0) {
-                tmpI = mModel.getInterceptor(cInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
-            }
-
-        } else if (fgvCurrentThreat.getMissileClass() == 'X') {
+        if (fgvCurrentThreat.getMissileClass() == 'X') {
             if (cInts.size() > 0) {
                 tmpI = mModel.getInterceptor(cInts.get(0));
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
@@ -805,6 +764,35 @@ public class MDSCSSController {
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
                 newlyAssigned = true;
             }
+        } else if (fgvCurrentThreat.getMissileClass() == 'Y') {
+            if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (bInts.size() > 0) {
+                tmpI = mModel.getInterceptor(bInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }else if (aInts.size() > 0) {
+                tmpI = mModel.getInterceptor(aInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }
+        } else if (fgvCurrentThreat.getMissileClass() == 'Z') {
+            if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (bInts.size() > 0) {
+                tmpI = mModel.getInterceptor(bInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }else if (aInts.size() > 0) {
+                tmpI = mModel.getInterceptor(aInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            }
+
         }
 
         return newlyAssigned;
@@ -812,13 +800,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * getForgivingDetState
-     *
-     * Called by the GUI on a regular basis to determine whether or not a popup
-     * should be presented to the operator to approve or disprove a detonation in
-     * the forgiving control mode
+     * The getForgivingDetState function is called by the MMODFrame on a regular 
+     * basis to determine whether or not a prompt should be presented to the operator
+     * to approve or disprove a detonation while in the forgiving control mode.
      * 
-     * @return - the identifier of the interceptor to be detonated, null if there
+     * @return - The identifier of the interceptor to be detonated, null if there
      *           is no interceptor eligible for detonation
      **************************************************************************/
     public String getForgivingDetState() {
@@ -830,14 +816,12 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * getForgivingDetState
-     *
-     * Called by the GUI on a regular basis to determine whether or not a popup
-     * should be presented to the operator to approve or disprove an assignment in
-     * the forgiving control mode
+     * The getForgivingDetState function is called by the MMODFrame on a regular basis 
+     * to determine whether or not a prompt should be presented to the operator 
+     * to approve or disprove an assignment while in the forgiving control mode.
      * 
-     * @return - the identifier of the interceptor and threat to be assigned, null if there
-     *           is no eligable pair for assignment
+     * @return - The identifier of the interceptor and threat to be assigned, null if there
+     *           is no eligible pair for assignment
      **************************************************************************/
     public String getForgivingAssignmentState() {
         if (fgvCurrentThreat != null && bFgvAssignmentApproved == false && bFgvAssignmentRejected == false) {
@@ -848,51 +832,41 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * approveForgivingAssignment
-     *
-     * Called by the GUI if the operator has approved the current assignment in
-     * the forgiving mode of control
+     * The approveForgivingAssignment function is called by the MMODFRame if the 
+     * operator has approved the current assignment in the forgiving mode of control.
      **************************************************************************/
     public void approveForgivingAssignment() {
         bFgvAssignmentApproved = true;
     }
 
     /***************************************************************************
-     * rejectForgivingAssignment
-     *
-     * Called by the GUI if the operator has rejected the current assignment in
-     * the forgiving mode of control
+     * The rejectForgivingAssignment function is called by the MMODFRame if the 
+     * operator has rejected the current assignment in the forgiving mode of control.
      **************************************************************************/
     public void rejectForgivingAssignment() {
         bFgvAssignmentRejected = true;
     }
 
     /***************************************************************************
-     * approveForgivingDet
-     *
-     * Called by the GUI if the operator has approved the current detonation choice in
-     * the forgiving mode of control
+     * The approveForgivingDet function is called by the MMODFrame if the 
+     * operator has approved the current detonation choice in the forgiving mode of control.
      **************************************************************************/
     public void approveForgivingDet() {
         bFgvDetonateApproved = true;
     }
 
     /***************************************************************************
-     * rejectForgivingDet
-     *
-     * Called by the GUI if the operator has rejected the current detonation choice in
-     * the forgiving mode of control
+     * The rejectForgivingDet function is called by the MMODFrame if the 
+     * operator has rejected the current detonation choice in the forgiving mode of control.
      **************************************************************************/
     public void rejectForgivingDet() {
         bFgvDetonateRejected = true;
     }
 
     /***************************************************************************
-     * forceManualAssignment
-     *
-     * Called by the forgiving control logic to set the assignment override state of
-     * every interceptor to manual in the case of an alternative assignment in forgiving
-     * control to be impossible
+     * The forceManualAssignment function is called by the forgiving control logic to set the assignment override state of
+     * every interceptor to manual, if an alternative assignment in forgiving
+     * control is impossible.
      **************************************************************************/
     private void forceManualAssignment() {
         ArrayList<String> interceptors = mModel.getInterceptorList();
@@ -911,13 +885,11 @@ public class MDSCSSController {
      **************************************************************************/
     
     /***************************************************************************
-     * cmdTssTrackThreat
-     *
-     * Queries the TSS for a threat's position
+     * The cmdTssTrackThreat function queries the TSS for a threat's position.
      * 
-     * @param missileID - the id of the Threat to query
+     * @param missileID The id of the Threat to query
      * 
-     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     * @return An array of 3 integers that represent the position in the x, y, and z plane
      **************************************************************************/
     public int[] cmdTssTrackThreat(String missileID) {
         DataOutputStream buffOut;
@@ -966,13 +938,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdTssTrackInterceptor
-     *
-     * Queries the TSS for a interceptor's position
+     * The cmdTssTrackInterceptor function queries the TSS for a interceptor's position.
      * 
-     * @param missileID - the id of the interceptor to query
+     * @param missileID The id of the interceptor to query
      * 
-     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     * @return An array of 3 integers that represent the position in the x, y, and z plane
      **************************************************************************/
     public int[] cmdTssTrackInterceptor(String missileID) {
         DataOutputStream buffOut;
@@ -1022,12 +992,10 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdTssGetThreatList
-     *
-     * Queries the TSS for a list of known threats
-     * Note: Per requirement, all threats are assumed to have a 2-char ID
+     * The cmdTssGetThreatList function queries the TSS for a list of known threats.
+     * Note: Per requirement, all threats are assumed to have a 2-char ID.
      * 
-     * @return an arraylist containing the ids of all known threats
+     * @return An arraylist containing the ids of all known threats
      **************************************************************************/
     public ArrayList<String> cmdTssGetThreatList() {
         DataOutputStream buffOut;
@@ -1072,11 +1040,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdTssGetVersion
-     *
-     * Queries the TSS for its version string and parses out the version number
+     * The cmdTssGetVersion function queries the TSS for its version string and parses out the version number.
      * 
-     * @return the version number of the TSS
+     * @return A String representation of the version number of the TSS
      **************************************************************************/
     public String cmdTssGetVersion() {
         DataOutputStream buffOut;
@@ -1121,13 +1087,11 @@ public class MDSCSSController {
      * MCSS Command Interface
      **************************************************************************/
     /***************************************************************************
-     * cmdMcssLaunch
-     *
-     * Sends the launch command to the MCSS for a specified interceptor
+     * The cmdMcssLaunch function sends the launch command to the MCSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to launch
+     * @param missileID The id of the interceptor to launch
      * 
-     * @return the success status of the launch command
+     * @return The success status of the launch command
      **************************************************************************/
     public boolean cmdMcssLaunch(String missileID) {
         DataOutputStream buffOut;
@@ -1161,17 +1125,15 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssLaunch
-     *
-     * Sends the thrust command to the MCSS for a specified interceptor, each
+     * The cmdMcssThrust function ends the thrust command to the MCSS for a specified interceptor, each
      * power level will persist for 1 second of duration.
      * 
-     * @param missileID - the id of the interceptor to control
-     * @param pwrX - the power level in the x direction
-     * @param pwrY - the power level in the y direction
-     * @param pwrZ - the power level in the z direction
+     * @param missileID The id of the interceptor to control
+     * @param pwrX The power level in the x direction
+     * @param pwrY The power level in the y direction
+     * @param pwrZ The power level in the z direction
      * 
-     * @return the success status of the thrust command
+     * @return The success status of the thrust command
      **************************************************************************/
     public boolean cmdMcssThrust(String missileID, int pwrX, int pwrY, int pwrZ) {
         DataOutputStream buffOut;
@@ -1255,13 +1217,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssDetonate
-     *
-     * Sends the detonate command to the MCSS for a specified interceptor
+     * The cmdMcssDetonate function sends the detonate command to the MCSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to detonate
+     * @param missileID The id of the interceptor to detonate
      * 
-     * @return the success status of the detonate command
+     * @return The success status of the detonate command
      **************************************************************************/
     public boolean cmdMcssDetonate(String missileID) {
         DataOutputStream buffOut;
@@ -1295,13 +1255,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssDestruct
-     *
-     * Sends the destruct command to the MCSS for a specified interceptor
+     * The cmdMcssDestruct function sends the destruct command to the MCSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to destroy
+     * @param missileID The id of the interceptor to destroy
      * 
-     * @return the success status of the destruct command
+     * @return The success status of the destruct command
      **************************************************************************/
     public boolean cmdMcssDestruct(String missileID) {
         DataOutputStream buffOut;
@@ -1335,12 +1293,10 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssGetInterceptorList
-     *
-     * Queries the MCSS for a list of known interceptors
-     * Note: Per requirement, all interceptors are assumed to have a 2-char ID
+     * The cmdMcssGetInterceptorList function queries the MCSS for a list of known interceptors.
+     * Note: Per requirement, all interceptors are assumed to have a 2-char ID.
      * 
-     * @return an arraylist containing the ids of all known interceptors
+     * @return An arraylist containing the ids of all known interceptors
      **************************************************************************/
     public ArrayList<String> cmdMcssGetInterceptorList() {
         DataOutputStream buffOut;
@@ -1383,13 +1339,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssgetState
-     *
-     * Queries the MCSS for a specified interceptor's state
+     * The cmdMcssgetState function queries the MCSS for a specified interceptor's state.
      * 
-     * @param missileID - the id of the interceptor to query
+     * @param missileID The id of the interceptor to query
      * 
-     * @return an enumeration value representing the state of the specified interceptor
+     * @return An enumeration value representing the state of the specified interceptor
      **************************************************************************/
     public Interceptor.interceptorState cmdMcssgetState(String missileID) {
         DataOutputStream buffOut;
@@ -1445,13 +1399,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssGetLaunchSite
-     *
-     * Queries the MCSS for a interceptor's launch position
+     * The cmdMcssGetLaunchSite function queries the MCSS for a interceptor's launch position.
      * 
-     * @param missileID - the id of the interceptor to query
+     * @param missileID The id of the interceptor to query
      * 
-     * @return an array of 3 integers that represent the position in the x, y, and z plane
+     * @return An array of 3 integers that represent the launch position in the x, y, and z plane
      **************************************************************************/
     public int[] cmdMcssGetLaunchSite(String missileID) {
         DataOutputStream buffOut;
@@ -1500,11 +1452,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssGetVersion
-     *
-     * Queries the MCSS for its version string and parses out the version number
+     * The cmdMcssGetVersion function queries the MCSS for its version string and parses out the version number.
      * 
-     * @return the version number of the MCSS
+     * @return A string representation of the version number of the MCSS
      **************************************************************************/
     public String cmdMcssGetVersion() {
         DataOutputStream buffOut;
@@ -1542,13 +1492,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdMcssGetCtrlVersion
-     *
-     * Queries the MCSS for the version string of a specific interceptor controller
+     * The cmdMcssGetCtrlVersion function queries the MCSS for the version string of a specific interceptor controller.
      * 
-     * @param missileID - the id of the interceptor to query
+     * @param missileID The id of the interceptor to query
      * 
-     * @return the version string of the specific interceptor controller
+     * @return The version string of the specific interceptor controller
      **************************************************************************/
     public String cmdMcssGetCtrlVersion(String missileID) {
         DataOutputStream buffOut;
@@ -1589,13 +1537,11 @@ public class MDSCSSController {
      * SMSS Command Interface
      **************************************************************************/
     /***************************************************************************
-     * cmdSmssActivateSafety
-     *
-     * Sends the activate command to the SMSS for a specified interceptor
+     * The cmdSmssActivateSafety function sends the activate command to the SMSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to activate the safety for
+     * @param missileID The id of the interceptor to activate the safety for
      * 
-     * @return the success status of the activate command
+     * @return The success status of the activate command
      **************************************************************************/
     public boolean cmdSmssActivateSafety(String missileID) {
         DataOutputStream buffOut;
@@ -1629,13 +1575,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdSmssDeactivateSafety
-     *
-     * Sends the deactivate command to the SMSS for a specified interceptor
+     * The cmdSmssDeactivateSafety function sends the deactivate command to the SMSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to deactivate the safety for
+     * @param missileID The id of the interceptor to deactivate the safety for
      * 
-     * @return the success status of the deactivate command
+     * @return The success status of the deactivate command
      **************************************************************************/
     public boolean cmdSmssDeactivateSafety(String missileID) {
         DataOutputStream buffOut;
@@ -1670,14 +1614,12 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdSmssPingWatchdog
-     *
-     * Sends the safety watchdog command to the SMSS for a specified interceptor
+     * The cmdSmssPingWatchdog function sends the safety watchdog command to the SMSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to update
-     * @param pTimer - the watchdog count value to set
+     * @param missileID The id of the interceptor to update
+     * @param pTimer The watchdog count value to set
      * 
-     * @return the success status of the ping command
+     * @return The success status of the ping command
      **************************************************************************/
     public boolean cmdSmssPingWatchdog(String missileID, int pTimer) {
         DataOutputStream buffOut;
@@ -1717,13 +1659,12 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdSmssDetEnable
-     *
-     * Sends the detonate enable command to the SMSS for a specified interceptor
+     * The cmdSmssDetEnable command sends the detonate enable command to the 
+     * SMSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to enable detonation
+     * @param missileID The id of the interceptor to enable detonation
      * 
-     * @return the success status of the deactivate command
+     * @return The success status of the deactivate command
      **************************************************************************/
     public boolean cmdSmssDetEnable(String missileID) {
         DataOutputStream buffOut;
@@ -1757,13 +1698,11 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdSmssDestruct
-     *
-     * Sends the destruct command to the SMSS for a specified interceptor
+     * The cmdSmssDestruct command sends the destruct command to the SMSS for a specified interceptor.
      * 
-     * @param missileID - the id of the interceptor to destroy
+     * @param missileID The id of the interceptor to destroy
      * 
-     * @return the success status of the destruct command
+     * @return The success status of the destruct command
      **************************************************************************/
     public boolean cmdSmssDestruct(String missileID) {
         DataOutputStream buffOut;
@@ -1797,11 +1736,9 @@ public class MDSCSSController {
     }
 
     /***************************************************************************
-     * cmdSmssGetVersion
-     *
-     * Queries the SMSS for its version string and parses out the version number
+     * The cmdSmssGetVersion queries the SMSS for its version string and parses out the version number.
      * 
-     * @return the version number of the SMSS
+     * @return A string representation of the version number of the SMSS
      **************************************************************************/
     public String cmdSmssGetVersion(String missileID) {
         DataOutputStream buffOut;
