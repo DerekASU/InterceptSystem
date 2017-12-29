@@ -515,6 +515,7 @@ public class MMODFrame extends javax.swing.JFrame
     public void forwardDestruct(String pID)
     {
         mController.cmdMcssDestruct(pID);
+        mModel.getInterceptor(pID).setAssignedThreat("[UNASSIGNED]");
     }
     
     

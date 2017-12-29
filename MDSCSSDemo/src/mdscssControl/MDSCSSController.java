@@ -648,15 +648,15 @@ public class MDSCSSController {
                     tmpI = mModel.getInterceptor(cInts.get(0));
                     tmpI.setAssignedThreat(threats.get(i));
                     cInts.remove(0);
-                } else if (aInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(aInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    aInts.remove(0);
                 } else if (bInts.size() > 0) {
                     tmpI = mModel.getInterceptor(bInts.get(0));
                     tmpI.setAssignedThreat(threats.get(i));
                     bInts.remove(0);
-                }
+                } else if (aInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(aInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    aInts.remove(0);
+                } 
 
                 threats.remove(i);
             } else {
@@ -692,14 +692,14 @@ public class MDSCSSController {
             tmpT = mModel.getThreat(threats.get(i));
 
             if (tmpT.getMissileClass() == 'Z') {
-                if (cInts.size() > 0) {
-                    tmpI = mModel.getInterceptor(cInts.get(0));
-                    tmpI.setAssignedThreat(threats.get(i));
-                    cInts.remove(0);
-                } else if (bInts.size() > 0) {
+                if (bInts.size() > 0) {
                     tmpI = mModel.getInterceptor(bInts.get(0));
                     tmpI.setAssignedThreat(threats.get(i));
                     bInts.remove(0);
+                } else if (cInts.size() > 0) {
+                    tmpI = mModel.getInterceptor(cInts.get(0));
+                    tmpI.setAssignedThreat(threats.get(i));
+                    cInts.remove(0);
                 } else if (aInts.size() > 0) {
                     tmpI = mModel.getInterceptor(aInts.get(0));
                     tmpI.setAssignedThreat(threats.get(i));
@@ -755,15 +755,15 @@ public class MDSCSSController {
                 tmpI = mModel.getInterceptor(cInts.get(0));
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
                 newlyAssigned = true;
-            } else if (aInts.size() > 0) {
-                tmpI = mModel.getInterceptor(aInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
             } else if (bInts.size() > 0) {
                 tmpI = mModel.getInterceptor(bInts.get(0));
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
                 newlyAssigned = true;
-            }
+            } else if (aInts.size() > 0) {
+                tmpI = mModel.getInterceptor(aInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } 
         } else if (fgvCurrentThreat.getMissileClass() == 'Y') {
             if (cInts.size() > 0) {
                 tmpI = mModel.getInterceptor(cInts.get(0));
@@ -779,15 +779,15 @@ public class MDSCSSController {
                 newlyAssigned = true;
             }
         } else if (fgvCurrentThreat.getMissileClass() == 'Z') {
-            if (cInts.size() > 0) {
-                tmpI = mModel.getInterceptor(cInts.get(0));
-                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
-                newlyAssigned = true;
-            } else if (bInts.size() > 0) {
+            if (bInts.size() > 0) {
                 tmpI = mModel.getInterceptor(bInts.get(0));
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
                 newlyAssigned = true;
-            }else if (aInts.size() > 0) {
+            }else if (cInts.size() > 0) {
+                tmpI = mModel.getInterceptor(cInts.get(0));
+                tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
+                newlyAssigned = true;
+            } else if (aInts.size() > 0) {
                 tmpI = mModel.getInterceptor(aInts.get(0));
                 tmpI.setAssignedThreat(fgvCurrentThreat.getIdentifier());
                 newlyAssigned = true;

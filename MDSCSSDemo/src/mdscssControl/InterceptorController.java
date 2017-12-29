@@ -9,15 +9,22 @@ import mdscssModel.Missile;
  ******************************************************************************/
 public class InterceptorController 
 {
-    private static final double[][] TUNING_TABLE_X = {{1,       1,      0.5},
-                                                      {0.45,    1,      0.5},
-                                                      {1,       1,      0.5}};
-    private static final double[][] TUNING_TABLE_Y = {{1,       1,      1},
-                                                      {0.5,     1,      0.5},
-                                                      {0.45,    0.45,   0.5}};
-    private static final double[][] TUNING_TABLE_Z = {{0.5,     0.5,    0.45},
-                                                      {1,       0.5,    1},
-                                                      {1,       0.5,    0.5}};
+    //row = threat, col = interceptor
+    private static final double[][] TUNING_TABLE_X = {{1.1,       1.3,      0.9},
+                                                      {1.2,    1.2,      1.2},
+                                                      {1.2,       1.3,      1.1}};
+    
+    private static final double[][] TUNING_TABLE_Y = {{1.1,       1.3,      1.1},
+                                                      {1.2,     1.2,     1.2},
+                                                      {1.2,    1.3,   1.1}};
+    
+    private static final double[][] TUNING_TABLE_Z = {{1.1,     1.3,    1.1},
+                                                      {1.2,       1.2,    1.2},
+                                                      {1.2,       1.3,    1.2}};
+    
+    private static final double[][] GAIN_TABLE     = {{2,         2,    2},
+                                                      {2,       2,    2},
+                                                      {2,      2,    2}};
     private static final int ATTRIB_KP = 1;
     private static final int ATTRIB_KC = 1;
     private static final int ATTRIB_FS = 1;   
@@ -61,7 +68,7 @@ public class InterceptorController
             tmpT = 2;
         
         // X direction ------------------------------------------------------------------------------------->
-        error1 = ((pThreat.getPosX() - pInterceptor.getPosX()) *0.5);
+        error1 = ((pThreat.getPosX() - pInterceptor.getPosX()) *GAIN_TABLE[tmpT][tmpI]);
         tune = TUNING_TABLE_X[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
@@ -104,7 +111,7 @@ public class InterceptorController
         }
         
         // Y direction ------------------------------------------------------------------------------------->
-        error1 = ((pThreat.getPosY() - pInterceptor.getPosY()) *0.5);
+        error1 = ((pThreat.getPosY() - pInterceptor.getPosY()) *GAIN_TABLE[tmpT][tmpI]);
         tune = TUNING_TABLE_Y[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
@@ -147,7 +154,7 @@ public class InterceptorController
         }
         
         // Z direction ------------------------------------------------------------------------------------->
-        error1 = ((pThreat.getPosZ() - pInterceptor.getPosZ()) *0.5);
+        error1 = ((pThreat.getPosZ() - pInterceptor.getPosZ()) *GAIN_TABLE[tmpT][tmpI]);
         tune = TUNING_TABLE_Z[tmpT][tmpI];
         attrib_a = 1.3 * tune;
         attrib_b = 0.03 * tune;
