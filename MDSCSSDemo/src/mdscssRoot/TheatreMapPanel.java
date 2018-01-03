@@ -61,6 +61,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
     final MarkerLayer removedLayer = new MarkerLayer();
     final RenderableLayer textLayer = new RenderableLayer();
     ArrayList<Marker> markers;
+    ArrayList<Renderable> labels;
     ArrayList<Marker> threatMarkers;
     ArrayList<Marker> removedThreats;
     ArrayList<Marker> LocalremovedThreats;
@@ -85,6 +86,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
     {
         initComponents();
         markers = new ArrayList();
+        labels = new ArrayList();
         threatMarkers = new ArrayList();
         removedThreats = new ArrayList();
         LocalremovedThreats  = new ArrayList();
@@ -154,6 +156,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
         
         markers.clear();
         threatMarkers.clear();
+        labels.clear();
         
 
         for (int i = 0; i < interceptors.size(); i++) 
@@ -166,8 +169,8 @@ public class TheatreMapPanel extends javax.swing.JPanel
             tmp2.setDrawImage(false);
             tmp.setAttributes(tmp2);
             
-            tmp.setLabelText("TEST!!!");
-            textLayer.addRenderable(tmp);
+            tmp.setLabelText("__TEST!!!");
+            labels.add(tmp);
             
             switch(tmpI.getState()){
                 case PRE_FLIGHT:
@@ -219,6 +222,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
             layer.setMarkers(markers);
             layer.setOverrideMarkerElevation(true);
             
+            textLayer.setRenderables(labels);
             
             this.worldWindowGLCanvas1.getModel().getLayers().add(layer);
             this.worldWindowGLCanvas1.getModel().getLayers().add(threatLayer);
