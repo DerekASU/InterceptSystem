@@ -457,6 +457,7 @@ public class MMODFrame extends javax.swing.JFrame
     public void ChangeSMCDSel(String pID)
     {
         sMCDPanel1.handleSelChange(pID);
+        theatreMapPanel1.handleSelChange(pID);
     }
     
     /***************************************************************************
@@ -469,6 +470,7 @@ public class MMODFrame extends javax.swing.JFrame
     public void ChangeIOverviewSel(String pID)
     {
         interceptorOverviewPanel1.handleSelChange(pID);
+        theatreMapPanel1.handleSelChange(pID);
     }
     
     /***************************************************************************

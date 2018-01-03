@@ -418,9 +418,7 @@ public class MDSCSSController {
                     inCtrl.trackMissilePair(tmpI, tmpT);
 
                     cmdMcssThrust(interceptors.get(i), tmpI.getThrustX(), tmpI.getThrustY(), tmpI.getThrustZ());
-                } else {
-                    System.out.println("manual control, tracking threat thats not assigned ERROR");
-                }
+                } 
             }
         }
 

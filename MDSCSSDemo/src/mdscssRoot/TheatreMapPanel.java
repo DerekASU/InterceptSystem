@@ -48,13 +48,9 @@ import mdscssModel.Interceptor;
 import mdscssModel.MissileDBManager;
 
 //TODO: 
-//handle threat detonation 
+// theres an index out of bounds exception due to thread concurrency.I don't think this effects operation, we recover, need to test in deployed version, iff issues occur, then make it so that everytihing is done in the update function
 //-> add ID labels 
 //-> add position labels 
-//-> handle pan on zoom 
-//-> handle scaling of icons when zooming in
-// figure out why we get a null pointer exception for one of the array lists in here (i.e close sim before this app) //line 107 in this file
-// random bug: sometimes the assigned interceptor disappears from the map, only seen this happen for c class interceptors .... why? ... i think it has something to do with proximity to one another and the zoom level
 
 
 
@@ -62,9 +58,12 @@ public class TheatreMapPanel extends javax.swing.JPanel
 {
     final MarkerLayer layer = new MarkerLayer();
     final MarkerLayer threatLayer = new MarkerLayer();
+    final MarkerLayer removedLayer = new MarkerLayer();
     final RenderableLayer textLayer = new RenderableLayer();
     ArrayList<Marker> markers;
     ArrayList<Marker> threatMarkers;
+    ArrayList<Marker> removedThreats;
+    ArrayList<Marker> LocalremovedThreats;
     MissileDBManager mModel;
     MMODFrame mParent;
     Model canvasModel;
@@ -87,6 +86,10 @@ public class TheatreMapPanel extends javax.swing.JPanel
         initComponents();
         markers = new ArrayList();
         threatMarkers = new ArrayList();
+        removedThreats = new ArrayList();
+        LocalremovedThreats  = new ArrayList();
+        //canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+        //this.worldWindowGLCanvas1.setModel(canvasModel);
         canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
         this.worldWindowGLCanvas1.setModel(canvasModel);
         
@@ -103,9 +106,13 @@ public class TheatreMapPanel extends javax.swing.JPanel
         // this function gets called when connection is lost with tyhe subsystems.  
         // this function should remove everything from the map, and get the map to be as if it was 
         // just starting for the first time
+        
+        if(canvasModel != null)
+        {
         this.worldWindowGLCanvas1.getModel().getLayers().removeAll();
-        canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
-        this.worldWindowGLCanvas1.setModel(canvasModel);
+        canvasModel = null;
+        }
+        
         
     }
     
@@ -115,9 +122,11 @@ public class TheatreMapPanel extends javax.swing.JPanel
         // this may or may not be necessary for this panel, when this is called, it means all entries in the database
         // are valid and populated
         
-
+        canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
+        this.worldWindowGLCanvas1.setModel(canvasModel);
        
         
+        this.worldWindowGLCanvas1.getView().setEyePosition(Position.fromDegrees(SRC_LAT, SRC_LON,8000));
         
     }
     
@@ -137,24 +146,29 @@ public class TheatreMapPanel extends javax.swing.JPanel
     
     public void updatePanelContents()
     {
-        // this is called every second, this is the periodic update, you should query the database here
-        // and then update the map with new positions, states, assignments, etc
         
-        
-        
-        // below is an example on how to traverse the model for every interceptor , this can easily be done for threats, or all missiles.  I reccomend you look at the 
-        // MDSCSSController and the MissileDBManager, i updated all the functions with headers that explain their
-        // functionality
         ArrayList<String> interceptors = mModel.getInterceptorList();
         ArrayList<String> threats = mModel.getThreatList();
         Interceptor tmpI;
         Missile tmpT;
+        
         markers.clear();
         threatMarkers.clear();
-        for (int i = 0; i < interceptors.size(); i++) {
+        
+
+        for (int i = 0; i < interceptors.size(); i++) 
+        {
             tmpI = mModel.getInterceptor(interceptors.get(i));
             double examplePosition[] = convertPosition(tmpI.getPosX(), tmpI.getPosY());
-            PointPlacemark pm = new PointPlacemark(Position.fromDegrees(examplePosition[0], examplePosition[1]));
+            
+            PointPlacemark tmp = new PointPlacemark(Position.fromDegrees(examplePosition[0], examplePosition[1],1d));
+            PointPlacemarkAttributes tmp2 = new PointPlacemarkAttributes();
+            tmp2.setDrawImage(false);
+            tmp.setAttributes(tmp2);
+            
+            tmp.setLabelText("TEST!!!");
+            textLayer.addRenderable(tmp);
+            
             switch(tmpI.getState()){
                 case PRE_FLIGHT:
                     markers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d),  new BasicMarkerAttributes(Material.YELLOW, BasicMarkerShape.SPHERE, 1d)));
@@ -163,14 +177,12 @@ public class TheatreMapPanel extends javax.swing.JPanel
                     markers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d),  new BasicMarkerAttributes(Material.MAGENTA, BasicMarkerShape.SPHERE, 1d)));
                     break;
                 case DETONATED:
-                    markers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d),  new BasicMarkerAttributes(Material.GRAY, BasicMarkerShape.SPHERE, 1d)));
+                    markers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d),  new BasicMarkerAttributes(Material.LIGHT_GRAY, BasicMarkerShape.SPHERE, 1d)));
                     break;       
-            }
-            
-
-        
-            layer.setMarkers(markers);
+            }            
         }
+        
+
         ArrayList<String> assignedThreats = new ArrayList();
         for (int i =0; i < threats.size(); i++)
         {
@@ -182,29 +194,60 @@ public class TheatreMapPanel extends javax.swing.JPanel
             
                 if(assignedThreats.contains(tmpT.getIdentifier()))
                 {
-                    threatMarkers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d), new BasicMarkerAttributes(Material.GREEN,BasicMarkerShape.CONE,1d)));
+                    threatMarkers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],tmpT.getPosZ()), new BasicMarkerAttributes(Material.GREEN,BasicMarkerShape.CONE,1d)));
                 }
                 else
                 {
-                    threatMarkers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d), new BasicMarkerAttributes(Material.RED,BasicMarkerShape.CONE,1d)));
+                    threatMarkers.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],tmpT.getPosZ()), new BasicMarkerAttributes(Material.RED,BasicMarkerShape.CONE,1d)));
                 }
-                
-                threatLayer.setMarkers(threatMarkers);
 
-            
-
-            layer.setOverrideMarkerElevation(false);
-            threatLayer.setOverrideMarkerElevation(false);
         }
+        
+            layer.setKeepSeparated(false);
+            threatLayer.setKeepSeparated(false);
+
+            if(threatMarkers.size() == 0)
+            {
+                threatLayer.clearList();
+            }
+            else
+            {
+                threatLayer.setMarkers(threatMarkers);
+                threatLayer.setOverrideMarkerElevation(true);
+            }
+            
+            layer.setMarkers(markers);
+            layer.setOverrideMarkerElevation(true);
+            
+            
             this.worldWindowGLCanvas1.getModel().getLayers().add(layer);
             this.worldWindowGLCanvas1.getModel().getLayers().add(threatLayer);
+            this.worldWindowGLCanvas1.getModel().getLayers().add(textLayer);
+            
+            
+            removedThreats = (ArrayList<Marker>) (LocalremovedThreats.clone());
+            
+            removedLayer.setMarkers(removedThreats);
+        removedLayer.setKeepSeparated(false);
+        removedLayer.setOverrideMarkerElevation(true);
+        this.worldWindowGLCanvas1.getModel().getLayers().add(removedLayer);
     }
     
     public void markThreatDestroyed(String threatID)
     {
-        // called when a threat is destroyed and removed from the database.  after this is called, the threat
-        // is removed from the database and any query to the database for this threat will result in a null
-        // you should handle logic here that updates the map to show the threat has been destroyed
+        Missile tmpT = mModel.getThreat(threatID);
+        double examplePosition[] = convertPosition(tmpT.getPosX(), tmpT.getPosY());
+        
+        LocalremovedThreats.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d), new BasicMarkerAttributes(Material.GRAY,BasicMarkerShape.CONE,1d)));
+
+    }
+    
+    public void handleSelChange(String pID)
+    {
+        Interceptor tmpI = mModel.getInterceptor(pID);
+        double examplePosition[] = convertPosition(tmpI.getPosX(), tmpI.getPosY());
+        
+        this.worldWindowGLCanvas1.getView().setEyePosition(Position.fromDegrees(examplePosition[0], examplePosition[1],8000));
     }
 
     /***************************************************************************

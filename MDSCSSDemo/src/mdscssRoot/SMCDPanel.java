@@ -867,12 +867,13 @@ public class SMCDPanel extends javax.swing.JPanel
            assignedThreats = mModel.getAssignedThreats();
            Interceptor tmpI = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
            
-        if(!tmpI.getAssignedThreat().equals((String)dropdown.getSelectedItem()))
+        if(!tmpI.getAssignedThreat().equals((String)dropdown.getSelectedItem()) &&
+                tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT)
         {
            if(assignedThreats.contains((String)dropdown.getSelectedItem()))
            {
-               JOptionPane.showMessageDialog(null,  "\nThe slected threat has already been assigned an interceptor.\n" +
-                                                    "To reassign the threat to this interceptor, the threat must\n" +
+               JOptionPane.showMessageDialog(null,  "\nThe slected threat ["+ (String)dropdown.getSelectedItem() +"] has already been assigned an interceptor.\n" +
+                                                    "To reassign the threat to this interceptor["+ (String)cmbSelInterceptor.getSelectedItem() +"], the threat must\n" +
                                                     "first be unassigned from the existing interceptor.\n", 
                                                     "Threat Already Assigned", 
                                                     JOptionPane.WARNING_MESSAGE);
