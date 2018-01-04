@@ -60,11 +60,14 @@ public class TheatreMapPanel extends javax.swing.JPanel
     final MarkerLayer threatLayer = new MarkerLayer();
     final MarkerLayer removedLayer = new MarkerLayer();
     final RenderableLayer textLayer = new RenderableLayer();
+    final RenderableLayer removedtextLayer = new RenderableLayer();
     ArrayList<Marker> markers;
     ArrayList<Renderable> labels;
+    ArrayList<Renderable> removedlabels;
     ArrayList<Marker> threatMarkers;
     ArrayList<Marker> removedThreats;
     ArrayList<Marker> LocalremovedThreats;
+    ArrayList<Renderable> LocalremovedLabels;
     MissileDBManager mModel;
     MMODFrame mParent;
     Model canvasModel;
@@ -87,14 +90,17 @@ public class TheatreMapPanel extends javax.swing.JPanel
         initComponents();
         markers = new ArrayList();
         labels = new ArrayList();
+        removedlabels = new ArrayList();
         threatMarkers = new ArrayList();
         removedThreats = new ArrayList();
         LocalremovedThreats  = new ArrayList();
+        LocalremovedLabels = new ArrayList();
         //canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
         //this.worldWindowGLCanvas1.setModel(canvasModel);
         canvasModel = (Model) WorldWind.createConfigurationComponent(AVKey.MODEL_CLASS_NAME);
         this.worldWindowGLCanvas1.setModel(canvasModel);
         
+        this.setComponentZOrder(legendPanel, 0);
     }
     
     public void initialize(MissileDBManager pModel, MMODFrame pParent)
@@ -114,7 +120,7 @@ public class TheatreMapPanel extends javax.swing.JPanel
         this.worldWindowGLCanvas1.getModel().getLayers().removeAll();
         canvasModel = null;
         }
-        
+        legendPanel.setVisible(false);
         
     }
     
@@ -129,6 +135,15 @@ public class TheatreMapPanel extends javax.swing.JPanel
        
         
         this.worldWindowGLCanvas1.getView().setEyePosition(Position.fromDegrees(SRC_LAT, SRC_LON,8000));
+        
+        removedtextLayer.setPickEnabled(false);
+        textLayer.setPickEnabled(false);
+            layer.setPickEnabled(false);
+            threatLayer.setPickEnabled(false);
+            removedLayer.setPickEnabled(false);
+            
+            
+            legendPanel.setVisible(true);
         
     }
     
@@ -157,8 +172,21 @@ public class TheatreMapPanel extends javax.swing.JPanel
         markers.clear();
         threatMarkers.clear();
         labels.clear();
-        
+        removedThreats.clear();
+        removedlabels.clear();
 
+        
+        
+        this.worldWindowGLCanvas1.getModel().getLayers().remove(textLayer);
+        this.worldWindowGLCanvas1.getModel().getLayers().remove(removedtextLayer);
+        
+        this.worldWindowGLCanvas1.getModel().getLayers().remove(layer);
+        this.worldWindowGLCanvas1.getModel().getLayers().remove(threatLayer);
+        this.worldWindowGLCanvas1.getModel().getLayers().remove(removedLayer);
+        
+        textLayer.clearList();
+        removedtextLayer.clearList();
+        
         for (int i = 0; i < interceptors.size(); i++) 
         {
             tmpI = mModel.getInterceptor(interceptors.get(i));
@@ -167,9 +195,11 @@ public class TheatreMapPanel extends javax.swing.JPanel
             PointPlacemark tmp = new PointPlacemark(Position.fromDegrees(examplePosition[0], examplePosition[1],1d));
             PointPlacemarkAttributes tmp2 = new PointPlacemarkAttributes();
             tmp2.setDrawImage(false);
+            tmp2.setLabelFont(new Font("Segoe UI", Font.BOLD, 20));
+            tmp2.setLabelOffset(Offset.fromFraction(10, 6));
             tmp.setAttributes(tmp2);
             
-            tmp.setLabelText("__TEST!!!");
+            tmp.setLabelText(tmpI.getIdentifier() + " ("+ tmpI.getPosZ() +"m)");
             labels.add(tmp);
             
             switch(tmpI.getState()){
@@ -191,9 +221,23 @@ public class TheatreMapPanel extends javax.swing.JPanel
         {
             tmpT = mModel.getThreat(threats.get(i));
             
+            
+            
+            
             assignedThreats = mModel.getAssignedThreats();
                 
             double examplePosition[] = convertPosition(tmpT.getPosX(), tmpT.getPosY());
+            
+            
+            PointPlacemark tmp = new PointPlacemark(Position.fromDegrees(examplePosition[0], examplePosition[1],1d));
+            PointPlacemarkAttributes tmp2 = new PointPlacemarkAttributes();
+            tmp2.setDrawImage(false);
+            tmp2.setLabelFont(new Font("Segoe UI", Font.BOLD, 20));
+            tmp2.setLabelOffset(Offset.fromFraction(-60, -12));
+            tmp.setAttributes(tmp2);
+            
+            tmp.setLabelText("("+ tmpT.getPosZ() +"m) " + tmpT.getIdentifier());
+            labels.add(tmp);
             
                 if(assignedThreats.contains(tmpT.getIdentifier()))
                 {
@@ -222,12 +266,15 @@ public class TheatreMapPanel extends javax.swing.JPanel
             layer.setMarkers(markers);
             layer.setOverrideMarkerElevation(true);
             
+            removedlabels = (ArrayList<Renderable>) (LocalremovedLabels.clone());
+            removedtextLayer.setRenderables(removedlabels);
+                        
             textLayer.setRenderables(labels);
             
             this.worldWindowGLCanvas1.getModel().getLayers().add(layer);
             this.worldWindowGLCanvas1.getModel().getLayers().add(threatLayer);
             this.worldWindowGLCanvas1.getModel().getLayers().add(textLayer);
-            
+            this.worldWindowGLCanvas1.getModel().getLayers().add(removedtextLayer);
             
             removedThreats = (ArrayList<Marker>) (LocalremovedThreats.clone());
             
@@ -243,6 +290,16 @@ public class TheatreMapPanel extends javax.swing.JPanel
         double examplePosition[] = convertPosition(tmpT.getPosX(), tmpT.getPosY());
         
         LocalremovedThreats.add(new BasicMarker(Position.fromDegrees(examplePosition[0], examplePosition[1],1d), new BasicMarkerAttributes(Material.GRAY,BasicMarkerShape.CONE,1d)));
+        
+        PointPlacemark tmp = new PointPlacemark(Position.fromDegrees(examplePosition[0], examplePosition[1],1d));
+            PointPlacemarkAttributes tmp2 = new PointPlacemarkAttributes();
+            tmp2.setDrawImage(false);
+            tmp2.setLabelFont(new Font("Segoe UI", Font.BOLD, 20));
+            tmp2.setLabelOffset(Offset.fromFraction(-60, -12));
+            tmp.setAttributes(tmp2);
+            
+            tmp.setLabelText("("+ tmpT.getPosZ() +"m) " + tmpT.getIdentifier());
+            LocalremovedLabels.add(tmp);
 
     }
     
@@ -265,26 +322,52 @@ public class TheatreMapPanel extends javax.swing.JPanel
     private void initComponents() {
 
         worldWindowGLCanvas1 = new gov.nasa.worldwind.awt.WorldWindowGLCanvas();
+        btnNewWindow = new javax.swing.JLabel();
+        legendPanel = new javax.swing.JLabel();
 
         setBackground(new java.awt.Color(27, 161, 226));
         setMaximumSize(new java.awt.Dimension(876, 573));
         setMinimumSize(new java.awt.Dimension(876, 573));
         setPreferredSize(new java.awt.Dimension(876, 573));
 
+        btnNewWindow.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/openIcon2.png"))); // NOI18N
+
+        legendPanel.setIcon(new javax.swing.ImageIcon(getClass().getResource("/img/LegendMark1.png"))); // NOI18N
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(worldWindowGLCanvas1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(worldWindowGLCanvas1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 876, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addComponent(btnNewWindow)
+                    .addGap(0, 0, Short.MAX_VALUE)))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(legendPanel)
+                    .addGap(0, 692, Short.MAX_VALUE)))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(worldWindowGLCanvas1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addGap(0, 267, Short.MAX_VALUE)
+                    .addComponent(btnNewWindow)
+                    .addGap(0, 287, Short.MAX_VALUE)))
+            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                    .addGap(0, 464, Short.MAX_VALUE)
+                    .addComponent(legendPanel)))
         );
     }// </editor-fold>//GEN-END:initComponents
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel btnNewWindow;
+    private javax.swing.JLabel legendPanel;
     private gov.nasa.worldwind.awt.WorldWindowGLCanvas worldWindowGLCanvas1;
     // End of variables declaration//GEN-END:variables
 }
