@@ -231,6 +231,7 @@ public class SMCDPanel extends javax.swing.JPanel
             {
                 if(!threats.contains(cmbAssignedThreat.getItemAt(i)))
                 {
+                    cmbAssignedThreat.setSelectedIndex(0);
                     cmbAssignedThreat.removeItemAt(i);
                 }
             }
