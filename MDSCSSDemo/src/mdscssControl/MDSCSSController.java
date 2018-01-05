@@ -132,18 +132,7 @@ public class MDSCSSController {
     public boolean establishConnection() {
         boolean tssPass = false, mcssPass = false, smssPass = false;
 
-        try {
-            if (tssTCP == null) {
-
-                tssTCP = new Socket("localhost", TSS_SOCKET);
-                tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
-                tssPass = true;
-            } else {
-                tssPass = true;
-            }
-        } catch (Exception ex) {
-            System.out.println("MDSCSSController - establishConnection: TSS socket failure\n" + ex.getMessage() + "\n");
-        }
+        
 
         try {
             if (mcssTCP == null) {
@@ -151,6 +140,7 @@ public class MDSCSSController {
                 mcssTCP = new Socket("localhost", MCSS_SOCKET);
                 mcssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
                 mcssPass = true;
+                disableWatchdog();
             } else {
                 mcssPass = true;
             }
@@ -163,6 +153,7 @@ public class MDSCSSController {
                 smssTCP = new Socket("localhost", SMSS_SOCKET);
                 smssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
                 smssPass = true;
+                disableWatchdog();
             } else {
                 smssPass = true;
             }
@@ -170,6 +161,20 @@ public class MDSCSSController {
             System.out.println("MDSCSSController - establishConnection: SMSS socket failure\n" + ex.getMessage() + "\n");
         }
 
+        
+        try {
+            if (tssTCP == null) {
+
+                tssTCP = new Socket("localhost", TSS_SOCKET);
+                tssTCP.setSoTimeout(SOCKET_TIMEOUT_MS);
+                tssPass = true;
+            } else {
+                tssPass = true;
+            }
+        } catch (Exception ex) {
+            System.out.println("MDSCSSController - establishConnection: TSS socket failure\n" + ex.getMessage() + "\n");
+        }
+        
         if (smssPass && tssPass && mcssPass) {
             failureTimer = null;
             return true;
@@ -258,16 +263,16 @@ public class MDSCSSController {
      **************************************************************************/
     public void checkForFailure() {
         Timestamp tmp = new Timestamp(System.currentTimeMillis());
-        int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
 
-        if (failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 300000) {
+        if (failureTimer != null && (tmp.getTime() - failureTimer.getTime()) >= 5000) {
             mView.handleCodeRed();
 
             failureTimer = null;
 
             bPurgeWatchdog = true;
             initializeWatchdog();
+            
+            mModel.updateDatabase(new ArrayList<String>());
 
         }
     }
@@ -293,8 +298,10 @@ public class MDSCSSController {
      **************************************************************************/
     public void initializeWatchdog() {
         int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
+        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
 
+        watchdogTime +=2;
+        
         for (i = 0; i < interceptors.size(); i++) {
             cmdSmssActivateSafety(interceptors.get(i));
         }
@@ -306,7 +313,7 @@ public class MDSCSSController {
      **************************************************************************/
     public void disableWatchdog() {
         int i;
-        ArrayList<String> interceptors = mModel.getInterceptorList();
+        ArrayList<String> interceptors = cmdMcssGetInterceptorList();
 
         for (i = 0; i < interceptors.size(); i++) {
             cmdSmssDeactivateSafety(interceptors.get(i));
@@ -1329,7 +1336,9 @@ public class MDSCSSController {
                 System.out.println("MDSCSSController - cmdMcssGetInterceptorList: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
             } catch (IOException ex) {
                 System.out.println("MDSCSSController - cmdMcssGetInterceptorList: buffer failure\n" + ex.getMessage() + "\n");
-                handleSocketFailure();
+                
+                
+                //TODOhandleSocketFailure();
             }
         }
 
@@ -1603,7 +1612,7 @@ public class MDSCSSController {
                 System.out.println("MDSCSSController - cmdSmssDeactivateSafety: warning 2 second socket timeout\n" + ex.getMessage() + "\n");
             } catch (IOException ex) {
                 System.out.println("MDSCSSController - cmdSmssDeactivateSafety: buffer failure\n" + ex.getMessage() + "\n");
-                handleSocketFailure();
+                //handleSocketFailure();
             }
 
         }

@@ -66,7 +66,7 @@ public class ControlThread implements Runnable
                        }
                            
                        //endure that the watchdog is disabled until all subsystems are connected
-                       controlUtility.disableWatchdog();
+                       //controlUtility.disableWatchdog();
                        
                        //Update operator with connection status
                        controlUtility.establishStatus();
@@ -104,7 +104,7 @@ public class ControlThread implements Runnable
 
                        break;
                 }
-               
+
                 // command the thread to sleep so that it wakes up exactly a half second from
                 // the last time it awoke
                 elapsedTime = System.currentTimeMillis() - entryTime;
@@ -117,6 +117,7 @@ public class ControlThread implements Runnable
                 {
                     System.out.println("ControlThread -- Warning: latency time approaching 1 second [" + elapsedTime + "]");
                 }
+               
             }
         } 
         catch (InterruptedException e) 

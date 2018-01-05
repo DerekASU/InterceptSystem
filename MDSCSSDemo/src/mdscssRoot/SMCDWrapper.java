@@ -1,6 +1,7 @@
 package mdscssRoot;
 
 import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import mdscssModel.MissileDBManager;
 
@@ -12,6 +13,7 @@ public class SMCDWrapper extends javax.swing.JFrame
 {
     SMCDPanel mParent;
     SMCDWrapper mSelf; 
+    String referenceID;
     
     /***************************************************************************
      * Constructor
@@ -23,7 +25,7 @@ public class SMCDWrapper extends javax.swing.JFrame
      **************************************************************************/
     public SMCDWrapper(String pID, SMCDPanel pParent, MissileDBManager pModel, MMODFrame pMMOD) 
     {
-        this.setTitle("Single Missile Control");
+        this.setTitle("Single Missile Control -- " + pID);
         javax.swing.ImageIcon icon = new javax.swing.ImageIcon(getClass().getResource("/img/appIcon.png"));
         setIconImage(icon.getImage());
         
@@ -37,6 +39,18 @@ public class SMCDWrapper extends javax.swing.JFrame
         sMCDPanel1.hideExpandControls();
         mSelf = this;
         
+        referenceID = pID;
+        mParent = pParent;
+        
+        
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosed(WindowEvent e) {
+                
+                
+                handleClosing();
+                
+            }
+        });
     }
     
     /***************************************************************************
@@ -45,6 +59,11 @@ public class SMCDWrapper extends javax.swing.JFrame
     public void update()
     {
         sMCDPanel1.updatePanelContents();
+    }
+    
+    public String getReferenceID()
+    {
+        return referenceID;
     }
     
      /***************************************************************************
@@ -62,6 +81,11 @@ public class SMCDWrapper extends javax.swing.JFrame
         });
         
 
+    }
+    
+    public void handleClosing()
+    {
+        mParent.closeWrapper(referenceID);
     }
 
     /***************************************************************************

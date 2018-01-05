@@ -137,9 +137,9 @@ public class MMODFrame extends javax.swing.JFrame
         public void run(){
             JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has detected a connection failure with\n" +
                                                     "one or more MDS subsystems.  If the connection\n" +
-                                                    "cannot be re-established in 5 minutes, all interceptors\n" +
-                                                    "will be destructed.\n", 
-                                                    "Subsystem Connection Failure", 
+                                                    "cannot be re-established in 5 seconds, all airborne\n" +
+                                                    "interceptors will be destructed.\n", 
+                                                    "Subsystem Connection Loss", 
                                                     JOptionPane.WARNING_MESSAGE);
             }
         });
@@ -161,9 +161,9 @@ public class MMODFrame extends javax.swing.JFrame
         
         Thread t = new Thread(new Runnable(){
         public void run(){
-           JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has been unable to establis a connection\n" +
-                                            "with an MDS subsystem.  All interceptors have been \n" +
-                                            "destructed. A restart of the MDSCSS is required.\n", 
+           JOptionPane.showMessageDialog(null,  "\nThe MDSCSS has been unable to establish a connection with an\n" +
+                                            "MDS subsystem.  All airborne interceptors have been \n" +
+                                            "destructed.\n", 
                                             "Subsystem Failure", 
                                             JOptionPane.ERROR_MESSAGE);
             }
@@ -185,7 +185,7 @@ public class MMODFrame extends javax.swing.JFrame
            JOptionPane.showMessageDialog(null,  "\nAn alternative interceptor for threat assignment has\n" +
                                             "not been found.  The system has reverted to maunual assignment \n" +
                                             "and launch mode.\n", 
-                                            "Automatic Launch Mode Change", 
+                                            "Launch Mode Change", 
                                             JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -205,7 +205,7 @@ public class MMODFrame extends javax.swing.JFrame
            JOptionPane.showMessageDialog(null,  "\nForgiving detonation has been rejected for interceptor [" + id +"].\n" +
                                             "The detonation override setting for this interceptor has been \n" +
                                             "set to manual.\n", 
-                                            "Automatic Launch Mode Change", 
+                                            "Detonation Mode Change", 
                                             JOptionPane.ERROR_MESSAGE);
             }
         });
@@ -603,7 +603,7 @@ public class MMODFrame extends javax.swing.JFrame
 
         lblMDSCSSVersion.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         lblMDSCSSVersion.setForeground(new java.awt.Color(255, 255, 255));
-        lblMDSCSSVersion.setText("0.5B");
+        lblMDSCSSVersion.setText("1.2A");
 
         cmbSysMode.setBackground(new java.awt.Color(65, 65, 65));
         cmbSysMode.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N

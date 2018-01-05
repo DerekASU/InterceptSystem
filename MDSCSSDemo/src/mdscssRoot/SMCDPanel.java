@@ -108,6 +108,7 @@ public class SMCDPanel extends javax.swing.JPanel
         txtInterceptorPosition.setText("[NA]");
         txtInterceptorState.setText("[NA]");
         txtThreatDistance.setText("[NA]");
+        txtThreatDistance.setForeground(java.awt.Color.BLACK);
         txtThreatPosition.setText("[NA]");
         
         SMCDWrapper tmp;
@@ -186,6 +187,9 @@ public class SMCDPanel extends javax.swing.JPanel
             lblLaunchTime.setVisible(false);
         }
         
+        
+        cmbAssignedThreat.setSelectedItem(mModel.getInterceptor(pID).getAssignedThreat());
+        
         updatePanelContents();
     }
     
@@ -202,6 +206,16 @@ public class SMCDPanel extends javax.swing.JPanel
         Missile tmpT;
         String posText = "";
         DecimalFormat sciNote =  new DecimalFormat("0.##E0");
+        
+        
+        if(bSeparateWindow)
+        {
+            cmbSelInterceptor.setEnabled(false);
+        }
+        else
+        {
+            cmbSelInterceptor.setEnabled(true);
+        }
         
         
         if(tmp != null){
@@ -221,7 +235,7 @@ public class SMCDPanel extends javax.swing.JPanel
                 }
             }
 
-
+lblLaunchTime.setVisible(false);
 
             if(!tmp.isDisabled())
             {
@@ -250,6 +264,17 @@ public class SMCDPanel extends javax.swing.JPanel
                     btnDetonate.setEnabled(false);
                     btnLaunch.setEnabled(false);
                     tglDisable.setEnabled(false);
+                    
+                    
+                    if(tmp.getLaunchTime() != null)
+                    {
+                        lblLaunchTime.setVisible(true);
+                        lblLaunchTime.setText("Time of Launch:  " + tmp.getLaunchTime());
+                    }
+                    else
+                    {
+                        lblLaunchTime.setVisible(false);
+                    }
 
                     txtInterceptorPosition.setForeground(java.awt.Color.LIGHT_GRAY);
                     txtInterceptorState.setForeground(java.awt.Color.LIGHT_GRAY);
@@ -281,8 +306,23 @@ public class SMCDPanel extends javax.swing.JPanel
                         btnDestruct.setEnabled(true);
 
                     }
+                    
+                    
+                    if(tmp.getLaunchTime() != null)
+                    {
+                        lblLaunchTime.setVisible(true);
+                        lblLaunchTime.setText("Time of Launch:  " + tmp.getLaunchTime());
+                    }
+                    else
+                    {
+                        lblLaunchTime.setVisible(false);
+                    }
+
+                    
+                    
+                    
                     cmbAssignmentMode.setEnabled(false);
-                    cmbAssignedThreat.setEnabled(false);
+                    cmbAssignedThreat.setEnabled(true);
                     btnLaunch.setEnabled(false);
                     tglDisable.setEnabled(false);
 
@@ -314,6 +354,8 @@ public class SMCDPanel extends javax.swing.JPanel
                 posText += pos[2];
 
             txtInterceptorPosition.setText(posText);
+            
+            
             cmbAssignedThreat.setSelectedItem(assignedThreat);
 
             if(assignedThreat.equals("[UNASSIGNED]"))
@@ -400,6 +442,7 @@ public class SMCDPanel extends javax.swing.JPanel
             }
         }
     }
+    
     
     /***************************************************************************
      * The initialize function gives the SMCD object references to 
@@ -769,6 +812,7 @@ public class SMCDPanel extends javax.swing.JPanel
      **************************************************************************/
     private void btnNewWindowMousePressed(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnNewWindowMousePressed
         SMCDWrapper tmpWindow;
+        boolean flag = false;
 
         for(int i = 0; i < windowList.size(); i++)
         {
@@ -776,8 +820,17 @@ public class SMCDPanel extends javax.swing.JPanel
             {
                 windowList.remove(i);
             }
+            else
+            {
+                if(windowList.get(i).getReferenceID().equals(String.valueOf(cmbSelInterceptor.getSelectedItem())))
+                {
+                    flag = true;
+                    windowList.get(i).toFront();
+                }
+            }
         }
 
+        if(!flag){
         if(windowList.size() < 15)
         {
             windowList.add(new SMCDWrapper(String.valueOf(cmbSelInterceptor.getSelectedItem()), this, mModel, mParent));
@@ -792,8 +845,22 @@ public class SMCDPanel extends javax.swing.JPanel
                 "Max Amount of SMCD Opened",
                 JOptionPane.WARNING_MESSAGE);
         }
+        }
     }//GEN-LAST:event_btnNewWindowMousePressed
 
+    
+    public void closeWrapper(String pID)
+    {
+        for(int i = 0; i < windowList.size(); i++)
+        {
+            if(windowList.get(i).getReferenceID().equals(String.valueOf(cmbSelInterceptor.getSelectedItem())))
+            {
+                windowList.remove(i);
+            }
+        }
+    }
+    
+    
     /***************************************************************************
      * The handleInterceptorSelection function is an action handler for when the selected interceptor dropdown has its selection
      * changed.  This function forwards the new selected interceptor to the MMODFrame
@@ -808,7 +875,8 @@ public class SMCDPanel extends javax.swing.JPanel
         {
             JComboBox dropdown = (JComboBox) evt.getSource();
             mParent.ChangeIOverviewSel((String)dropdown.getSelectedItem());
-        }
+            cmbAssignedThreat.setSelectedItem(mModel.getInterceptor((String)dropdown.getSelectedItem()).getAssignedThreat());
+        }        
     }
     
     
@@ -867,8 +935,8 @@ public class SMCDPanel extends javax.swing.JPanel
            assignedThreats = mModel.getAssignedThreats();
            Interceptor tmpI = mModel.getInterceptor((String)cmbSelInterceptor.getSelectedItem());
            
-        if(!tmpI.getAssignedThreat().equals((String)dropdown.getSelectedItem()) &&
-                tmpI.getState() == Interceptor.interceptorState.PRE_FLIGHT)
+        if(!tmpI.getAssignedThreat().equals((String)dropdown.getSelectedItem()) 
+              /*TODO  tmpI.getState() == Interceptor.interceptorState.*/)
         {
            if(assignedThreats.contains((String)dropdown.getSelectedItem()))
            {

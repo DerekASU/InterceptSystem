@@ -101,9 +101,13 @@ public class InterceptorController
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustX);
         pInterceptor.setCtrlThrustDX(thrust_d);
 
-        if(Math.abs(error1) > D_SYS)
+        if(error1 > D_SYS)
         {
             pInterceptor.setThrustX(pInterceptor.maxThrustX);
+        }
+        else if(error1 < (D_SYS*-1))
+        {
+            pInterceptor.setThrustX(-1 * pInterceptor.maxThrustX);
         }
         else
         {
@@ -144,9 +148,13 @@ public class InterceptorController
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustY);
         pInterceptor.setCtrlThrustDY(thrust_d);
      
-        if(Math.abs(error1) > D_SYS)
+        if(error1 > D_SYS)
         {
-            pInterceptor.setThrustY(pInterceptor.maxThrustY);
+            pInterceptor.setThrustY(pInterceptor.maxThrustX);
+        }
+        else if(error1 < (D_SYS*-1))
+        {
+            pInterceptor.setThrustY(-1 * pInterceptor.maxThrustX);
         }
         else
         {
@@ -187,9 +195,13 @@ public class InterceptorController
         final_thrust = quantAndSat(thrust_i + thrust_p + thrust_d, pInterceptor.maxThrustZ);
         pInterceptor.setCtrlThrustDZ(thrust_d);
 
-        if(Math.abs(error1) > D_SYS)
+        if(error1 > D_SYS)
         {
-            pInterceptor.setThrustZ(pInterceptor.maxThrustZ);
+            pInterceptor.setThrustZ(pInterceptor.maxThrustX);
+        }
+        else if(error1 < (D_SYS*-1))
+        {
+            pInterceptor.setThrustZ(-1 * pInterceptor.maxThrustX);
         }
         else
         {
